@@ -1,0 +1,22 @@
+﻿# Documentos del proyecto
+bin/
+obj/
+.vs/
+*.exe
+*.dll
+*.pdb
+*.cache
+*.log
+*.tmp
+
+# Documentos del Usuario
+*.user
+*.suo
+*.userosscache
+*.vspscc
+
+# Config. Local
+Thumbs.db
+
+# Imagenes del proyecto
+!Images/*
