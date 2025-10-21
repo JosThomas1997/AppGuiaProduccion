@@ -1,4 +1,5 @@
 ﻿Imports System.Data.OleDb
+Imports System.Drawing.Printing
 Imports System.Globalization
 
 Public Class Form2
@@ -8,6 +9,9 @@ Public Class Form2
     Private idProduccionActual As Integer = -1
     Private cargarProduccion As Boolean = False
     Public dgvProductos As New DataGridView()
+
+    'Variable para Impresion
+    Private WithEvents impresionProduccion As New PrintDocument()
 
     'Inicios del Form2
     Private Sub Form2_Load(sender As Object, e As EventArgs) Handles MyBase.Load
@@ -604,6 +608,136 @@ Public Class Form2
         Dim formProductosProduccion As New FormProducc_Productos()
         FormProducc_Productos.Owner = Me
         FormProducc_Productos.ShowDialog()
+    End Sub
+
+    'Fuente, Cuerpo y posicion para impresion
+    Dim fuenteTitulo As New Font("Consolas", 8, FontStyle.Bold)
+    Dim fuenteCuerpo As New Font("Consolas", 7)
+    Dim yPos As Integer = 0
+
+    '==SECCION DE IMPRESION DE PRODUCCION==
+    Private Sub btnImprimirProduccion_Click(sender As Object, e As EventArgs) Handles btnImprimirProduccion.Click
+        Try
+            ' Configurar tamaño de papel (ancho 80mm ≈ 283, largo 297mm ≈ 1169)
+            Dim tamañoPapel As New PaperSize("Ticket80mm", 283, 1169)
+            impresionProduccion.DefaultPageSettings.PaperSize = tamañoPapel
+
+            ' Margen mínimo para aprovechar mejor el espacio
+            impresionProduccion.DefaultPageSettings.Margins = New Margins(5, 5, 5, 5)
+
+            ' Fuente estándar para tickets
+            fuenteCuerpo = New Font("Consolas", 7)
+
+            ' Inicia la impresión (DESCOMENTAR DESPUES DE PROBAR TICKETS!)
+            impresionProduccion.Print()
+
+            Using vistaPrevia As New PrintPreviewDialog()
+                vistaPrevia.Document = impresionProduccion
+                vistaPrevia.WindowState = FormWindowState.Maximized
+                vistaPrevia.PrintPreviewControl.Zoom = 2.0 'Escala de ventana del 200% CUIDADO!
+                vistaPrevia.Text = "Vista Previa de Guia"
+                vistaPrevia.ShowDialog()
+            End Using
+
+        Catch ex As Exception
+            MsgBox("Error al mostrar la vista previa de la guia!" & ex.Message, MsgBoxStyle.Critical)
+        End Try
+    End Sub
+
+    Private Sub ImpresionProduccion_PrintPage(sender As Object, e As PrintPageEventArgs) Handles impresionProduccion.PrintPage
+        'Elementos de la impresion, y margenes de impresion
+        Dim g As Graphics = e.Graphics
+        Dim margenIzq As Integer = e.MarginBounds.Left
+        yPos = e.MarginBounds.Top
+        Dim fuenteTitulo As New Font("Consolas", 8, FontStyle.Bold)
+        Dim fuenteCuerpo As New Font("Consolas", 7)
+        Dim salto As Integer = fuenteCuerpo.GetHeight(g) + 2
+
+        'Obtener el nombre del empleado
+        Dim nombreEmpleado As String = ""
+
+        'Conexion a la base de datos para obtener el nombre del empleado
+        Try
+            AbrirConexion()
+            Using cmd As New OleDbCommand("SELECT nombre_empleado FROM empleado WHERE id_empleado = ?", conexionDB)
+                cmd.Parameters.AddWithValue("?", cbIDEmpleado.SelectedValue)
+                Dim resultado = cmd.ExecuteScalar()
+                If resultado IsNot Nothing AndAlso Not IsDBNull(resultado) Then
+                    nombreEmpleado = resultado.ToString()
+                Else
+                    nombreEmpleado = "Empleado no encontrado."
+                End If
+            End Using
+        Catch ex As Exception
+            nombreEmpleado = "Empleado no Encontrado."
+        Finally
+            CerrarConexion()
+        End Try
+
+        '=== Encabezado de la guia ===
+        g.DrawString("Produccion Interna", fuenteTitulo, Brushes.Black, margenIzq, yPos)
+        yPos += salto
+
+        g.DrawString("Empleado: " & lblEmpleadoID.Text, fuenteCuerpo, Brushes.Black, margenIzq, yPos)
+        yPos += salto
+        g.DrawString("Fecha: " & dtpFechaProduccion.Value.ToString("dd/MM/yyyy"), fuenteCuerpo, Brushes.Black, margenIzq, yPos)
+        yPos += salto * 2
+
+        '== Cabecera de Tabla ==
+        g.DrawString("Código  Nombre Producto           Cant   Subtotal", fuenteCuerpo, Brushes.Black, margenIzq, yPos)
+        yPos += salto
+        g.DrawString("--------------------------------------------------", fuenteCuerpo, Brushes.Black, margenIzq, yPos)
+        yPos += salto
+
+        '== Cuerpo de la tabla ==
+
+        For Each fila As DataGridViewRow In dgvProduccion.Rows
+            If fila.IsNewRow Then Continue For
+
+            Dim codigo As String = If(fila.Cells("codigo").Value, "").ToString().PadRight(6)
+            Dim nombre As String = If(fila.Cells("nombre").Value, "").ToString().PadRight(25)
+            Dim cantidad As String = If(fila.Cells("cantidad").Value, "0").ToString().PadLeft(4)
+            Dim subtotalTexto As String = If(fila.Cells("subtotal").Value, "0").ToString().Replace(" $", "").Replace(".", "")
+            Dim subtotal As Integer = Val(subtotalTexto)
+
+            Dim linea As String = $"{codigo}{nombre}{cantidad.PadLeft(6)}{subtotal.ToString("N0").PadLeft(8)}"
+            g.DrawString(linea, fuenteCuerpo, Brushes.Black, margenIzq, yPos)
+            yPos += salto
+        Next
+
+        '== Total de Produccion ==
+        yPos += salto
+        g.DrawString("--------------------------------------------------", fuenteCuerpo, Brushes.Black, margenIzq, yPos)
+        yPos += salto
+        g.DrawString("TOTAL:".PadLeft(33) & txtTotalProduccion.Text.Replace(" ", ""), fuenteTitulo, Brushes.Black, margenIzq, yPos)
+        yPos += salto * 2
+
+        '== Comentario de Produccion ==
+        g.DrawString("COMENTARIO:", fuenteTitulo, Brushes.Black, margenIzq, yPos)
+        yPos += salto
+
+        Dim comentarioTexto As String = rtxtComentario.Text.Trim()
+        If comentarioTexto <> "" Then
+            ' Definir área de texto con márgenes
+            Dim anchoTexto As Single = 280 ' ancho útil del ticket (ajústalo a tu impresora)
+            Dim rectComentario As New RectangleF(margenIzq, yPos, anchoTexto, 9999)
+
+            ' Configurar formato de texto
+            Dim formato As New StringFormat()
+            formato.Alignment = StringAlignment.Near
+            formato.LineAlignment = StringAlignment.Near
+
+            ' Dibujar comentario con ajuste automático de líneas
+            g.DrawString(comentarioTexto, fuenteCuerpo, Brushes.Black, rectComentario, formato)
+
+            ' Mover yPos hacia abajo según el texto
+            Dim tamañoTexto As SizeF = g.MeasureString(comentarioTexto, fuenteCuerpo, anchoTexto)
+            yPos += tamañoTexto.Height
+        Else
+            g.DrawString("(Sin comentario)", fuenteCuerpo, Brushes.Black, margenIzq, yPos)
+            yPos += salto
+        End If
+
     End Sub
 
 End Class

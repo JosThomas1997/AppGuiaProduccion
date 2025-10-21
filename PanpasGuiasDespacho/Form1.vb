@@ -764,18 +764,20 @@ Public Class Form1
     'SECCION PARA IMPRESION (Click para imprimir en papel!)
     Private Sub btnImprimir_Click(sender As Object, e As EventArgs) Handles btnImprimir.Click
         Try
-            ' Configurar tamaño de papel (ancho 80mm ≈ 283, largo 297mm ≈ 1169)
+            ' Tamaño del papel del ticket
             Dim tamañoPapel As New PaperSize("Ticket80mm", 283, 1169)
             documentoImpresion.DefaultPageSettings.PaperSize = tamañoPapel
 
-            ' Margen mínimo para aprovechar mejor el espacio
+            ' Margen para el espacio
             documentoImpresion.DefaultPageSettings.Margins = New Margins(5, 5, 5, 5)
 
-            ' Fuente estándar para tickets
+            ' Fuente estandar para tickets
             fuenteCuerpo = New Font("Consolas", 7)
 
-            ' Inicia la impresión (DESCOMENTAR DESPUES DE PROBAR TICKETS!)
-            'documentoImpresion.Print()
+            ' Inicia la impresión
+            ' (Aviso, en caso de desear ver el formato sin imprimir, comentar el codigo
+            ' de abajo!)
+            documentoImpresion.Print()
 
             Using vistaPrevia As New PrintPreviewDialog()
                 vistaPrevia.Document = documentoImpresion
@@ -785,18 +787,20 @@ Public Class Form1
                 vistaPrevia.ShowDialog()
             End Using
 
+            'Error en caso de no lograrse imprimir
         Catch ex As Exception
             MsgBox("Error al mostrar la vista previa de la guia!" & ex.Message, MsgBoxStyle.Critical)
         End Try
     End Sub
 
-
+    'Posicion y Fuente para la impresion
     Dim fuenteTitulo As New Font("Consolas", 8, FontStyle.Bold)
     Dim fuenteCuerpo As New Font("Consolas", 7)
     Dim yPos As Integer = 0
 
-
+    'Impresion del Ticket
     Private Sub documentoImpresion_PrintPage(sender As Object, e As PrintPageEventArgs) Handles documentoImpresion.PrintPage
+        'Elementos graficos, como de margenes con fuentes de la impresion
         Dim g As Graphics = e.Graphics
         Dim margenIzq As Integer = e.MarginBounds.Left
         yPos = e.MarginBounds.Top
@@ -848,7 +852,7 @@ Public Class Form1
         yPos += salto
 
         ' N° Guía
-        g.DrawString("N°Guia :" & txtNumeroGuia.Text, fuenteCuerpo, Brushes.Black, margenIzq, yPos) : yPos += salto
+        g.DrawString("N°Guia: " & txtNumeroGuia.Text, fuenteCuerpo, Brushes.Black, margenIzq, yPos) : yPos += salto
         yPos += salto
 
         ' CABECERA DE TABLA
@@ -882,7 +886,17 @@ Public Class Form1
 
     'LLEVAR A LA VENTANA DE PRODUCCION
     Private Sub btnProduccion_Click(sender As Object, e As EventArgs) Handles btnProduccion.Click
-        Dim frm As New Form2()
-        frm.Show()
+        'En caso de existir una ventana abierta, no abrir otra
+        For Each frm As Form In Application.OpenForms
+            If TypeOf frm Is Form2 Then
+                frm.Focus() 'Mover hacia el frente de la pantalla si la ventana ya esta abierta
+                frm.WindowState = FormWindowState.Normal 'Mostrar la ventana de produccion con normalidad
+                frm.BringToFront() 'Traer al frente de la pantalla
+            End If
+        Next
+
+        'Si la ventana no esta abierta, abrir la misma
+        Dim ventanaProduccion As New Form2() 'Declarar la ventana de produccion
+        ventanaProduccion.Show() 'Mostrar la ventana de produccion
     End Sub
 End Class
