@@ -38,13 +38,14 @@ Partial Class Form2
         Me.dtpFechaProduccion = New System.Windows.Forms.DateTimePicker()
         Me.lblFechaProduccion = New System.Windows.Forms.Label()
         Me.rtxtComentario = New System.Windows.Forms.RichTextBox()
+        Me.btnEliminarProduccion = New System.Windows.Forms.Button()
         CType(Me.dgvProduccionHechas, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvProduccion, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'btnActualizarProduccion
         '
-        Me.btnActualizarProduccion.Location = New System.Drawing.Point(891, 472)
+        Me.btnActualizarProduccion.Location = New System.Drawing.Point(927, 472)
         Me.btnActualizarProduccion.Name = "btnActualizarProduccion"
         Me.btnActualizarProduccion.Size = New System.Drawing.Size(113, 23)
         Me.btnActualizarProduccion.TabIndex = 33
@@ -79,7 +80,7 @@ Partial Class Form2
         '
         'btnImprimirProduccion
         '
-        Me.btnImprimirProduccion.Location = New System.Drawing.Point(495, 472)
+        Me.btnImprimirProduccion.Location = New System.Drawing.Point(846, 472)
         Me.btnImprimirProduccion.Name = "btnImprimirProduccion"
         Me.btnImprimirProduccion.Size = New System.Drawing.Size(75, 23)
         Me.btnImprimirProduccion.TabIndex = 28
@@ -113,7 +114,7 @@ Partial Class Form2
         '
         'btnSiguienteProduccion
         '
-        Me.btnSiguienteProduccion.Location = New System.Drawing.Point(359, 472)
+        Me.btnSiguienteProduccion.Location = New System.Drawing.Point(471, 472)
         Me.btnSiguienteProduccion.Name = "btnSiguienteProduccion"
         Me.btnSiguienteProduccion.Size = New System.Drawing.Size(75, 23)
         Me.btnSiguienteProduccion.TabIndex = 23
@@ -122,7 +123,7 @@ Partial Class Form2
         '
         'btnAnteriorProduccion
         '
-        Me.btnAnteriorProduccion.Location = New System.Drawing.Point(278, 472)
+        Me.btnAnteriorProduccion.Location = New System.Drawing.Point(390, 472)
         Me.btnAnteriorProduccion.Name = "btnAnteriorProduccion"
         Me.btnAnteriorProduccion.Size = New System.Drawing.Size(75, 23)
         Me.btnAnteriorProduccion.TabIndex = 22
@@ -180,12 +181,22 @@ Partial Class Form2
         Me.rtxtComentario.TabIndex = 34
         Me.rtxtComentario.Text = ""
         '
+        'btnEliminarProduccion
+        '
+        Me.btnEliminarProduccion.Location = New System.Drawing.Point(230, 472)
+        Me.btnEliminarProduccion.Name = "btnEliminarProduccion"
+        Me.btnEliminarProduccion.Size = New System.Drawing.Size(108, 23)
+        Me.btnEliminarProduccion.TabIndex = 35
+        Me.btnEliminarProduccion.Text = "Eliminar Produccion"
+        Me.btnEliminarProduccion.UseVisualStyleBackColor = True
+        '
         'Form2
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.Color.DodgerBlue
         Me.ClientSize = New System.Drawing.Size(1132, 504)
+        Me.Controls.Add(Me.btnEliminarProduccion)
         Me.Controls.Add(Me.rtxtComentario)
         Me.Controls.Add(Me.btnActualizarProduccion)
         Me.Controls.Add(Me.lblEmpleadoID)
@@ -227,4 +238,5 @@ Partial Class Form2
     Friend WithEvents dtpFechaProduccion As DateTimePicker
     Friend WithEvents lblFechaProduccion As Label
     Friend WithEvents rtxtComentario As RichTextBox
+    Friend WithEvents btnEliminarProduccion As Button
 End Class

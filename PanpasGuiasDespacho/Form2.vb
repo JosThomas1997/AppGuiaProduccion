@@ -208,6 +208,66 @@ Public Class Form2
         CargarListadoProduccion()
     End Sub
 
+    '=== BOTON PARA ELIMINAR PRODUCCION
+    Private Sub btnEliminarProduccion_Click(sender As Object, e As EventArgs) Handles btnEliminarProduccion.Click
+        'Verificar si hay produccion cargada
+        If idProduccionActual <= 0 Then
+            MsgBox("No hay produccion cargada en pantalla.", MsgBoxStyle.Information)
+            Exit Sub
+        End If
+
+        'Confirmacion de la eliminacion de la produccion
+        Dim EliminarProduccion = MsgBox("Estas seguro de Eliminar la Produccion Nº " & idProduccionActual & "?", MsgBoxStyle.YesNo + MsgBoxStyle.Question, "Confirmar Accion")
+        If EliminarProduccion <> MsgBoxResult.Yes Then Exit Sub
+
+        'Conexion a la Base de Datos
+        Try
+            AbrirConexion()
+
+            'Eliminar detalles de produccion
+            Using cmdDetalle As New OleDbCommand("DELETE FROM produccion_detalle WHERE id_produccion = ?", conexionDB)
+                cmdDetalle.Parameters.AddWithValue("?", idProduccionActual)
+                cmdDetalle.ExecuteNonQuery()
+            End Using
+
+            'Eliminar Produccion
+            Using cmdProduccion As New OleDbCommand("DELETE FROM produccion WHERE id_produccion = ?", conexionDB)
+                cmdProduccion.Parameters.AddWithValue("?", idProduccionActual)
+                cmdProduccion.ExecuteNonQuery()
+            End Using
+
+            MsgBox("Produccion Eliminada", MsgBoxStyle.Information)
+
+            'Buscar produccion Anterior
+            Dim IDAnterior As Object = Nothing
+            Using cmdAnterior As New OleDbCommand("SELECT MAX(id_produccion) FROM produccion WHERE id_produccion < ?", conexionDB)
+                cmdAnterior.Parameters.AddWithValue("?", idProduccionActual)
+                IDAnterior = cmdAnterior.ExecuteScalar()
+            End Using
+
+            'Cargar produccion anterior
+            If IDAnterior IsNot Nothing AndAlso IDAnterior IsNot DBNull.Value Then
+                CargarProduccionID(Convert.ToInt32(IDAnterior))
+            Else
+                dgvProduccion.Rows.Clear()
+                txtTotalProduccion.Text = "0 $"
+                cbIDEmpleado.SelectedIndex = -1
+                lblEmpleadoID.Text = "Seleccionar empleado para produccion."
+                rtxtComentario.Clear()
+                idProduccionActual = 0
+            End If
+
+            'Actualizar listado lateral
+            CargarListadoProduccion()
+
+        Catch ex As Exception
+            MsgBox("Error al eliminar la produccion: " & ex.Message, MsgBoxStyle.Critical)
+        Finally
+            CerrarConexion()
+        End Try
+
+    End Sub
+
     '=== CARGAR LA ÚLTIMA PRODUCCIÓN AL ABRIR EL FORM ===
     Private Sub CargarUltimaProduccion()
         Try
