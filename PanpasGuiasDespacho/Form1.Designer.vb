@@ -42,6 +42,7 @@ Partial Class Form1
         Me.btnImprimir = New System.Windows.Forms.Button()
         Me.cbCodCliente = New System.Windows.Forms.ComboBox()
         Me.btnProduccion = New System.Windows.Forms.Button()
+        Me.btnEliminarGuia = New System.Windows.Forms.Button()
         CType(Me.dgvProductos, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvGuias, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
@@ -102,7 +103,7 @@ Partial Class Form1
         '
         'txtTotal
         '
-        Me.txtTotal.Location = New System.Drawing.Point(699, 472)
+        Me.txtTotal.Location = New System.Drawing.Point(687, 472)
         Me.txtTotal.Name = "txtTotal"
         Me.txtTotal.ReadOnly = True
         Me.txtTotal.Size = New System.Drawing.Size(100, 20)
@@ -111,7 +112,7 @@ Partial Class Form1
         'lblTotalPrecio
         '
         Me.lblTotalPrecio.AutoSize = True
-        Me.lblTotalPrecio.Location = New System.Drawing.Point(662, 475)
+        Me.lblTotalPrecio.Location = New System.Drawing.Point(650, 475)
         Me.lblTotalPrecio.Name = "lblTotalPrecio"
         Me.lblTotalPrecio.Size = New System.Drawing.Size(34, 13)
         Me.lblTotalPrecio.TabIndex = 15
@@ -121,7 +122,7 @@ Partial Class Form1
         '
         Me.btnAgregarProducto.Location = New System.Drawing.Point(12, 472)
         Me.btnAgregarProducto.Name = "btnAgregarProducto"
-        Me.btnAgregarProducto.Size = New System.Drawing.Size(75, 23)
+        Me.btnAgregarProducto.Size = New System.Drawing.Size(74, 23)
         Me.btnAgregarProducto.TabIndex = 20
         Me.btnAgregarProducto.Text = "Agregar"
         Me.btnAgregarProducto.UseVisualStyleBackColor = True
@@ -144,7 +145,7 @@ Partial Class Form1
         '
         'btnAnterior
         '
-        Me.btnAnterior.Location = New System.Drawing.Point(255, 472)
+        Me.btnAnterior.Location = New System.Drawing.Point(305, 472)
         Me.btnAnterior.Name = "btnAnterior"
         Me.btnAnterior.Size = New System.Drawing.Size(100, 23)
         Me.btnAnterior.TabIndex = 23
@@ -153,7 +154,7 @@ Partial Class Form1
         '
         'btnSiguiente
         '
-        Me.btnSiguiente.Location = New System.Drawing.Point(361, 472)
+        Me.btnSiguiente.Location = New System.Drawing.Point(411, 472)
         Me.btnSiguiente.Name = "btnSiguiente"
         Me.btnSiguiente.Size = New System.Drawing.Size(100, 23)
         Me.btnSiguiente.TabIndex = 24
@@ -189,7 +190,7 @@ Partial Class Form1
         '
         'btnImprimir
         '
-        Me.btnImprimir.Location = New System.Drawing.Point(546, 472)
+        Me.btnImprimir.Location = New System.Drawing.Point(567, 472)
         Me.btnImprimir.Name = "btnImprimir"
         Me.btnImprimir.Size = New System.Drawing.Size(75, 23)
         Me.btnImprimir.TabIndex = 28
@@ -217,12 +218,22 @@ Partial Class Form1
         Me.btnProduccion.Text = "Produccion"
         Me.btnProduccion.UseVisualStyleBackColor = False
         '
+        'btnEliminarGuia
+        '
+        Me.btnEliminarGuia.Location = New System.Drawing.Point(174, 472)
+        Me.btnEliminarGuia.Name = "btnEliminarGuia"
+        Me.btnEliminarGuia.Size = New System.Drawing.Size(81, 23)
+        Me.btnEliminarGuia.TabIndex = 31
+        Me.btnEliminarGuia.Text = "Eliminar Guia"
+        Me.btnEliminarGuia.UseVisualStyleBackColor = True
+        '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.Color.LightGreen
         Me.ClientSize = New System.Drawing.Size(1132, 504)
+        Me.Controls.Add(Me.btnEliminarGuia)
         Me.Controls.Add(Me.btnProduccion)
         Me.Controls.Add(Me.cbCodCliente)
         Me.Controls.Add(Me.btnImprimir)
@@ -271,4 +282,5 @@ Partial Class Form1
     Friend WithEvents btnImprimir As Button
     Friend WithEvents cbCodCliente As ComboBox
     Friend WithEvents btnProduccion As Button
+    Friend WithEvents btnEliminarGuia As Button
 End Class

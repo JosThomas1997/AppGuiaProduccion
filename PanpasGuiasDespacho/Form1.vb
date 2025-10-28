@@ -486,6 +486,65 @@ Public Class Form1
 
     End Sub
 
+    'BOTON PARA ELIMINAR LAS GUIAS EN PANTALLA
+    Private Sub btnEliminarGuia_Click(sender As Object, e As EventArgs) Handles btnEliminarGuia.Click
+        'Verificacion de guia cargada en pantalla
+        If idGuiaActual <= 0 Then
+            MsgBox("No hay guia cargada en pantalla.", MsgBoxStyle.Information)
+            Exit Sub
+        End If
+
+        'Mensaje de confirmacion antes de eliminar
+        Dim MensajeConfirmacion = MsgBox("Esta por eliminar la Guia Nº " & txtNumeroGuia.Text & "?", MsgBoxStyle.YesNo + MsgBoxStyle.Question, "Confirmar eliminación")
+        If MensajeConfirmacion <> MsgBoxResult.Yes Then Exit Sub
+
+        'Conexion a base de datos para eliminar guia
+        Try
+            AbrirConexion()
+
+            'Eliminar detalles de la guia
+            Using cmdDetalle As New OleDbCommand("DELETE FROM guia_detalle WHERE id_guia = ?", conexionDB)
+                cmdDetalle.Parameters.AddWithValue("?", idGuiaActual)
+                cmdDetalle.ExecuteNonQuery()
+            End Using
+
+            'Eliminar guia
+            Using cmdGuia As New OleDbCommand("DELETE FROM guia WHERE id_guia = ?", conexionDB)
+                cmdGuia.Parameters.AddWithValue("?", idGuiaActual)
+                cmdGuia.ExecuteNonQuery()
+            End Using
+
+            MsgBox("La guia ha sido eliminada.", MsgBoxStyle.Information)
+
+            'Buscar guia anterior
+            Dim IDAnterior As Object = Nothing
+            Using cmdAnterior As New OleDbCommand("SELECT MAX(id_guia) FROM guia WHERE id_guia < ?", conexionDB)
+                cmdAnterior.Parameters.AddWithValue("?", idGuiaActual)
+                IDAnterior = cmdAnterior.ExecuteScalar()
+            End Using
+
+            'Cargar guia anterior
+            If IDAnterior IsNot Nothing AndAlso IDAnterior IsNot DBNull.Value Then
+                CargarGuiaID(Convert.ToInt32(IDAnterior))
+            Else
+                dgvProductos.Rows.Clear()
+                txtNumeroGuia.Clear()
+                txtTotal.Text = "0 $"
+                cbCodCliente.SelectedIndex = -1
+                lblNombreCliente.Text = "Ingrese Nombre de Cliente"
+                idGuiaActual = 0
+            End If
+
+            'Actualizar el listado de guia lateral
+            AutoActualizarGuias()
+
+        Catch ex As Exception
+            MsgBox("Error al eliminar guia: " & ex.Message, MsgBoxStyle.Critical)
+        Finally
+            CerrarConexion()
+        End Try
+    End Sub
+
     'PARA EL SIGUIENTE NUMERO DE LA GUIA (AHORA EN BASE AL MAS RECIENTE)
     Private Function ObtenerSiguienteNumeroGuia() As Integer
         Try
@@ -648,6 +707,7 @@ Public Class Form1
         End With
     End Sub
 
+    'Validar en los campos exclusivamente numeros en los campos designados
     Private Sub ValidarEntradaNumerica(sender As Object, e As KeyPressEventArgs)
         Dim txt As TextBox = CType(sender, TextBox)
 
@@ -680,6 +740,7 @@ Public Class Form1
         End If
     End Sub
 
+    'Celda de "Eliminar" de guias
     Private Sub dgvProductos_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvProductos.CellClick
         If e.ColumnIndex = dgvProductos.Columns("Eliminar").Index AndAlso e.RowIndex >= 0 Then
             If Not dgvProductos.Rows(e.RowIndex).IsNewRow Then
@@ -689,6 +750,7 @@ Public Class Form1
         End If
     End Sub
 
+    'Solo asegura numeros en el numero de guias
     Private Sub txtNumeroGuia_KeyPress(sender As Object, e As KeyPressEventArgs) Handles txtNumeroGuia.KeyPress
         'Solo Numero y borrado del mismo 
         If Not Char.IsControl(e.KeyChar) AndAlso Not Char.IsDigit(e.KeyChar) Then
@@ -899,4 +961,5 @@ Public Class Form1
         Dim ventanaProduccion As New Form2() 'Declarar la ventana de produccion
         ventanaProduccion.Show() 'Mostrar la ventana de produccion
     End Sub
+
 End Class
