@@ -113,8 +113,6 @@ Public Class FormProducc_Productos
         dgvProducProductos.BringToFront()
     End Sub
 
-
-
     '==================================================================
     'BOTONES - PRODUCTOS DEL PANEL IZQUIERDO
     '==================================================================
