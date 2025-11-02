@@ -48,6 +48,7 @@ Partial Class FormProducc_Productos
         '
         'dgvProducProductos
         '
+        Me.dgvProducProductos.AllowUserToOrderColumns = True
         Me.dgvProducProductos.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.dgvProducProductos.Dock = System.Windows.Forms.DockStyle.Right
         Me.dgvProducProductos.Location = New System.Drawing.Point(802, 0)

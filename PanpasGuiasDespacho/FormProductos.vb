@@ -28,7 +28,9 @@ Public Class FormProductos
             ("Queques y Muffins", "quequesymuffins.png"),
             ("Pasteles", "pasteles.png"),
             ("Materia Prima", "placeholder.png"),
-            ("Pan de Completo", "pancompleto.png")
+            ("Pan de Completo", "pancompleto.png"),
+            ("Mote con Huesillo", "motehuesillo.png"),
+            ("Pan de Pascua", "panpascua.png")
         }
         Dim posicionY As Integer = 10
 
@@ -103,6 +105,10 @@ Public Class FormProductos
                 MostrarCodigoProducto({"1402"})
             Case "Materia Prima"
                 MostrarCodigoProducto({"9000", "10007"})
+            Case "Mote con Huesillo"
+                MostrarCodigoProducto({"1514"})
+            Case "Pan de Pascua"
+                MostrarCodigoProducto({"1513", "1509"})
             Case Else
                 MessageBox.Show("Aun no ha sido definido productos para:  " & nombreProducto,
                                 "!", MessageBoxButtons.OK, MessageBoxIcon.Information)
@@ -190,7 +196,7 @@ Public Class FormProductos
                         If reader.Read() Then
                             Dim nombre As String = reader("nombre").ToString()
                             Dim precio As Integer = Convert.ToInt32(reader("precio_venta_boleta"))
-                            dgvProductos.Rows.Add(codigo, nombre, String.Format("{0:N0}", precio) & " $")
+                            dgvProductos.Rows.Add(codigo, nombre, String.Format("$ {0:N0}", precio))
                         End If
                     End Using
                 End Using
@@ -242,7 +248,7 @@ Public Class FormProductos
                         If reader.Read() Then
                             Dim nombre As String = reader("nombre").ToString()
                             Dim precio As Integer = Convert.ToInt32(reader("precio_venta_boleta"))
-                            dgvProductos.Rows.Add(codigo, nombre, String.Format("{0:N0}", precio) & " $")
+                            dgvProductos.Rows.Add(codigo, nombre, String.Format("$ {0:N0}", precio))
                         End If
                     End Using
                 End Using
@@ -260,7 +266,7 @@ Public Class FormProductos
 
 
     'Doble click en las celdas de los productos para ser agregados al grid
-    Private Sub dgvProductos_CellDoubleClick(sender As Object, e As DataGridViewCellEventArgs)
+    Private Sub dgvProductos_CellDoubleClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvProductos.CellDoubleClick
         If e.RowIndex < 0 Then Exit Sub
 
         Try
@@ -273,7 +279,7 @@ Public Class FormProductos
 
             'Limpiar el precio de venta boleta y convertir el mismo a entero
             Dim precioTexto As String = dgvProductos.Rows(e.RowIndex).Cells("precio").Value.ToString()
-            precioTexto = precioTexto.Replace(" $", "").Replace(".", "").Trim()
+            precioTexto = precioTexto.Replace("$ ", "").Replace(" ", "").Replace(".", "").Trim()
 
             Dim precio As Integer
             If Not Integer.TryParse(precioTexto, precio) Then
@@ -286,14 +292,14 @@ Public Class FormProductos
                 Dim formGuias As Form1 = CType(Owner, Form1)
 
                 ' Agregar producto al DataGridView principal
-                Dim filaIndex As Integer = formGuias.dgvProductos.Rows.Add()
-                Dim nuevaFila = formGuias.dgvProductos.Rows(filaIndex)
+                Dim filaIndex As Integer = formGuias.dgvGuiaProductos.Rows.Add()
+                Dim nuevaFila = formGuias.dgvGuiaProductos.Rows(filaIndex)
 
                 nuevaFila.Cells("codigo").Value = codigo
                 nuevaFila.Cells("nombre").Value = nombre
                 nuevaFila.Cells("cantidad").Value = 1
-                nuevaFila.Cells("precio").Value = String.Format("{0:N0}", precio) & " $"
-                nuevaFila.Cells("subtotal").Value = String.Format("{0:N0}", precio) & " $"
+                nuevaFila.Cells("precio").Value = String.Format("$ {0:N0}", precio)
+                nuevaFila.Cells("subtotal").Value = String.Format("$ {0:N0}", precio)
 
                 ' Recalcular y guardar automáticamente
                 formGuias.CalcularTotal()

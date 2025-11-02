@@ -49,7 +49,7 @@ Public Class Form1
         'dtpFecha.Value = Date.Today
 
         'Evitar de que las columnas organicen las filas
-        For Each col As DataGridViewColumn In dgvProductos.Columns
+        For Each col As DataGridViewColumn In dgvGuiaProductos.Columns
             col.SortMode = DataGridViewColumnSortMode.NotSortable
         Next
 
@@ -93,8 +93,24 @@ Public Class Form1
         End If
     End Sub
 
+    'Actualizar guia al cambiar la fecha
+    Private Sub dtpFecha_ValueChanged(sender As Object, e As EventArgs) Handles dtpFecha.ValueChanged
+        If Not cargarGuia Then
+            guardarGuia() 'Guardar cambio en la guia
+            AutoActualizarGuias() 'Refrescar la lista
+        End If
+    End Sub
+
+    'Actualizar guia a cambiar numero de guia
+    Private Sub txtNumeroGuia_TextChanged(sender As Object, e As EventArgs) Handles txtNumeroGuia.TextChanged
+        If Not cargarGuia Then
+            guardarGuia() 'Guardar cambio en la guia
+            AutoActualizarGuias() 'Refrescar la lista
+        End If
+    End Sub
+
     'DETECCION DE CAMBIOS EN EL GRID
-    Private Sub dgvProductos_CellValueChanged(sender As Object, e As DataGridViewCellEventArgs) Handles dgvProductos.CellValueChanged
+    Private Sub dgvProductos_CellValueChanged(sender As Object, e As DataGridViewCellEventArgs) Handles dgvGuiaProductos.CellValueChanged
         If cargarGuia Then Exit Sub
         BeginInvoke(Sub()
                         Try
@@ -105,7 +121,7 @@ Public Class Form1
                     End Sub)
     End Sub
 
-    Private Sub dgvProductos_RowsRemoved(sender As Object, e As DataGridViewRowsRemovedEventArgs) Handles dgvProductos.RowsRemoved
+    Private Sub dgvProductos_RowsRemoved(sender As Object, e As DataGridViewRowsRemovedEventArgs) Handles dgvGuiaProductos.RowsRemoved
         If cargarGuia Then Exit Sub
         BeginInvoke(Sub()
                         Try
@@ -131,7 +147,8 @@ Public Class Form1
                 sql &= "WHERE g.fecha BETWEEN ? AND ? "
             End If
 
-            sql &= "ORDER BY g.fecha DESC"
+            'Cambio y orden ante las guias creadas como guardadas
+            sql &= "ORDER BY g.fecha DESC, g.numero_guia DESC, g.id_guia DESC"
 
             Using cmd As New OleDbCommand(sql, conexionDB)
                 If fechaInicio <> Nothing AndAlso fechaFin <> Nothing Then
@@ -162,6 +179,7 @@ Public Class Form1
     Private Sub AutoActualizarGuias()
         ConfigurarColumnasDgvGuias()
         GuiasListado()
+        dgvGuias.Refresh()
 
         'Selecciona automaticamente la guia actual de la lista lateral
         For Each fila As DataGridViewRow In dgvGuias.Rows
@@ -246,7 +264,7 @@ Public Class Form1
         Debug.WriteLine(">> CargarndoDetalle con ID = " & idGuia)
 
         cargarGuia = True
-        dgvProductos.Rows.Clear()
+        dgvGuiaProductos.Rows.Clear()
 
         Dim datosGuia As New List(Of Object())
 
@@ -268,9 +286,9 @@ Public Class Form1
                         datosGuia.Add(New Object() {
                           codigo,
                           nombre,
-                          String.Format("{0:N0}", precio) & " $",
+                          String.Format("$ {0:N0}", precio),
                           cantidad,
-                          String.Format("{0:N0}", subtotal) & " $"
+                          String.Format("$ {0:N0}", subtotal)
                         })
                     End While
                 End Using
@@ -282,7 +300,7 @@ Public Class Form1
         End Try
 
         For Each fila As Object() In datosGuia
-            dgvProductos.Rows.Add(fila)
+            dgvGuiaProductos.Rows.Add(fila)
         Next
 
         cargarGuia = False
@@ -368,10 +386,6 @@ Public Class Form1
         Debug.WriteLine(">> CargarGuiaID con ID = " & idGuia)
 
         cargarGuia = True
-        'Dim numeroGuiaActual As String = ""
-        'Dim fechaActual As Date = Date.Today
-        'Dim idClienteActual As Integer = 0
-        'Dim totalActual As Integer = 0
 
         Try
             If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
@@ -386,19 +400,10 @@ Public Class Form1
                         txtNumeroGuia.Text = reader("numero_guia").ToString()
                         dtpFecha.Value = Convert.ToDateTime(reader("fecha"))
                         cbCodCliente.SelectedValue = Convert.ToInt32(reader("id_cliente"))
-                        'txtCodigoCliente.Text = reader("id_cliente").ToString()
-                        'BuscarNombreClienteID(Convert.ToInt32(txtCodigoCliente.Text))
 
                         lblNombreCliente.Text = cbCodCliente.Text
 
-                        'Dim clienteID = Convert.ToInt32(reader("id_cliente"))
-                        'Using cmdCliente As New OleDbCommand("SELECT nombre_fantasia FROM cliente WHERE id_cliente = ?", conexionDB)
-                        'cmdCliente.Parameters.AddWithValue("?", clienteID)
-                        'Dim 'nombre = cmdCliente.ExecuteScalar()
-                        'lblNombreCliente.Text = If(nombre IsNot Nothing, nombre.ToString(), "Cliente no Encontrado")
-                        'End Using
-
-                        txtTotal.Text = String.Format("{0:N0}", reader("total")) & " $"
+                        txtTotal.Text = String.Format("$ {0:N0}", reader("total"))
                     End If
                 End Using
             End Using
@@ -413,10 +418,11 @@ Public Class Form1
         End Try
     End Sub
 
-    Private Sub dgvProductos_CellEndEdit(sender As Object, e As DataGridViewCellEventArgs) Handles dgvProductos.CellEndEdit
+    Private Sub dgvProductos_CellEndEdit(sender As Object, e As DataGridViewCellEventArgs) Handles dgvGuiaProductos.CellEndEdit
+
         If e.ColumnIndex = 0 Then
 
-            Dim codigo As String = dgvProductos.Rows(e.RowIndex).Cells(0).Value?.ToString()
+            Dim codigo As String = dgvGuiaProductos.Rows(e.RowIndex).Cells(0).Value?.ToString()
 
             If Not String.IsNullOrEmpty(codigo) Then
                 Try
@@ -428,20 +434,30 @@ Public Class Form1
                             If reader.Read() Then
                                 Dim nombre As String = reader("nombre").ToString()
                                 Dim precioBoleta As Integer = Convert.ToInt32(reader("precio_venta_boleta"))
-                                Dim precioFormato As String = String.Format("{0:N0}", precioBoleta) & " $"
+                                Dim precioFormato As String = String.Format("$ {0:N0}", precioBoleta)
 
-                                With dgvProductos.Rows(e.RowIndex)
+                                With dgvGuiaProductos.Rows(e.RowIndex)
                                     .Cells(1).Value = nombre
                                     .Cells(2).Value = precioFormato
                                     .Cells(3).Value = 1
-                                    .Cells(4).Value = String.Format("{0:N0}", precioBoleta) & " $"
+                                    .Cells(4).Value = String.Format("$ {0:N0}", precioBoleta)
                                 End With
 
                                 CalcularTotal()
 
+                                'Tras ingresar el codigo de producto, se seleccionar cantidad automaticamente
+                                Me.BeginInvoke(Sub()
+                                                   Try
+                                                       Dim columCantidad As Integer = dgvGuiaProductos.Columns("cantidad").Index
+                                                       dgvGuiaProductos.CurrentCell = dgvGuiaProductos.Rows(e.RowIndex).Cells(columCantidad)
+                                                       dgvGuiaProductos.BeginEdit(True)
+                                                   Catch ex As Exception
+                                                       Debug.WriteLine("Error al seleccionar Cantidad", ex.Message)
+                                                   End Try
+                                               End Sub)
                             Else
                                 MsgBox("Codigo de producto no valido: " & MsgBoxStyle.Exclamation)
-                                dgvProductos.Rows.RemoveAt(e.RowIndex)
+                                dgvGuiaProductos.Rows.RemoveAt(e.RowIndex)
                             End If
                         End Using
                     End Using
@@ -453,13 +469,13 @@ Public Class Form1
             End If
 
         ElseIf e.ColumnIndex = 3 Then
-            Dim cantidad = Val(dgvProductos.Rows(e.RowIndex).Cells(3).Value)
+            Dim cantidad = Val(dgvGuiaProductos.Rows(e.RowIndex).Cells(3).Value)
 
-            Dim precioTexto = dgvProductos.Rows(e.RowIndex).Cells(2).Value?.ToString().Replace(" $", "").Replace(".", "")
+            Dim precioTexto = dgvGuiaProductos.Rows(e.RowIndex).Cells(2).Value?.ToString().Replace("$ ", "").Replace(" ", "").Replace(".", "").Trim()
             Dim precio = Val(precioTexto)
 
             Dim subtotal = cantidad * precio
-            dgvProductos.Rows(e.RowIndex).Cells(4).Value = String.Format("{0:N0}", subtotal) & " $"
+            dgvGuiaProductos.Rows(e.RowIndex).Cells(4).Value = String.Format("$ {0:N0}", subtotal)
 
             CalcularTotal()
         End If
@@ -467,7 +483,7 @@ Public Class Form1
 
     'BOTON PARA NUEVAS GUIAS
     Private Sub btnNuevaGuia_Click(sender As Object, e As EventArgs) Handles btnNuevaGuia.Click
-        dgvProductos.Rows.Clear()
+        dgvGuiaProductos.Rows.Clear()
         txtNumeroGuia.Text = ObtenerSiguienteNumeroGuia().ToString()
         lblNombreCliente.Text = ""
         idGuiaActual = 0
@@ -527,9 +543,9 @@ Public Class Form1
             If IDAnterior IsNot Nothing AndAlso IDAnterior IsNot DBNull.Value Then
                 CargarGuiaID(Convert.ToInt32(IDAnterior))
             Else
-                dgvProductos.Rows.Clear()
+                dgvGuiaProductos.Rows.Clear()
                 txtNumeroGuia.Clear()
-                txtTotal.Text = "0 $"
+                txtTotal.Text = "$ 0"
                 cbCodCliente.SelectedIndex = -1
                 lblNombreCliente.Text = "Ingrese Nombre de Cliente"
                 idGuiaActual = 0
@@ -572,17 +588,23 @@ Public Class Form1
 
     'Calcular el total de los subtotal
     Public Sub CalcularTotal()
-        Dim total = ObtenerTotalGuia()
-        Dim formato As New CultureInfo("es-ES")
-        formato.NumberFormat.NumberGroupSeparator = "."
-        txtTotal.Text = total.ToString("N0", formato)
+        Dim total As Integer = 0
+
+        For Each fila As DataGridViewRow In dgvGuiaProductos.Rows
+            If Not fila.IsNewRow Then
+                Dim subtotalTexto As String = fila.Cells(4).Value?.ToString()
+                total += LimpiarMonto(subtotalTexto)
+            End If
+        Next
+
+        txtTotal.Text = "$ " & String.Format("{0:N0}", total)
     End Sub
 
     'OBTENER EL TOTAL DE LOS SUBTOTAL
     Private Function ObtenerTotalGuia() As Integer
         Dim total As Integer = 0
 
-        For Each fila As DataGridViewRow In dgvProductos.Rows
+        For Each fila As DataGridViewRow In dgvGuiaProductos.Rows
             If Not fila.IsNewRow Then
                 Dim subtotalTexto = fila.Cells(4).Value?.ToString().Replace(".", "")
                 total += Val(subtotalTexto)
@@ -593,7 +615,7 @@ Public Class Form1
 
     'GUARDADO DE GUIAS NUEVO
     Public Sub guardarGuia()
-        If cbCodCliente.SelectedValue Is Nothing OrElse dgvProductos.Rows.Count = 0 Then Exit Sub
+        If cbCodCliente.SelectedValue Is Nothing OrElse dgvGuiaProductos.Rows.Count = 0 Then Exit Sub
 
         Try
             conexionDB.Open()
@@ -637,7 +659,7 @@ Public Class Form1
             End If
 
             'Insercion de nuevos detalles
-            For Each fila As DataGridViewRow In dgvProductos.Rows
+            For Each fila As DataGridViewRow In dgvGuiaProductos.Rows
 
                 If fila.IsNewRow Then Continue For
 
@@ -677,13 +699,23 @@ Public Class Form1
     'LIMPIEZA DE LOS SIMBOLOS EN LOS INTEGER
     Private Function LimpiarMonto(monto As Object) As Integer
         If monto Is Nothing OrElse String.IsNullOrWhiteSpace(monto.ToString()) Then Return 0
-        Return Convert.ToInt32(monto.ToString().Replace(" $", "").Replace(".", ""))
+
+        Dim TextoMonetario As String = monto.ToString()
+
+        'Ajuste de posicion del simbolo monetario
+        TextoMonetario = TextoMonetario.Replace("$", "").Replace(" ", "").Replace(".", "").Trim()
+
+        Dim valor As Integer = 0
+        Integer.TryParse(TextoMonetario, valor)
+
+        Return valor
+        'Return Convert.ToInt32(monto.ToString().Replace("$ ", "").Replace(" ", "").Replace(".", ""))
     End Function
 
     'inicializacion de la tabla guia
     Private Sub IniciarTabla()
         Debug.WriteLine(">> IniciarTabla")
-        With dgvProductos
+        With dgvGuiaProductos
             'Agregado de las Columnas de Productos
             .Columns.Clear()
             .Columns.Add("codigo", "Codigo Producto")
@@ -727,9 +759,9 @@ Public Class Form1
 
     End Sub
 
-    Private Sub dgvProductos_EditingControlShowing(sender As Object, e As DataGridViewEditingControlShowingEventArgs) Handles dgvProductos.EditingControlShowing
+    Private Sub dgvProductos_EditingControlShowing(sender As Object, e As DataGridViewEditingControlShowingEventArgs) Handles dgvGuiaProductos.EditingControlShowing
         ' Solo afecta para las columnas de Codigo y Cantidad
-        If dgvProductos.CurrentCell.ColumnIndex = 0 Or dgvProductos.CurrentCell.ColumnIndex = 3 Then
+        If dgvGuiaProductos.CurrentCell.ColumnIndex = 0 Or dgvGuiaProductos.CurrentCell.ColumnIndex = 3 Then
             Dim txtEdit As TextBox = TryCast(e.Control, TextBox)
 
             If txtEdit IsNot Nothing Then
@@ -741,10 +773,10 @@ Public Class Form1
     End Sub
 
     'Celda de "Eliminar" de guias
-    Private Sub dgvProductos_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvProductos.CellClick
-        If e.ColumnIndex = dgvProductos.Columns("Eliminar").Index AndAlso e.RowIndex >= 0 Then
-            If Not dgvProductos.Rows(e.RowIndex).IsNewRow Then
-                dgvProductos.Rows.RemoveAt(e.RowIndex)
+    Private Sub dgvProductos_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvGuiaProductos.CellClick
+        If e.ColumnIndex = dgvGuiaProductos.Columns("Eliminar").Index AndAlso e.RowIndex >= 0 Then
+            If Not dgvGuiaProductos.Rows(e.RowIndex).IsNewRow Then
+                dgvGuiaProductos.Rows.RemoveAt(e.RowIndex)
                 CalcularTotal()
             End If
         End If
@@ -758,6 +790,7 @@ Public Class Form1
         End If
     End Sub
 
+    'Numero de guia editado
     Private Sub txtNumeroGuia_Leave(sender As Object, e As EventArgs) Handles txtNumeroGuia.Leave
         If Not cargarGuia Then
             Try
@@ -820,6 +853,7 @@ Public Class Form1
     'BOTONES DE RETORNO Y AVANCE PARA VER GUIAS
     Private Sub btnAgregarProducto_Click(sender As Object, e As EventArgs) Handles btnAgregarProducto.Click
         Dim formProductos As New FormProductos()
+        formProductos.Owner = Me 'Establece al dueño de la apertura 
         formProductos.ShowDialog() 'Mostrar el Formulario
     End Sub
 
@@ -837,7 +871,7 @@ Public Class Form1
             fuenteCuerpo = New Font("Consolas", 7)
 
             ' Inicia la impresión
-            ' (Aviso, en caso de desear ver el formato sin imprimir, comentar el codigo
+            ' (Aviso, en caso de desear ver el formato sin imprimir para pruebas, comentar el codigo
             ' de abajo!)
             documentoImpresion.Print()
 
@@ -923,13 +957,13 @@ Public Class Form1
 
         ' CONTENIDO DE LA GUIA
 
-        For Each fila As DataGridViewRow In dgvProductos.Rows
+        For Each fila As DataGridViewRow In dgvGuiaProductos.Rows
             If fila.IsNewRow Then Continue For
             ' Alineación formateada tipo consola
             Dim nombre As String = If(fila.Cells("nombre").Value IsNot Nothing, fila.Cells("nombre").Value.ToString(), "")
             Dim cantidad As Integer = Val(fila.Cells("cantidad").Value?.ToString())
-            Dim precio As Integer = Val(fila.Cells("precio").Value?.ToString().Replace(" $", "").Replace(".", ""))
-            Dim subtotal As Integer = Val(fila.Cells("subtotal").Value?.ToString().Replace(" $", "").Replace(".", ""))
+            Dim precio As Integer = Val(fila.Cells("precio").Value?.ToString().Replace("$ ", "").Replace(" ", "").Replace(".", ""))
+            Dim subtotal As Integer = Val(fila.Cells("subtotal").Value?.ToString().Replace("$ ", "").Replace(" ", "").Replace(".", ""))
 
             Dim linea As String = nombre.PadRight(26)
             linea &= cantidad.ToString().PadLeft(4) & " "

@@ -28,7 +28,9 @@ Public Class FormProducc_Productos
             ("Queques y Muffins", "quequesymuffins.png"),
             ("Pasteles", "pasteles.png"),
             ("Materia Prima", "placeholder.png"),
-            ("Pan de Completo", "pancompleto.png")
+            ("Pan de Completo", "pancompleto.png"),
+            ("Mote con Huesillo", "motehuesillo.png"),
+            ("Pan de Pascua", "panpascua.png")
         }
         Dim posicionY As Integer = 10
 
@@ -103,6 +105,10 @@ Public Class FormProducc_Productos
                 MostrarCodigoProducto({"1402"})
             Case "Materia Prima"
                 MostrarCodigoProducto({"9000", "10007"})
+            Case "Mote con Huesillo"
+                MostrarCodigoProducto({"1514"})
+            Case "Pan de Pascua"
+                MostrarCodigoProducto({"1513", "1509"})
             Case Else
                 MessageBox.Show("Aun no ha sido definido productos para:  " & nombreProducto,
                                 "!", MessageBoxButtons.OK, MessageBoxIcon.Information)
@@ -190,7 +196,7 @@ Public Class FormProducc_Productos
                         If reader.Read() Then
                             Dim nombre As String = reader("nombre").ToString()
                             Dim precio As Integer = Convert.ToInt32(reader("precio_venta_boleta"))
-                            dgvProducProductos.Rows.Add(codigo, nombre, String.Format("{0:N0}", precio) & " $")
+                            dgvProducProductos.Rows.Add(codigo, nombre, String.Format("$ {0:N0}", precio))
                         End If
                     End Using
                 End Using
@@ -242,7 +248,7 @@ Public Class FormProducc_Productos
                         If reader.Read() Then
                             Dim nombre As String = reader("nombre").ToString()
                             Dim precio As Integer = Convert.ToInt32(reader("precio_venta_boleta"))
-                            dgvProducProductos.Rows.Add(codigo, nombre, String.Format("{0:N0}", precio) & " $")
+                            dgvProducProductos.Rows.Add(codigo, nombre, String.Format("$ {0:N0}", precio))
                         End If
                     End Using
                 End Using
@@ -273,7 +279,7 @@ Public Class FormProducc_Productos
 
             'Limpiar el precio de venta boleta y convertir el mismo a entero
             Dim precioTexto As String = dgvProducProductos.Rows(e.RowIndex).Cells("precio").Value.ToString()
-            precioTexto = precioTexto.Replace(" $", "").Replace(".", "").Trim()
+            precioTexto = precioTexto.Replace("$ ", "").Replace(" ", "").Replace(".", "").Trim()
 
             Dim precio As Integer
             If Not Integer.TryParse(precioTexto, precio) Then
@@ -290,7 +296,7 @@ Public Class FormProducc_Productos
                 codigo,
                 nombre,
                 1,
-                String.Format("{0:N0}", precio) & " $"
+                String.Format("$ {0:N0}", precio)
                 )
 
                 'Calcular el total y guardar automaticamente los productos agregados

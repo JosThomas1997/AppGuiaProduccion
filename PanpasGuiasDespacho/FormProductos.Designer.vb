@@ -50,6 +50,8 @@ Partial Class FormProductos
         Me.dgvProductos.Dock = System.Windows.Forms.DockStyle.Right
         Me.dgvProductos.Location = New System.Drawing.Point(802, 0)
         Me.dgvProductos.Name = "dgvProductos"
+        Me.dgvProductos.ReadOnly = True
+        Me.dgvProductos.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect
         Me.dgvProductos.Size = New System.Drawing.Size(331, 504)
         Me.dgvProductos.TabIndex = 2
         '

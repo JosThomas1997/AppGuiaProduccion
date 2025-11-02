@@ -27,7 +27,7 @@ Partial Class Form1
         Me.lblFecha = New System.Windows.Forms.Label()
         Me.lblCodigoCliente = New System.Windows.Forms.Label()
         Me.lblNombreCliente = New System.Windows.Forms.Label()
-        Me.dgvProductos = New System.Windows.Forms.DataGridView()
+        Me.dgvGuiaProductos = New System.Windows.Forms.DataGridView()
         Me.txtTotal = New System.Windows.Forms.TextBox()
         Me.lblTotalPrecio = New System.Windows.Forms.Label()
         Me.btnAgregarProducto = New System.Windows.Forms.Button()
@@ -43,7 +43,7 @@ Partial Class Form1
         Me.cbCodCliente = New System.Windows.Forms.ComboBox()
         Me.btnProduccion = New System.Windows.Forms.Button()
         Me.btnEliminarGuia = New System.Windows.Forms.Button()
-        CType(Me.dgvProductos, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.dgvGuiaProductos, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvGuias, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
@@ -91,15 +91,15 @@ Partial Class Form1
         Me.lblNombreCliente.TabIndex = 6
         Me.lblNombreCliente.Text = "INGRESAR ID CLIENTE"
         '
-        'dgvProductos
+        'dgvGuiaProductos
         '
-        Me.dgvProductos.AllowUserToOrderColumns = True
-        Me.dgvProductos.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill
-        Me.dgvProductos.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.dgvProductos.Location = New System.Drawing.Point(12, 61)
-        Me.dgvProductos.Name = "dgvProductos"
-        Me.dgvProductos.Size = New System.Drawing.Size(787, 400)
-        Me.dgvProductos.TabIndex = 7
+        Me.dgvGuiaProductos.AllowUserToOrderColumns = True
+        Me.dgvGuiaProductos.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill
+        Me.dgvGuiaProductos.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        Me.dgvGuiaProductos.Location = New System.Drawing.Point(12, 61)
+        Me.dgvGuiaProductos.Name = "dgvGuiaProductos"
+        Me.dgvGuiaProductos.Size = New System.Drawing.Size(787, 400)
+        Me.dgvGuiaProductos.TabIndex = 7
         '
         'txtTotal
         '
@@ -247,7 +247,7 @@ Partial Class Form1
         Me.Controls.Add(Me.btnAgregarProducto)
         Me.Controls.Add(Me.lblTotalPrecio)
         Me.Controls.Add(Me.txtTotal)
-        Me.Controls.Add(Me.dgvProductos)
+        Me.Controls.Add(Me.dgvGuiaProductos)
         Me.Controls.Add(Me.lblNombreCliente)
         Me.Controls.Add(Me.lblCodigoCliente)
         Me.Controls.Add(Me.lblFecha)
@@ -255,7 +255,7 @@ Partial Class Form1
         Me.Controls.Add(Me.lblNumeroGuia)
         Me.Name = "Form1"
         Me.Text = "Guias PANPAS"
-        CType(Me.dgvProductos, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.dgvGuiaProductos, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.dgvGuias, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
@@ -267,7 +267,7 @@ Partial Class Form1
     Friend WithEvents lblFecha As Label
     Friend WithEvents lblCodigoCliente As Label
     Friend WithEvents lblNombreCliente As Label
-    Friend WithEvents dgvProductos As DataGridView
+    Friend WithEvents dgvGuiaProductos As DataGridView
     Friend WithEvents txtTotal As TextBox
     Friend WithEvents lblTotalPrecio As Label
     Friend WithEvents btnAgregarProducto As Button

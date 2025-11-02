@@ -109,6 +109,12 @@ Public Class Form2
         End Try
     End Sub
 
+    'Autoactualizar la produccion al momento de realizar cambios
+    Private Sub AutoActualizarProduccion()
+        CargarListadoProduccion()
+        dgvProduccionHechas.Refresh()
+    End Sub
+
     'Texto de empleado al ser elegido
     Private Sub cbIDEmpleado_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cbIDEmpleado.SelectedIndexChanged
         'Evitar que el codigo se ejecute al cargar los datos
@@ -117,9 +123,18 @@ Public Class Form2
         'Si ya existe un empleado seleccionado
         If cbIDEmpleado.SelectedIndex >= 0 AndAlso cbIDEmpleado.SelectedValue IsNot Nothing Then
             lblEmpleadoID.Text = cbIDEmpleado.Text
+            GuardarProduccion()
+            AutoActualizarProduccion()
         Else
             lblEmpleadoID.Text = "Seleccionar el empleado para produccion."
         End If
+    End Sub
+
+    'Autoguardar al cambiar la fecha de produccion
+    Private Sub dtpFechaProduccion_ValueChanged(sender As Object, e As EventArgs) Handles dtpFechaProduccion.ValueChanged
+        If cargarProduccion Then Exit Sub
+        GuardarProduccion()
+        AutoActualizarProduccion()
     End Sub
 
     'Activado de autoguardado en cuanto se realizan cambios en el grid de produccion
@@ -178,7 +193,7 @@ Public Class Form2
             "SELECT p.id_produccion, p.fecha_produccion, e.nombre_empleado, p.total " &
             "FROM produccion AS p " &
             "INNER JOIN empleado AS e ON p.id_empleado = e.id_empleado " &
-            "ORDER BY p.id_produccion DESC"
+            "ORDER BY p.fecha_produccion DESC, p.id_produccion DESC"
 
             Using cmd As New OleDbCommand(sql, conexionDB)
                 Using reader = cmd.ExecuteReader()
@@ -586,6 +601,17 @@ Public Class Form2
 
                                     CalcularTotalProduccion()
                                     GuardarProduccion()
+
+                                    'Tras ingresar el codigo producto, se seleccione cantidad automaticamente
+                                    Me.BeginInvoke(Sub()
+                                                       Try
+                                                           Dim columCantidad As Integer = dgvProduccion.Columns("cantidad").Index
+                                                           dgvProduccion.CurrentCell = dgvProduccion.Rows(e.RowIndex).Cells(columCantidad)
+                                                           dgvProduccion.BeginEdit(True)
+                                                       Catch ex As Exception
+                                                           Debug.WriteLine("Error al seleccionar Cantidad", ex.Message)
+                                                       End Try
+                                                   End Sub)
                                 Else
                                     MsgBox("Código de producto no válido.", MsgBoxStyle.Exclamation)
                                     dgvProduccion.Rows.RemoveAt(e.RowIndex)
