@@ -18,7 +18,6 @@ Public Class Form1
 
     'Carga del formulario para dar formato a la guia
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        Debug.WriteLine(">> Form1_Load")
         cargarGuia = True
 
         'Preparar tabla de guia
@@ -44,9 +43,6 @@ Public Class Form1
 
         'Cargar ultima guia realizada
         CargarUltimaGuia()
-
-        'Fecha del dia de hoy
-        'dtpFecha.Value = Date.Today
 
         'Evitar de que las columnas organicen las filas
         For Each col As DataGridViewColumn In dgvGuiaProductos.Columns
@@ -421,7 +417,6 @@ Public Class Form1
     Private Sub dgvProductos_CellEndEdit(sender As Object, e As DataGridViewCellEventArgs) Handles dgvGuiaProductos.CellEndEdit
 
         If e.ColumnIndex = 0 Then
-
             Dim codigo As String = dgvGuiaProductos.Rows(e.RowIndex).Cells(0).Value?.ToString()
 
             If Not String.IsNullOrEmpty(codigo) Then
@@ -478,18 +473,38 @@ Public Class Form1
             dgvGuiaProductos.Rows(e.RowIndex).Cells(4).Value = String.Format("$ {0:N0}", subtotal)
 
             CalcularTotal()
+
+            'Mover automaticamente a la siguiente fila
+            Me.BeginInvoke(Sub()
+                               Try
+                                   Dim filaSiguiente As Integer = e.RowIndex + 1
+
+                                   'Agregar una fila en caso de no haber una en el grid
+                                   If filaSiguiente >= dgvGuiaProductos.Rows.Count Then
+                                       dgvGuiaProductos.Rows.Add()
+                                   End If
+
+                                   Dim colCodigo As Integer = dgvGuiaProductos.Columns("codigo").Index
+                                   dgvGuiaProductos.CurrentCell = dgvGuiaProductos.Rows(filaSiguiente).Cells(colCodigo)
+                                   dgvGuiaProductos.BeginEdit(True)
+                               Catch ex As Exception
+                                   Debug.WriteLine("Error al mover el foco a la siguiente fila: " & ex.Message)
+                               End Try
+                           End Sub)
         End If
     End Sub
 
     'BOTON PARA NUEVAS GUIAS
     Private Sub btnNuevaGuia_Click(sender As Object, e As EventArgs) Handles btnNuevaGuia.Click
         dgvGuiaProductos.Rows.Clear()
-        txtNumeroGuia.Text = ObtenerSiguienteNumeroGuia().ToString()
         lblNombreCliente.Text = ""
         idGuiaActual = 0
 
         cbCodCliente.SelectedIndex = -1
         lblNombreCliente.Text = ""
+
+
+        txtNumeroGuia.Text = ObtenerSiguienteNumeroGuia().ToString()
 
         'Esto permitira que la guia sea creada con la fecha actual de la PC
         dtpFecha.Value = Date.Today
@@ -588,15 +603,7 @@ Public Class Form1
 
     'Calcular el total de los subtotal
     Public Sub CalcularTotal()
-        Dim total As Integer = 0
-
-        For Each fila As DataGridViewRow In dgvGuiaProductos.Rows
-            If Not fila.IsNewRow Then
-                Dim subtotalTexto As String = fila.Cells(4).Value?.ToString()
-                total += LimpiarMonto(subtotalTexto)
-            End If
-        Next
-
+        Dim total As Integer = ObtenerTotalGuia()
         txtTotal.Text = "$ " & String.Format("{0:N0}", total)
     End Sub
 
@@ -606,27 +613,34 @@ Public Class Form1
 
         For Each fila As DataGridViewRow In dgvGuiaProductos.Rows
             If Not fila.IsNewRow Then
-                Dim subtotalTexto = fila.Cells(4).Value?.ToString().Replace(".", "")
-                total += Val(subtotalTexto)
+                Dim subtotalTexto As String = fila.Cells(4).Value?.ToString()
+                total += LimpiarMonto(subtotalTexto)
             End If
         Next
+
         Return total
     End Function
 
     'GUARDADO DE GUIAS NUEVO
     Public Sub guardarGuia()
-        If cbCodCliente.SelectedValue Is Nothing OrElse dgvGuiaProductos.Rows.Count = 0 Then Exit Sub
-
         Try
+            'conexion a la db
+            If conexionDB.State <> ConnectionState.Closed Then conexionDB.Close()
             conexionDB.Open()
 
-            Dim fecha As Date = dtpFecha.Value
+            CalcularTotal()
             Dim total As Integer = ObtenerTotalGuia()
-            Dim idCliente As Integer = Convert.ToInt32(cbCodCliente.SelectedValue)
+            Dim fecha As Date = dtpFecha.Value
             Dim numeroGuia As Integer = Convert.ToInt32(txtNumeroGuia.Text)
 
-            'En caso de ya existir la guia, actualizar
+            ' Dejar codigo cliente nulo
+            Dim idCliente As Object = If(cbCodCliente.SelectedValue Is Nothing OrElse cbCodCliente.SelectedValue.ToString() = "",
+                                     DBNull.Value,
+                                     cbCodCliente.SelectedValue)
+
+            ' verificar si la guia existe
             If idGuiaActual > 0 Then
+                'Actualizar la guia ya registrada
                 Using cmdUpdate As New OleDbCommand("UPDATE guia SET fecha = ?, total = ?, id_cliente = ?, numero_guia = ? WHERE id_guia = ?", conexionDB)
                     cmdUpdate.Parameters.AddWithValue("?", fecha)
                     cmdUpdate.Parameters.AddWithValue("?", total)
@@ -636,44 +650,39 @@ Public Class Form1
                     cmdUpdate.ExecuteNonQuery()
                 End Using
 
-                'Eliminar Detalles antiguos en caso de cambios en la guia
+                ' eliminar detalles
                 Using cmdDelete As New OleDbCommand("DELETE FROM guia_detalle WHERE id_guia = ?", conexionDB)
                     cmdDelete.Parameters.AddWithValue("?", idGuiaActual)
                     cmdDelete.ExecuteNonQuery()
                 End Using
 
             Else
-                'En caso de no existir, crear nueva guia
-                Using cmdInsertar As New OleDbCommand("INSERT INTO guia (fecha, total, id_cliente, numero_guia) VALUES (?,?,?,?)", conexionDB)
-                    cmdInsertar.Parameters.AddWithValue("?", fecha)
-                    cmdInsertar.Parameters.AddWithValue("?", total)
-                    cmdInsertar.Parameters.AddWithValue("?", idCliente)
-                    cmdInsertar.Parameters.AddWithValue("?", numeroGuia)
-                    cmdInsertar.ExecuteNonQuery()
+                'crear la nueva guia
+                Using cmdInsert As New OleDbCommand("INSERT INTO guia (fecha, total, id_cliente, numero_guia) VALUES (?,?,?,?)", conexionDB)
+                    cmdInsert.Parameters.AddWithValue("?", fecha)
+                    cmdInsert.Parameters.AddWithValue("?", total)
+                    cmdInsert.Parameters.AddWithValue("?", idCliente)
+                    cmdInsert.Parameters.AddWithValue("?", numeroGuia)
+                    cmdInsert.ExecuteNonQuery()
 
-                    'Obtencion de la ID de manera automatica
+                    ' conseguir la ID de la nueva guia
                     Using cmdID As New OleDbCommand("SELECT @@IDENTITY", conexionDB)
                         idGuiaActual = Convert.ToInt32(cmdID.ExecuteScalar())
                     End Using
                 End Using
             End If
 
-            'Insercion de nuevos detalles
+            ' insertar los detalles de la guia
             For Each fila As DataGridViewRow In dgvGuiaProductos.Rows
-
                 If fila.IsNewRow Then Continue For
-
-                If fila.Cells("codigo").Value Is Nothing OrElse
-                   fila.Cells("nombre").Value Is Nothing OrElse
-                   fila.Cells("cantidad").Value Is Nothing OrElse
-                   fila.Cells("precio").Value Is Nothing OrElse
-                   fila.Cells("subtotal").Value Is Nothing Then Continue For
 
                 Dim codigo = fila.Cells("codigo").Value?.ToString()
                 Dim nombre = fila.Cells("nombre").Value?.ToString()
-                Dim cantidad = Convert.ToInt32(fila.Cells("cantidad").Value)
+                Dim cantidad = If(IsNumeric(fila.Cells("cantidad").Value), Convert.ToInt32(fila.Cells("cantidad").Value), 0)
                 Dim precioUnitario = LimpiarMonto(fila.Cells("precio").Value)
                 Dim subtotal = LimpiarMonto(fila.Cells("subtotal").Value)
+
+                If String.IsNullOrEmpty(codigo) OrElse String.IsNullOrEmpty(nombre) Then Continue For
 
                 Using cmdDetalle As New OleDbCommand("INSERT INTO guia_detalle (id_guia, codigo_producto, nombre_producto, cantidad, precio_venta_boleta, subtotal) VALUES (?,?,?,?,?,?)", conexionDB)
                     cmdDetalle.Parameters.AddWithValue("?", idGuiaActual)
@@ -686,13 +695,31 @@ Public Class Form1
                 End Using
             Next
 
-            'Actualizacion Automatica de la lista de guias
+            'actualizar lista lateral de las guias
             AutoActualizarGuias()
 
         Catch ex As Exception
-            MsgBox("Error al guardar/actualizar Guia: ", ex.Message, MsgBoxStyle.Critical)
+            MsgBox("Error al guardar o actualizar la guía: " & ex.Message, MsgBoxStyle.Critical)
         Finally
             If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
+        End Try
+    End Sub
+
+    'Carga de la guia por su numero
+    Private Sub CargarGuiaNumero(numGuia As Integer)
+        Try
+            AbrirConexion()
+            Using cmd As New OleDbCommand("SELECT id_guia FROM guia WHERE numero_guia = ?", conexionDB)
+                cmd.Parameters.AddWithValue("?", numGuia)
+                Dim id As Object = cmd.ExecuteScalar()
+                If id IsNot Nothing AndAlso id IsNot DBNull.Value Then
+                    CargarGuiaID(Convert.ToInt32(id))
+                End If
+            End Using
+        Catch ex As Exception
+            MsgBox("Error al cargar la guía existente: " & ex.Message)
+        Finally
+            CerrarConexion()
         End Try
     End Sub
 

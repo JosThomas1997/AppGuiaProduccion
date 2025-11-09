@@ -30,3 +30,4 @@ D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDesp
 D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDespacho.exe
 D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDespacho.xml
 D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDespacho.pdb
+D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDespacho.FormInicio.resources

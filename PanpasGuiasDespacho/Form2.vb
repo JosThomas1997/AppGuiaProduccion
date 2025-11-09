@@ -15,6 +15,7 @@ Public Class Form2
 
     'Inicios del Form2
     Private Sub Form2_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
         Debug.WriteLine(">> Form2_Load")
         cargarProduccion = True
 
@@ -117,16 +118,33 @@ Public Class Form2
 
     'Texto de empleado al ser elegido
     Private Sub cbIDEmpleado_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cbIDEmpleado.SelectedIndexChanged
-        'Evitar que el codigo se ejecute al cargar los datos
-        If cargarProduccion Then Exit Sub
+        ' Evitar que se ejecute durante carga inicial
+        If cargarProduccion OrElse idProduccionActual <= 0 Then Exit Sub
 
-        'Si ya existe un empleado seleccionado
+        ' Si hay selección válida
         If cbIDEmpleado.SelectedIndex >= 0 AndAlso cbIDEmpleado.SelectedValue IsNot Nothing Then
             lblEmpleadoID.Text = cbIDEmpleado.Text
-            GuardarProduccion()
-            AutoActualizarProduccion()
+
+            Try
+                AbrirConexion()
+
+                ' Actualizar el id_empleado en la producción actual
+                Using cmdUpdate As New OleDbCommand("UPDATE produccion SET id_empleado = ? WHERE id_produccion = ?", conexionDB)
+                    cmdUpdate.Parameters.AddWithValue("?", Convert.ToInt32(cbIDEmpleado.SelectedValue))
+                    cmdUpdate.Parameters.AddWithValue("?", idProduccionActual)
+                    cmdUpdate.ExecuteNonQuery()
+                End Using
+
+                ' Refrescar lista lateral
+                CargarListadoProduccion()
+
+            Catch ex As Exception
+                MsgBox("Error al actualizar empleado: " & ex.Message, MsgBoxStyle.Critical)
+            Finally
+                CerrarConexion()
+            End Try
         Else
-            lblEmpleadoID.Text = "Seleccionar el empleado para produccion."
+            lblEmpleadoID.Text = "Sin empleado"
         End If
     End Sub
 
@@ -170,6 +188,34 @@ Public Class Form2
                             MsgBox("Error al guardar comentario: " & ex.Message, MsgBoxStyle.Critical)
                         End Try
                     End Sub)
+    End Sub
+
+    '=== Tabulacion de Codigo a Cantidad en el DataGrid
+    Private Sub dgvProduccion_KeyDown(sender As Object, e As KeyEventArgs) Handles dgvProduccion.KeyDown
+        If e.KeyCode = Keys.Enter Then
+            e.SuppressKeyPress = True ' Evita el beep y el salto de fila automático
+
+            Dim filaActual As Integer = dgvProduccion.CurrentCell.RowIndex
+            Dim colActual As Integer = dgvProduccion.CurrentCell.ColumnIndex
+
+            ' Si estamos en la columna "Código" (columna 0)
+            If colActual = 0 Then
+                ' Mover a la columna de "Cantidad" (columna 2)
+                dgvProduccion.CurrentCell = dgvProduccion.Rows(filaActual).Cells(2)
+                dgvProduccion.BeginEdit(True)
+
+                ' Si estamos en la columna "Cantidad" (columna 2)
+            ElseIf colActual = 2 Then
+                ' Si no es la última fila, mover a la siguiente fila, columna 0 (Código)
+                If filaActual = dgvProduccion.Rows.Count - 1 Then
+                    ' Crear nueva fila automáticamente si estamos en la última
+                    dgvProduccion.Rows.Add()
+                End If
+
+                dgvProduccion.CurrentCell = dgvProduccion.Rows(filaActual + 1).Cells(0)
+                dgvProduccion.BeginEdit(True)
+            End If
+        End If
     End Sub
 
     '=== CONFIGURAR COLUMNAS DEL LISTADO LATERAL ===
@@ -508,25 +554,40 @@ Public Class Form2
     End Sub
 
     Private Sub btnNuevaProduccion_Click(sender As Object, e As EventArgs) Handles btnNuevaProduccion.Click
-        'Limpieza de las columnas del grid
-        dgvProduccion.Rows.Clear()
+        Try
+            AbrirConexion()
 
-        'Limpiar la caja de comenarios
-        rtxtComentario.Clear()
-        txtTotalProduccion.Text = "0 $"
-        idProduccionActual = 0
+            ' Insertar nueva producción solo con fecha, total 0 y sin empleado
+            Using cmdInsertar As New OleDbCommand("INSERT INTO produccion (fecha_produccion, total) VALUES (?, ?)", conexionDB)
+                cmdInsertar.Parameters.AddWithValue("?", Date.Today)
+                cmdInsertar.Parameters.AddWithValue("?", 0)
+                cmdInsertar.ExecuteNonQuery()
+            End Using
 
-        'Fecha actual
-        dtpFechaProduccion.Value = Date.Today
+            ' Obtener el ID recién creado
+            Using cmdID As New OleDbCommand("SELECT @@IDENTITY", conexionDB)
+                idProduccionActual = Convert.ToInt32(cmdID.ExecuteScalar())
+            End Using
 
-        cbIDEmpleado.SelectedIndex = -1
-        lblEmpleadoID.Text = ""
+            ' Resetear interfaz
+            dgvProduccion.Rows.Clear()
+            rtxtComentario.Clear()
+            txtTotalProduccion.Text = "$ 0"
+            cbIDEmpleado.SelectedIndex = -1
+            lblEmpleadoID.Text = "Sin empleado"
+            dtpFechaProduccion.Value = Date.Today
 
-        'Guardar nueva producción vacía
-        GuardarProduccion()
+            ' Permitir edición en el grid
+            dgvProduccion.ReadOnly = False
 
-        'Actualizar listado lateral
-        CargarListadoProduccion()
+            ' Actualizar lista lateral
+            CargarListadoProduccion()
+
+        Catch ex As Exception
+            MsgBox("Error al crear nueva producción: " & ex.Message, MsgBoxStyle.Critical)
+        Finally
+            CerrarConexion()
+        End Try
     End Sub
 
     Private Sub btnSiguienteProduccion_Click(sender As Object, e As EventArgs) Handles btnSiguienteProduccion.Click
@@ -650,6 +711,24 @@ Public Class Form2
 
                 CalcularTotalProduccion()
                 GuardarProduccion()
+
+                'Mover automaticamente a la siguiente fila
+                Me.BeginInvoke(Sub()
+                                   Try
+                                       Dim siguienteFila As Integer = e.RowIndex + 1
+
+                                       'Agregar fila en caso de no existir
+                                       If siguienteFila >= dgvProduccion.Rows.Count Then
+                                           dgvProduccion.Rows.Add()
+                                       End If
+
+                                       Dim colCodigo As Integer = dgvProduccion.Columns("codigo").Index
+                                       dgvProduccion.CurrentCell = dgvProduccion.Rows(siguienteFila).Cells(colCodigo)
+                                       dgvProduccion.BeginEdit(True)
+                                   Catch ex As Exception
+                                       Debug.WriteLine("Error al mover el foco a la siguiente fila: " & ex.Message)
+                                   End Try
+                               End Sub)
 
             Catch ex As Exception
                 MsgBox("Error al recalcular subtotal: " & ex.Message, MsgBoxStyle.Critical)
