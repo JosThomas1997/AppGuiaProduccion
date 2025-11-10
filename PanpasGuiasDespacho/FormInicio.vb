@@ -26,7 +26,22 @@ Public Class FormInicio
     End Sub
 
     Private Sub btnInformes_Click(sender As Object, e As EventArgs) Handles btnInformes.Click
-        '
+        Dim formAbierto As Boolean = False
+
+        For Each form As Form In Application.OpenForms
+            If TypeOf form Is FormInformes Then
+                formAbierto = True
+                form.BringToFront()
+                Exit For
+            End If
+        Next
+
+        If formAbierto Then
+            MessageBox.Show("Informes se encuentra en ejecucion.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+        Else
+            Dim form As New FormInformes
+            form.Show()
+        End If
     End Sub
 
 End Class
