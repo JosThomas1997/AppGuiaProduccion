@@ -40,7 +40,7 @@ Public Class FormInicio
             MessageBox.Show("Informes se encuentra en ejecucion.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
         Else
             Dim form As New FormInformes
-            form.Show()
+        form.Show()
         End If
     End Sub
 

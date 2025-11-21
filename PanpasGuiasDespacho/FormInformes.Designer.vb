@@ -31,7 +31,6 @@ Partial Class FormInformes
         Me.dtpHasta = New System.Windows.Forms.DateTimePicker()
         Me.dtpDesde = New System.Windows.Forms.DateTimePicker()
         Me.rdbEntreFechas = New System.Windows.Forms.RadioButton()
-        Me.btnBuscar = New System.Windows.Forms.Button()
         Me.btnLimpiar = New System.Windows.Forms.Button()
         Me.grpFechasMesAnio = New System.Windows.Forms.GroupBox()
         Me.Label4 = New System.Windows.Forms.Label()
@@ -54,6 +53,8 @@ Partial Class FormInformes
         '
         'dgvResultados
         '
+        Me.dgvResultados.AllowUserToAddRows = False
+        Me.dgvResultados.AllowUserToDeleteRows = False
         Me.dgvResultados.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
@@ -62,6 +63,8 @@ Partial Class FormInformes
         Me.dgvResultados.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.dgvResultados.Location = New System.Drawing.Point(12, 306)
         Me.dgvResultados.Name = "dgvResultados"
+        Me.dgvResultados.ReadOnly = True
+        Me.dgvResultados.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect
         Me.dgvResultados.Size = New System.Drawing.Size(912, 260)
         Me.dgvResultados.TabIndex = 0
         '
@@ -132,22 +135,13 @@ Partial Class FormInformes
         Me.rdbEntreFechas.Text = "Entre Fechas"
         Me.rdbEntreFechas.UseVisualStyleBackColor = True
         '
-        'btnBuscar
-        '
-        Me.btnBuscar.Location = New System.Drawing.Point(299, 162)
-        Me.btnBuscar.Name = "btnBuscar"
-        Me.btnBuscar.Size = New System.Drawing.Size(75, 23)
-        Me.btnBuscar.TabIndex = 3
-        Me.btnBuscar.Text = "Buscar"
-        Me.btnBuscar.UseVisualStyleBackColor = True
-        '
         'btnLimpiar
         '
-        Me.btnLimpiar.Location = New System.Drawing.Point(551, 162)
+        Me.btnLimpiar.Location = New System.Drawing.Point(402, 161)
         Me.btnLimpiar.Name = "btnLimpiar"
-        Me.btnLimpiar.Size = New System.Drawing.Size(75, 23)
+        Me.btnLimpiar.Size = New System.Drawing.Size(118, 23)
         Me.btnLimpiar.TabIndex = 4
-        Me.btnLimpiar.Text = "Limpiar"
+        Me.btnLimpiar.Text = "Limpiar Fechas"
         Me.btnLimpiar.UseVisualStyleBackColor = True
         '
         'grpFechasMesAnio
@@ -285,7 +279,6 @@ Partial Class FormInformes
         Me.Controls.Add(Me.btnVentasLocales)
         Me.Controls.Add(Me.grpFechasMesAnio)
         Me.Controls.Add(Me.btnLimpiar)
-        Me.Controls.Add(Me.btnBuscar)
         Me.Controls.Add(Me.grpFechasDesdeHasta)
         Me.Controls.Add(Me.PictureBox1)
         Me.Controls.Add(Me.dgvResultados)
@@ -310,7 +303,6 @@ Partial Class FormInformes
     Friend WithEvents dtpHasta As DateTimePicker
     Friend WithEvents dtpDesde As DateTimePicker
     Friend WithEvents rdbEntreFechas As RadioButton
-    Friend WithEvents btnBuscar As Button
     Friend WithEvents btnLimpiar As Button
     Friend WithEvents grpFechasMesAnio As GroupBox
     Friend WithEvents rdbPorMes As RadioButton

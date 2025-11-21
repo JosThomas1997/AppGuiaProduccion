@@ -86,7 +86,7 @@ Public Class FormProductos
             Case "Galletas"
                 MostrarCodigoProducto({"1304", "1305", "1310", "1311", "1313"})
             Case "Empanadas"
-                MostrarCodigoProducto({"1410", "1411", "1414"})
+                MostrarCodigoProducto({"1410", "1411", "1414", "9012"})
             Case "Masas Dulces"
                 MostrarCodigoProducto({"1502", "1503", "1504", "1505"})
             Case "Kuchen"
@@ -98,7 +98,7 @@ Public Class FormProductos
             Case "Brazos de Reina"
                 MostrarCodigoProducto({"1211"})
             Case "Queques y Muffins"
-                MostrarCodigoProducto({"1307", "1316"})
+                MostrarCodigoProducto({"1307", "1316", "9013"})
             Case "Pasteles"
                 MostrarCodigoProducto({"8000", "8006", "8001", "8007", "8017", "8009", "8003", "8010", "8004", "8011", "8005", "8013"})
             Case "Pan de Completo"

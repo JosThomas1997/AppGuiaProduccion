@@ -32,3 +32,4 @@ D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDesp
 D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDespacho.pdb
 D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDespacho.FormInicio.resources
 D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDespacho.FormInformes.resources
+D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDespacho.FormLocal.resources

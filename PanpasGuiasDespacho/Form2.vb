@@ -355,85 +355,83 @@ Public Class Form2
     End Sub
 
     Public Sub GuardarProduccion()
-        'Si no hay empleado seleccionado o el grid está vacío, no hace nada
-        If cbIDEmpleado.SelectedValue Is Nothing OrElse dgvProduccion.Rows.Count = 0 Then Exit Sub
+        ' Si no existe producción creada aún, no guardar
+        If idProduccionActual <= 0 Then Exit Sub
 
         Try
             AbrirConexion()
 
             Dim fecha As Date = dtpFechaProduccion.Value
-            Dim idEmpleado As Integer = Convert.ToInt32(cbIDEmpleado.SelectedValue)
+
+            ' Empleado puede ser NULL
+            Dim idEmpleado As Object = DBNull.Value
+            If cbIDEmpleado.SelectedValue IsNot Nothing AndAlso IsNumeric(cbIDEmpleado.SelectedValue) Then
+                idEmpleado = Convert.ToInt32(cbIDEmpleado.SelectedValue)
+            End If
+
             Dim comentario As String = rtxtComentario.Text
             Dim total As Integer = ObtenerTotalProduccion()
 
-            'Actualizar la produccion existente o crear una nueva
+            '=== SI YA EXISTE, ACTUALIZAR ===
             If idProduccionActual > 0 Then
-                'Actualizar producción existente
-                Using cmdActualizar As New OleDbCommand("UPDATE produccion SET fecha_produccion = ?, id_empleado = ?, comentario = ?, total = ? WHERE id_produccion = ?", conexionDB)
+                Using cmdActualizar As New OleDbCommand(
+                "UPDATE produccion SET fecha_produccion = ?, id_empleado = ?, comentario = ?, total = ? 
+                 WHERE id_produccion = ?", conexionDB)
+
                     cmdActualizar.Parameters.AddWithValue("?", fecha)
                     cmdActualizar.Parameters.AddWithValue("?", idEmpleado)
                     cmdActualizar.Parameters.AddWithValue("?", comentario)
                     cmdActualizar.Parameters.AddWithValue("?", total)
                     cmdActualizar.Parameters.AddWithValue("?", idProduccionActual)
+
                     cmdActualizar.ExecuteNonQuery()
                 End Using
 
-                'Eliminar detalles antiguos
+                'Eliminar detalles anteriores
                 Using cmdBorrar As New OleDbCommand("DELETE FROM produccion_detalle WHERE id_produccion = ?", conexionDB)
                     cmdBorrar.Parameters.AddWithValue("?", idProduccionActual)
                     cmdBorrar.ExecuteNonQuery()
                 End Using
-            Else
-                'Crear nueva producción
-                Using cmdInsertar As New OleDbCommand("INSERT INTO produccion (fecha_produccion, id_empleado, comentario, total) VALUES (?,?,?,?)", conexionDB)
-                    cmdInsertar.Parameters.AddWithValue("", fecha)
-                    cmdInsertar.Parameters.AddWithValue("", idEmpleado)
-                    cmdInsertar.Parameters.AddWithValue("", comentario)
-                    cmdInsertar.Parameters.AddWithValue("", total)
-                    cmdInsertar.ExecuteNonQuery()
 
-                    Using cmdID As New OleDbCommand("SELECT @@IDENTITY", conexionDB)
-                        idProduccionActual = Convert.ToInt32(cmdID.ExecuteScalar())
-                    End Using
-                End Using
             End If
 
-            'Insertar los detalles de producción
+            '=== INSERTAR DETALLES ===
             For Each fila As DataGridViewRow In dgvProduccion.Rows
                 If fila.IsNewRow Then Continue For
 
                 If fila.Cells("codigo").Value Is Nothing OrElse
-                   fila.Cells("nombre").Value Is Nothing OrElse
-                   fila.Cells("cantidad").Value Is Nothing OrElse
-                   fila.Cells("subtotal").Value Is Nothing Then Continue For
+               fila.Cells("nombre").Value Is Nothing OrElse
+               fila.Cells("cantidad").Value Is Nothing OrElse
+               fila.Cells("subtotal").Value Is Nothing Then Continue For
 
-                Dim codigo = fila.Cells("codigo").Value.ToString()
-                Dim nombre = fila.Cells("nombre").Value.ToString()
-                Dim cantidad = Convert.ToInt32(fila.Cells("cantidad").Value)
-                Dim subtotal = LimpiarMonto(fila.Cells("subtotal").Value)
+                Dim codigo As String = fila.Cells("codigo").Value.ToString()
+                Dim nombre As String = fila.Cells("nombre").Value.ToString()
+                Dim cantidad As Integer = Convert.ToInt32(fila.Cells("cantidad").Value)
+                Dim subtotal As Integer = LimpiarMonto(fila.Cells("subtotal").Value)
 
-                'Precio unitario para evitar el cambio de precios en guias antiguas
+                ' Precio unitario fijo para que producciones antiguas no se alteren
                 Dim precioUnitario As Integer = 0
-                If cantidad > 0 Then
-                    precioUnitario = subtotal \ cantidad
-                End If
+                If cantidad > 0 Then precioUnitario = subtotal \ cantidad
 
-                'Insertar detalles de produccion en la tabla detalle_produccion
-                Using cmdDetalle As New OleDbCommand("INSERT INTO produccion_detalle (id_produccion, codigo_producto, nombre_producto, cantidad, precio_unitario, subtotal) VALUES (?,?,?,?,?,?)", conexionDB)
+                Using cmdDetalle As New OleDbCommand(
+                "INSERT INTO produccion_detalle
+                (id_produccion, codigo_producto, nombre_producto, cantidad, precio_unitario, subtotal)
+                 VALUES (?,?,?,?,?,?)", conexionDB)
+
                     cmdDetalle.Parameters.AddWithValue("?", idProduccionActual)
                     cmdDetalle.Parameters.AddWithValue("?", codigo)
                     cmdDetalle.Parameters.AddWithValue("?", nombre)
                     cmdDetalle.Parameters.AddWithValue("?", cantidad)
                     cmdDetalle.Parameters.AddWithValue("?", precioUnitario)
                     cmdDetalle.Parameters.AddWithValue("?", subtotal)
+
                     cmdDetalle.ExecuteNonQuery()
                 End Using
             Next
 
-            'Actualizar listado lateral automáticamente
+            'Actualizar lista lateral
             CargarListadoProduccion()
 
-            'Captura de errores y cierre de conexion
         Catch ex As Exception
             MsgBox("Error al guardar la producción: " & ex.Message, MsgBoxStyle.Critical)
         Finally
@@ -445,12 +443,14 @@ Public Class Form2
     Private Function ObtenerTotalProduccion() As Integer
         'El valor es 0 si no hay filas
         Dim total As Integer = 0
+
         For Each fila As DataGridViewRow In dgvProduccion.Rows
             If Not fila.IsNewRow Then
-                Dim subtotalTexto = fila.Cells("subtotal").Value?.ToString().Replace(".", "")
+                Dim subtotalTexto = LimpiarMonto(fila.Cells("subtotal").Value)
                 total += Val(subtotalTexto)
             End If
         Next
+
         Return total
     End Function
 
@@ -460,11 +460,23 @@ Public Class Form2
         txtTotalProduccion.Text = String.Format("{0:N0}", total) & " $"
     End Sub
 
-    'Limpiar los símbolos en montos
+    'Limpia los montos de los totales
     Private Function LimpiarMonto(monto As Object) As Integer
-        If monto Is Nothing OrElse String.IsNullOrWhiteSpace(monto.ToString()) Then Return 0
-        Return Convert.ToInt32(monto.ToString().Replace(" $", "").Replace(".", ""))
+        If monto Is Nothing Then Return 0
+
+        Dim txt As String = monto.ToString()
+
+        ' Eliminar cualquier formato conocido
+        txt = txt.Replace("$", "")
+        txt = txt.Replace(" ", "")
+        txt = txt.Replace(".", "")
+        txt = txt.Trim()
+
+        Dim val As Integer = 0
+        Integer.TryParse(txt, val)
+        Return val
     End Function
+
 
     Private Sub CargarProduccionID(idProduccion As Integer)
         Debug.WriteLine(">> CargarProduccionID con ID = " & idProduccion)
@@ -488,7 +500,7 @@ Public Class Form2
                         Dim idEmpleado As Integer? = Nothing
                         If Not IsDBNull(reader("id_empleado")) Then idEmpleado = Convert.ToInt32(reader("id_empleado"))
 
-                        If idEmpleado.HasValue Then
+                        If idEmpleado.HasValue AndAlso idEmpleado.Value > 0 Then
                             Dim empleadoDesignado As Boolean = False
 
                             'Designar directamente si el combobox posee los datos cargados
@@ -539,7 +551,7 @@ Public Class Form2
                         Dim subtotal As Integer = If(IsDBNull(reader("subtotal")), 0, Convert.ToInt32(reader("subtotal")))
 
                         'Agregado de la fila en el grid
-                        dgvProduccion.Rows.Add(codigo, nombre, cantidad, String.Format("{0:N0}", subtotal) & " $")
+                        dgvProduccion.Rows.Add(codigo, nombre, cantidad, "$ " & String.Format("{0:N0}", subtotal))
                     End While
                 End Using
             End Using
@@ -641,7 +653,7 @@ Public Class Form2
             If Not String.IsNullOrEmpty(codigo) Then
 
                 Try
-                    ' 🔹 Usar una conexión local y cerrarla manualmente (para evitar RCW)
+                    'Usar una conexión local y cerrarla manualmente (para evitar RCW)
                     Using conexionLocal As New OleDbConnection(conexionDB.ConnectionString)
                         conexionLocal.Open()
 
@@ -652,7 +664,7 @@ Public Class Form2
                                 If reader.Read() Then
                                     Dim nombre As String = reader("nombre").ToString()
                                     Dim precioBoleta As Integer = Convert.ToInt32(reader("precio_venta_boleta"))
-                                    Dim precioFormato As String = String.Format("{0:N0}", precioBoleta) & " $"
+                                    Dim precioFormato As String = "$ " & String.Format("{0:N0}", precioBoleta)
 
                                     With dgvProduccion.Rows(e.RowIndex)
                                         .Cells(1).Value = nombre
@@ -686,52 +698,39 @@ Public Class Form2
                 End Try
             End If
 
-            ' Si editamos la columna de cantidad
+            'Si editamos la columna de cantidad
         ElseIf e.ColumnIndex = 2 Then
             Try
                 Dim fila = dgvProduccion.Rows(e.RowIndex)
-                Dim cantidadTexto As String = fila.Cells(2).Value?.ToString()
+
                 Dim cantidad As Integer = 1
-                Integer.TryParse(cantidadTexto, cantidad)
+                Integer.TryParse(fila.Cells(2).Value?.ToString(), cantidad)
                 If cantidad <= 0 Then cantidad = 1
 
-                ' Obtener precio desde el subtotal anterior (dividido entre cantidad anterior)
-                Dim subtotalTexto As String = fila.Cells(3).Value?.ToString().Replace(" $", "").Replace(".", "")
-                Dim subtotalAnterior As Integer = 0
-                Integer.TryParse(subtotalTexto, subtotalAnterior)
+                Dim subtotalAnterior As Integer = LimpiarMonto(fila.Cells(3).Value)
 
+                ' El precio unitario es el subtotal anterior por 1 unidad
                 Dim precioUnitario As Integer = subtotalAnterior
-                If subtotalAnterior > 0 AndAlso cantidad > 0 Then
-                    precioUnitario = subtotalAnterior \ 1 ' Si el valor anterior era 1 unidad
-                End If
 
-                ' Calcular nuevo subtotal
                 Dim nuevoSubtotal As Integer = cantidad * precioUnitario
-                fila.Cells(3).Value = String.Format("{0:N0}", nuevoSubtotal) & " $"
+                fila.Cells(3).Value = "$ " & String.Format("{0:N0}", nuevoSubtotal)
 
                 CalcularTotalProduccion()
                 GuardarProduccion()
 
-                'Mover automaticamente a la siguiente fila
+                'Mover foco
                 Me.BeginInvoke(Sub()
-                                   Try
-                                       Dim siguienteFila As Integer = e.RowIndex + 1
-
-                                       'Agregar fila en caso de no existir
-                                       If siguienteFila >= dgvProduccion.Rows.Count Then
-                                           dgvProduccion.Rows.Add()
-                                       End If
-
-                                       Dim colCodigo As Integer = dgvProduccion.Columns("codigo").Index
-                                       dgvProduccion.CurrentCell = dgvProduccion.Rows(siguienteFila).Cells(colCodigo)
-                                       dgvProduccion.BeginEdit(True)
-                                   Catch ex As Exception
-                                       Debug.WriteLine("Error al mover el foco a la siguiente fila: " & ex.Message)
-                                   End Try
+                                   Dim siguienteFila As Integer = e.RowIndex + 1
+                                   If siguienteFila >= dgvProduccion.Rows.Count Then
+                                       dgvProduccion.Rows.Add()
+                                   End If
+                                   dgvProduccion.CurrentCell =
+                               dgvProduccion.Rows(siguienteFila).Cells("codigo")
+                                   dgvProduccion.BeginEdit(True)
                                End Sub)
 
             Catch ex As Exception
-                MsgBox("Error al recalcular subtotal: " & ex.Message, MsgBoxStyle.Critical)
+                MsgBox("Error al recalcular el subototal de los productos: " & ex.Message)
             End Try
         End If
     End Sub
