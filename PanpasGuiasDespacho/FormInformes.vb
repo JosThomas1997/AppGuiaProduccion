@@ -128,54 +128,89 @@ Public Class FormInformes
     End Sub
 
     Private Sub btnResumenProduccion_Click(sender As Object, e As EventArgs) Handles btnResumenProduccion.Click
+        Dim selector As New FormResumenProduccion()
+
+        If selector.ShowDialog() = DialogResult.OK Then
+            Dim IDEmpleado As Integer = selector.EmpleadoID
+
+            If IDEmpleado > 0 Then
+                CargarProduccionPorEmpleado(IDEmpleado)
+            End If
+        End If
+
+    End Sub
+
+    Private Sub CargarProduccionPorEmpleado(idEmpleado As Integer)
         Try
-            'Obtener el rango de las producciones con las fechas
+            AbrirConexion()
+
             Dim rango = ObtenerRangoFechas()
             Dim desde As Date = rango.Item1
             Dim hasta As Date = rango.Item2
 
-            Dim consultaSQL As String = "SELECT p.id_produccion, p.fecha_produccion, e.nombre_empleado, p.comentario, p.total " &
-            "FROM produccion AS p " &
-            "LEFT JOIN empleado AS e ON p.id_empleado = e.id_empleado " &
-            "WHERE p.fecha_produccion BETWEEN @desde AND @hasta " &
-            "ORDER BY p.fecha_produccion ASC"
+            Dim consultaSQL As String =
+        "SELECT 
+            p.fecha_produccion,
+            d.codigo_producto,
+            d.nombre_producto,
+            d.cantidad,
+            d.precio_unitario,
+            d.subtotal
+         FROM produccion AS p
+         INNER JOIN produccion_detalle AS d 
+                ON p.id_produccion = d.id_produccion
+         WHERE p.id_empleado = ?
+           AND p.fecha_produccion BETWEEN ? AND ?
+         ORDER BY p.fecha_produccion DESC"
 
-            AbrirConexion()
+            Dim tabla As New DataTable()
 
-            Using cmd As New OleDb.OleDbCommand(consultaSQL, conexionDB)
-                cmd.Parameters.AddWithValue("@Desde", desde)
-                cmd.Parameters.AddWithValue("@Hasta", hasta)
-
-                Dim adaptar As New OleDb.OleDbDataAdapter(cmd)
-                Dim tabla As New DataTable()
-                adaptar.Fill(tabla)
-
-                dgvResultados.DataSource = tabla
-                'Entrega de formato en las celdas de titulos
-                FormatoGuiayProduccion()
-
-                If dgvResultados.Columns.Contains("total") Then
-                    dgvResultados.Columns("total").DefaultCellStyle.Format = "C0"
-                    dgvResultados.Columns("total").DefaultCellStyle.FormatProvider = Globalization.CultureInfo.CreateSpecificCulture("es-CL")
-                End If
-
-                Dim totalGeneral As Decimal = 0
-                For Each fila As DataGridViewRow In dgvResultados.Rows
-                    If Not IsDBNull(fila.Cells("total").Value) AndAlso IsNumeric(fila.Cells("total").Value) Then
-                        totalGeneral += Convert.ToDecimal(fila.Cells("total").Value)
-                    End If
-                Next
-
-                txtTotalInforme.Text = totalGeneral.ToString("C0", Globalization.CultureInfo.CreateSpecificCulture("es-CL"))
-
-                MessageBox.Show($"Se encontraron {tabla.Rows.Count} producciones entre {desde:d} y {hasta:d}.",
-                                "Resumen de Produccion", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Using cmd As New OleDbCommand(consultaSQL, conexionDB)
+                cmd.Parameters.AddWithValue("?", idEmpleado)
+                cmd.Parameters.AddWithValue("?", desde)
+                cmd.Parameters.AddWithValue("?", hasta)
+                tabla.Load(cmd.ExecuteReader())
             End Using
 
-            CerrarConexion()
+            dgvResultados.DataSource = tabla
+            FormatoGuiayProduccion()
+
+            ' FORMATEO DE COLUMNAS
+            If dgvResultados.Columns.Contains("precio_unitario") Then
+                dgvResultados.Columns("precio_unitario").DefaultCellStyle.Format = "C0"
+                dgvResultados.Columns("precio_unitario").DefaultCellStyle.FormatProvider =
+                Globalization.CultureInfo.CreateSpecificCulture("es-CL")
+            End If
+
+            If dgvResultados.Columns.Contains("subtotal") Then
+                dgvResultados.Columns("subtotal").DefaultCellStyle.Format = "C0"
+                dgvResultados.Columns("subtotal").DefaultCellStyle.FormatProvider =
+                Globalization.CultureInfo.CreateSpecificCulture("es-CL")
+            End If
+
+            ' Calcular total general
+            Dim totalGeneral As Decimal = 0
+            For Each fila As DataGridViewRow In dgvResultados.Rows
+                If Not IsDBNull(fila.Cells("subtotal").Value) Then
+                    totalGeneral += Convert.ToDecimal(fila.Cells("subtotal").Value)
+                End If
+            Next
+
+            txtTotalInforme.Text =
+            totalGeneral.ToString("C0", Globalization.CultureInfo.CreateSpecificCulture("es-CL"))
+
+            ' Mensaje de aviso
+            MessageBox.Show(
+            $"Se encontraron {tabla.Rows.Count} registros de producción del empleado seleccionado entre {desde:d} y {hasta:d}.",
+            "Producción por Empleado",
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Information
+        )
 
         Catch ex As Exception
-            MessageBox.Show("Error al generar el resumen de produccion: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            MessageBox.Show("Error al cargar producción por empleado: " & ex.Message)
+        Finally
+            CerrarConexion()
         End Try
     End Sub
 
@@ -248,6 +283,62 @@ Public Class FormInformes
         End Try
     End Sub
 
+    'Venta por productos de guias
+    Private Sub BuscarProductoEnGuias(codigoProd As String)
+        Try
+            AbrirConexion()
+
+            Dim fechas = ObtenerRangoFechas()
+            Dim desde As Date = fechas.Item1
+            Dim hasta As Date = fechas.Item2
+
+            Dim sql As String =
+            "SELECT g.numero_guia AS NumeroGuia, g.fecha AS Fecha, " &
+            "c.nombre_fantasia AS Cliente, d.nombre_producto AS Producto, " &
+            "d.cantidad AS Cantidad, d.subtotal AS Subtotal " &
+            "FROM (guia AS g " &
+            "INNER JOIN guia_detalle AS d ON g.id_guia = d.id_guia) " &
+            "LEFT JOIN cliente AS c ON g.id_cliente = c.id_cliente " &
+            "WHERE d.codigo_producto = ? AND g.fecha BETWEEN ? AND ? " &
+            "ORDER BY g.fecha DESC"
+
+
+            Using cmd As New OleDbCommand(sql, conexionDB)
+                cmd.Parameters.AddWithValue("?", codigoProd)
+                cmd.Parameters.AddWithValue("?", desde)
+                cmd.Parameters.AddWithValue("?", hasta)
+
+                Dim tabla As New DataTable()
+                tabla.Load(cmd.ExecuteReader())
+
+                dgvResultados.DataSource = tabla
+
+                'Formato del grid
+                If dgvResultados.Columns.Contains("Subtotal") Then
+                    dgvResultados.Columns("Subtotal").DefaultCellStyle.Format = "C0"
+                    dgvResultados.Columns("Subtotal").DefaultCellStyle.FormatProvider =
+                    Globalization.CultureInfo.CreateSpecificCulture("es-CL")
+                End If
+
+                'Sumatoria
+                Dim total As Decimal = 0
+                For Each row As DataGridViewRow In dgvResultados.Rows
+                    If Not IsDBNull(row.Cells("Subtotal").Value) Then
+                        total += Convert.ToDecimal(row.Cells("Subtotal").Value)
+                    End If
+                Next
+
+                txtTotalInforme.Text = total.ToString("C0",
+                Globalization.CultureInfo.CreateSpecificCulture("es-CL"))
+            End Using
+
+        Catch ex As Exception
+            MessageBox.Show("Error al generar informe: " & ex.Message)
+        Finally
+            CerrarConexion()
+        End Try
+    End Sub
+
     'Formato de celdas titulares para guias y produccion
     Private Sub FormatoGuiayProduccion()
         'Formato Guias
@@ -264,12 +355,23 @@ Public Class FormInformes
             dgvResultados.Columns("Fecha").DefaultCellStyle.Format = "dd/MM/yyyy"
         End If
 
+        If dgvResultados.Columns.Contains("cantidad") Then
+            dgvResultados.Columns("cantidad").HeaderText = "Cantidad"
+        End If
+
         If dgvResultados.Columns.Contains("Cliente") Then
             dgvResultados.Columns("Cliente").HeaderText = "Cliente"
         End If
 
         If dgvResultados.Columns.Contains("nombre_fantasia") Then
             dgvResultados.Columns("nombre_fantasia").HeaderText = "Nombre de Fantasia"
+        End If
+
+        If dgvResultados.Columns.Contains("precio_unitario") Then
+            dgvResultados.Columns("precio_unitario").HeaderText = "Precio Unitario"
+            dgvResultados.Columns("precio_unitario").DefaultCellStyle.Format = "C0"
+            dgvResultados.Columns("precio_unitario").DefaultCellStyle.FormatProvider =
+                Globalization.CultureInfo.CreateSpecificCulture("es-CL")
         End If
 
         If dgvResultados.Columns.Contains("Total") Then
@@ -284,9 +386,17 @@ Public Class FormInformes
             dgvResultados.Columns("id_produccion").HeaderText = "ID Producción"
         End If
 
+        If dgvResultados.Columns.Contains("codigo_producto") Then
+            dgvResultados.Columns("codigo_producto").HeaderText = "Codigo de Producto"
+        End If
+
         If dgvResultados.Columns.Contains("fecha_produccion") Then
             dgvResultados.Columns("fecha_produccion").HeaderText = "Fecha"
             dgvResultados.Columns("fecha_produccion").DefaultCellStyle.Format = "dd/MM/yyyy"
+        End If
+
+        If dgvResultados.Columns.Contains("nombre_producto") Then
+            dgvResultados.Columns("nombre_producto").HeaderText = "Nombre de Producto"
         End If
 
         If dgvResultados.Columns.Contains("nombre_empleado") Then
@@ -297,19 +407,19 @@ Public Class FormInformes
             dgvResultados.Columns("comentario").HeaderText = "Comentario"
         End If
 
+        If dgvResultados.Columns.Contains("subtotal") Then
+            dgvResultados.Columns("subtotal").HeaderText = "Sub.Total"
+            dgvResultados.Columns("subtotal").DefaultCellStyle.Format = "C0"
+            dgvResultados.Columns("subtotal").DefaultCellStyle.FormatProvider =
+                Globalization.CultureInfo.CreateSpecificCulture("es-CL")
+        End If
+
         If dgvResultados.Columns.Contains("total") Then
             dgvResultados.Columns("total").HeaderText = "Total"
             dgvResultados.Columns("total").DefaultCellStyle.Format = "C0"
             dgvResultados.Columns("total").DefaultCellStyle.FormatProvider =
                 Globalization.CultureInfo.CreateSpecificCulture("es-CL")
         End If
-    End Sub
-
-    Private Sub btnLimpiar_Click(sender As Object, e As EventArgs) Handles btnLimpiar.Click
-        dtpDesde.Value = Date.Now
-        dtpHasta.Value = Date.Now
-        cmbMes.SelectedIndex = Date.Now.Month - 1
-        cmbAnio.SelectedItem = Date.Now.Year
     End Sub
 
     Private Sub rdbPorMes_CheckedChanged(sender As Object, e As EventArgs) Handles rdbPorMes.CheckedChanged
@@ -326,5 +436,13 @@ Public Class FormInformes
         ActualizarEstadoFiltros()
     End Sub
 
+    Private Sub btnVentasProductos_Click(sender As Object, e As EventArgs) Handles btnVentasProductos.Click
+        Dim f As New FormInformeProducto()
 
+        If f.ShowDialog() = DialogResult.OK Then
+            If f.CodigoSeleccionado <> "" Then
+                BuscarProductoEnGuias(f.CodigoSeleccionado)
+            End If
+        End If
+    End Sub
 End Class

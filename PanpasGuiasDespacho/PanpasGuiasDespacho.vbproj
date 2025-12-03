@@ -105,6 +105,12 @@
     <Compile Include="Form2.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="FormInformeProducto.Designer.vb">
+      <DependentUpon>FormInformeProducto.vb</DependentUpon>
+    </Compile>
+    <Compile Include="FormInformeProducto.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="FormInformes.Designer.vb">
       <DependentUpon>FormInformes.vb</DependentUpon>
     </Compile>
@@ -133,6 +139,12 @@
       <DependentUpon>FormProductos.vb</DependentUpon>
     </Compile>
     <Compile Include="FormProductos.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormResumenProduccion.Designer.vb">
+      <DependentUpon>FormResumenProduccion.vb</DependentUpon>
+    </Compile>
+    <Compile Include="FormResumenProduccion.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="FormVentaProducto.Designer.vb">
@@ -166,6 +178,9 @@
     <EmbeddedResource Include="Form2.resx">
       <DependentUpon>Form2.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FormInformeProducto.resx">
+      <DependentUpon>FormInformeProducto.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormInformes.resx">
       <DependentUpon>FormInformes.vb</DependentUpon>
     </EmbeddedResource>
@@ -180,6 +195,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormProductos.resx">
       <DependentUpon>FormProductos.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormResumenProduccion.resx">
+      <DependentUpon>FormResumenProduccion.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>

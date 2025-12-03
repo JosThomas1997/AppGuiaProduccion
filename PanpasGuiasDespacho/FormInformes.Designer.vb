@@ -31,7 +31,6 @@ Partial Class FormInformes
         Me.dtpHasta = New System.Windows.Forms.DateTimePicker()
         Me.dtpDesde = New System.Windows.Forms.DateTimePicker()
         Me.rdbEntreFechas = New System.Windows.Forms.RadioButton()
-        Me.btnLimpiar = New System.Windows.Forms.Button()
         Me.grpFechasMesAnio = New System.Windows.Forms.GroupBox()
         Me.Label4 = New System.Windows.Forms.Label()
         Me.Label3 = New System.Windows.Forms.Label()
@@ -135,15 +134,6 @@ Partial Class FormInformes
         Me.rdbEntreFechas.Text = "Entre Fechas"
         Me.rdbEntreFechas.UseVisualStyleBackColor = True
         '
-        'btnLimpiar
-        '
-        Me.btnLimpiar.Location = New System.Drawing.Point(402, 161)
-        Me.btnLimpiar.Name = "btnLimpiar"
-        Me.btnLimpiar.Size = New System.Drawing.Size(118, 23)
-        Me.btnLimpiar.TabIndex = 4
-        Me.btnLimpiar.Text = "Limpiar Fechas"
-        Me.btnLimpiar.UseVisualStyleBackColor = True
-        '
         'grpFechasMesAnio
         '
         Me.grpFechasMesAnio.Controls.Add(Me.Label4)
@@ -205,7 +195,7 @@ Partial Class FormInformes
         '
         'btnVentasLocales
         '
-        Me.btnVentasLocales.Location = New System.Drawing.Point(278, 220)
+        Me.btnVentasLocales.Location = New System.Drawing.Point(279, 192)
         Me.btnVentasLocales.Name = "btnVentasLocales"
         Me.btnVentasLocales.Size = New System.Drawing.Size(118, 80)
         Me.btnVentasLocales.TabIndex = 6
@@ -214,7 +204,7 @@ Partial Class FormInformes
         '
         'btnCorrelativoGuias
         '
-        Me.btnCorrelativoGuias.Location = New System.Drawing.Point(402, 220)
+        Me.btnCorrelativoGuias.Location = New System.Drawing.Point(403, 192)
         Me.btnCorrelativoGuias.Name = "btnCorrelativoGuias"
         Me.btnCorrelativoGuias.Size = New System.Drawing.Size(118, 80)
         Me.btnCorrelativoGuias.TabIndex = 7
@@ -223,7 +213,7 @@ Partial Class FormInformes
         '
         'btnVentasProductos
         '
-        Me.btnVentasProductos.Location = New System.Drawing.Point(526, 220)
+        Me.btnVentasProductos.Location = New System.Drawing.Point(527, 192)
         Me.btnVentasProductos.Name = "btnVentasProductos"
         Me.btnVentasProductos.Size = New System.Drawing.Size(118, 80)
         Me.btnVentasProductos.TabIndex = 8
@@ -232,7 +222,7 @@ Partial Class FormInformes
         '
         'btnResumenProduccion
         '
-        Me.btnResumenProduccion.Location = New System.Drawing.Point(154, 220)
+        Me.btnResumenProduccion.Location = New System.Drawing.Point(155, 192)
         Me.btnResumenProduccion.Name = "btnResumenProduccion"
         Me.btnResumenProduccion.Size = New System.Drawing.Size(118, 80)
         Me.btnResumenProduccion.TabIndex = 9
@@ -241,7 +231,7 @@ Partial Class FormInformes
         '
         'btnProduccionProductos
         '
-        Me.btnProduccionProductos.Location = New System.Drawing.Point(650, 220)
+        Me.btnProduccionProductos.Location = New System.Drawing.Point(651, 192)
         Me.btnProduccionProductos.Name = "btnProduccionProductos"
         Me.btnProduccionProductos.Size = New System.Drawing.Size(118, 80)
         Me.btnProduccionProductos.TabIndex = 10
@@ -278,7 +268,6 @@ Partial Class FormInformes
         Me.Controls.Add(Me.btnCorrelativoGuias)
         Me.Controls.Add(Me.btnVentasLocales)
         Me.Controls.Add(Me.grpFechasMesAnio)
-        Me.Controls.Add(Me.btnLimpiar)
         Me.Controls.Add(Me.grpFechasDesdeHasta)
         Me.Controls.Add(Me.PictureBox1)
         Me.Controls.Add(Me.dgvResultados)
@@ -303,7 +292,6 @@ Partial Class FormInformes
     Friend WithEvents dtpHasta As DateTimePicker
     Friend WithEvents dtpDesde As DateTimePicker
     Friend WithEvents rdbEntreFechas As RadioButton
-    Friend WithEvents btnLimpiar As Button
     Friend WithEvents grpFechasMesAnio As GroupBox
     Friend WithEvents rdbPorMes As RadioButton
     Friend WithEvents cmbAnio As ComboBox

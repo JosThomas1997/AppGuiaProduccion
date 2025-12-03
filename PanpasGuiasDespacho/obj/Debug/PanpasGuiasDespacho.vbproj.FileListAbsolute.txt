@@ -33,3 +33,5 @@ D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDesp
 D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDespacho.FormInicio.resources
 D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDespacho.FormInformes.resources
 D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDespacho.FormLocal.resources
+D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDespacho.FormInformeProducto.resources
+D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDespacho.FormResumenProduccion.resources

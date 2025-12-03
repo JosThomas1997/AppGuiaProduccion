@@ -3,28 +3,28 @@
   "WorkspaceRootPath": "D:\\AnaisPrograma\\AppGuiaProduccion\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|D:\\AnaisPrograma\\AppGuiaProduccion\\panpasguiasdespacho\\form2.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
-      "RelativeMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|solutionrelative:panpasguiasdespacho\\form2.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|D:\\AnaisPrograma\\AppGuiaProduccion\\panpasguiasdespacho\\form1.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
-      "RelativeMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|solutionrelative:panpasguiasdespacho\\form1.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|D:\\AnaisPrograma\\AppGuiaProduccion\\panpasguiasdespacho\\formproductos.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
-      "RelativeMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|solutionrelative:panpasguiasdespacho\\formproductos.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|d:\\anaisprograma\\appguiaproduccion\\panpasguiasdespacho\\formproducc_productos.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
-      "RelativeMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|solutionrelative:panpasguiasdespacho\\formproducc_productos.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|D:\\AnaisPrograma\\AppGuiaProduccion\\panpasguiasdespacho\\forminformes.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}|Form",
       "RelativeMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|solutionrelative:panpasguiasdespacho\\forminformes.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}|Form"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|d:\\anaisprograma\\appguiaproduccion\\panpasguiasdespacho\\forminformeproducto.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
+      "RelativeMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|solutionrelative:panpasguiasdespacho\\forminformeproducto.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|D:\\AnaisPrograma\\AppGuiaProduccion\\panpasguiasdespacho\\forminformeproducto.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}|Form",
+      "RelativeMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|solutionrelative:panpasguiasdespacho\\forminformeproducto.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}|Form"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|D:\\AnaisPrograma\\AppGuiaProduccion\\panpasguiasdespacho\\forminformes.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
       "RelativeMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|solutionrelative:panpasguiasdespacho\\forminformes.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|D:\\AnaisPrograma\\AppGuiaProduccion\\panpasguiasdespacho\\formresumenproduccion.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
+      "RelativeMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|solutionrelative:panpasguiasdespacho\\formresumenproduccion.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|D:\\AnaisPrograma\\AppGuiaProduccion\\panpasguiasdespacho\\formresumenproduccion.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}|Form",
+      "RelativeMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|solutionrelative:panpasguiasdespacho\\formresumenproduccion.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}|Form"
     }
   ],
   "DocumentGroupContainers": [
@@ -34,24 +34,25 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 3,
               "Title": "FormInformes.vb",
               "DocumentMoniker": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormInformes.vb",
               "RelativeDocumentMoniker": "PanpasGuiasDespacho\\FormInformes.vb",
               "ToolTip": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormInformes.vb",
               "RelativeToolTip": "PanpasGuiasDespacho\\FormInformes.vb",
-              "ViewState": "AgIAAEMAAAAAAAAAAAASwAIBAABNAAAAAAAAAA==",
+              "ViewState": "AgIAAJcBAAAAAAAAAAAtwKYBAAALAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
               "WhenOpened": "2025-11-09T08:15:48.899Z",
-              "IsPinned": true
+              "IsPinned": true,
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 0,
               "Title": "FormInformes.vb [Dise\u00F1o]",
               "DocumentMoniker": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormInformes.vb",
               "RelativeDocumentMoniker": "PanpasGuiasDespacho\\FormInformes.vb",
@@ -59,59 +60,58 @@
               "RelativeToolTip": "PanpasGuiasDespacho\\FormInformes.vb [Dise\u00F1o]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
               "WhenOpened": "2025-11-09T07:56:03.373Z",
-              "IsPinned": true
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Form2.vb",
-              "DocumentMoniker": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\Form2.vb",
-              "RelativeDocumentMoniker": "PanpasGuiasDespacho\\Form2.vb",
-              "ToolTip": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\Form2.vb",
-              "RelativeToolTip": "PanpasGuiasDespacho\\Form2.vb",
-              "ViewState": "AgIAAKgBAAAAAAAAAAAMwMABAABNAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
-              "WhenOpened": "2025-11-18T20:09:04.208Z",
-              "EditorCaption": ""
+              "IsPinned": true,
+              "EditorCaption": " [Dise\u00F1o]"
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "Form1.vb",
-              "DocumentMoniker": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\Form1.vb",
-              "RelativeDocumentMoniker": "PanpasGuiasDespacho\\Form1.vb",
-              "ToolTip": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\Form1.vb",
-              "RelativeToolTip": "PanpasGuiasDespacho\\Form1.vb",
-              "ViewState": "AgIAAFUCAAAAAAAAAIAwwGcCAABNAAAAAAAAAA==",
+              "Title": "FormInformeProducto.vb",
+              "DocumentMoniker": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormInformeProducto.vb",
+              "RelativeDocumentMoniker": "PanpasGuiasDespacho\\FormInformeProducto.vb",
+              "ToolTip": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormInformeProducto.vb",
+              "RelativeToolTip": "PanpasGuiasDespacho\\FormInformeProducto.vb",
+              "ViewState": "AgIAABEBAAAAAAAAAAAAABIBAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
-              "WhenOpened": "2025-11-18T20:08:48.4Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "FormProducc_Productos.vb",
-              "DocumentMoniker": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormProducc_Productos.vb",
-              "RelativeDocumentMoniker": "PanpasGuiasDespacho\\FormProducc_Productos.vb",
-              "ToolTip": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormProducc_Productos.vb",
-              "RelativeToolTip": "PanpasGuiasDespacho\\FormProducc_Productos.vb",
-              "ViewState": "AgIAAB4BAAAAAAAAAAAAADkBAAAJAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
-              "WhenOpened": "2025-11-18T19:51:19.009Z",
+              "WhenOpened": "2025-12-02T20:21:57.649Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "FormProductos.vb",
-              "DocumentMoniker": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormProductos.vb",
-              "RelativeDocumentMoniker": "PanpasGuiasDespacho\\FormProductos.vb",
-              "ToolTip": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormProductos.vb",
-              "RelativeToolTip": "PanpasGuiasDespacho\\FormProductos.vb",
-              "ViewState": "AgIAABgBAAAAAAAAAAAwwB4BAAAYAAAAAAAAAA==",
+              "Title": "FormInformeProducto.vb [Dise\u00F1o]",
+              "DocumentMoniker": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormInformeProducto.vb",
+              "RelativeDocumentMoniker": "PanpasGuiasDespacho\\FormInformeProducto.vb",
+              "ToolTip": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormInformeProducto.vb [Dise\u00F1o]",
+              "RelativeToolTip": "PanpasGuiasDespacho\\FormInformeProducto.vb [Dise\u00F1o]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
-              "WhenOpened": "2025-11-15T20:44:04.102Z",
+              "WhenOpened": "2025-12-02T19:33:40.033Z",
+              "EditorCaption": " [Dise\u00F1o]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "FormResumenProduccion.vb",
+              "DocumentMoniker": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormResumenProduccion.vb",
+              "RelativeDocumentMoniker": "PanpasGuiasDespacho\\FormResumenProduccion.vb",
+              "ToolTip": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormResumenProduccion.vb",
+              "RelativeToolTip": "PanpasGuiasDespacho\\FormResumenProduccion.vb",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
+              "WhenOpened": "2025-11-30T22:25:15.752Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "FormResumenProduccion.vb [Dise\u00F1o]",
+              "DocumentMoniker": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormResumenProduccion.vb",
+              "RelativeDocumentMoniker": "PanpasGuiasDespacho\\FormResumenProduccion.vb",
+              "ToolTip": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormResumenProduccion.vb [Dise\u00F1o]",
+              "RelativeToolTip": "PanpasGuiasDespacho\\FormResumenProduccion.vb [Dise\u00F1o]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
+              "WhenOpened": "2025-11-30T22:24:22.834Z",
+              "EditorCaption": " [Dise\u00F1o]"
             }
           ]
         }
