@@ -25,6 +25,7 @@ Partial Class FormLocal
         Me.Label1 = New System.Windows.Forms.Label()
         Me.cmbLocales = New System.Windows.Forms.ComboBox()
         Me.btnAceptar = New System.Windows.Forms.Button()
+        Me.btnTodoLocales = New System.Windows.Forms.Button()
         Me.SuspendLayout()
         '
         'Label1
@@ -46,18 +47,28 @@ Partial Class FormLocal
         '
         'btnAceptar
         '
-        Me.btnAceptar.Location = New System.Drawing.Point(51, 89)
+        Me.btnAceptar.Location = New System.Drawing.Point(12, 90)
         Me.btnAceptar.Name = "btnAceptar"
-        Me.btnAceptar.Size = New System.Drawing.Size(118, 34)
+        Me.btnAceptar.Size = New System.Drawing.Size(87, 34)
         Me.btnAceptar.TabIndex = 2
         Me.btnAceptar.Text = "Aceptar"
         Me.btnAceptar.UseVisualStyleBackColor = True
+        '
+        'btnTodoLocales
+        '
+        Me.btnTodoLocales.Location = New System.Drawing.Point(105, 90)
+        Me.btnTodoLocales.Name = "btnTodoLocales"
+        Me.btnTodoLocales.Size = New System.Drawing.Size(100, 34)
+        Me.btnTodoLocales.TabIndex = 3
+        Me.btnTodoLocales.Text = "Todos los Locales"
+        Me.btnTodoLocales.UseVisualStyleBackColor = True
         '
         'FormLocal
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(217, 136)
+        Me.Controls.Add(Me.btnTodoLocales)
         Me.Controls.Add(Me.btnAceptar)
         Me.Controls.Add(Me.cmbLocales)
         Me.Controls.Add(Me.Label1)
@@ -73,4 +84,5 @@ Partial Class FormLocal
     Friend WithEvents Label1 As Label
     Friend WithEvents cmbLocales As ComboBox
     Friend WithEvents btnAceptar As Button
+    Friend WithEvents btnTodoLocales As Button
 End Class

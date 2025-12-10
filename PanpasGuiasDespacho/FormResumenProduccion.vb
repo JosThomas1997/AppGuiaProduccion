@@ -41,4 +41,10 @@ Public Class FormResumenProduccion
         Me.DialogResult = DialogResult.OK
         Me.Close()
     End Sub
+
+    Private Sub btnTodoProduccion_Click(sender As Object, e As EventArgs) Handles btnTodoProduccion.Click
+        EmpleadoID = 0
+        Me.DialogResult = DialogResult.OK
+        Me.Close()
+    End Sub
 End Class

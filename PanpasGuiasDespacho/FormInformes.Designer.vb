@@ -44,6 +44,9 @@ Partial Class FormInformes
         Me.btnProduccionProductos = New System.Windows.Forms.Button()
         Me.Label5 = New System.Windows.Forms.Label()
         Me.txtTotalInforme = New System.Windows.Forms.TextBox()
+        Me.btnLimpiarTabla = New System.Windows.Forms.Button()
+        Me.btnImprimirInforme = New System.Windows.Forms.Button()
+        Me.documentoImpresion = New System.Drawing.Printing.PrintDocument()
         CType(Me.dgvResultados, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.grpFechasDesdeHasta.SuspendLayout()
@@ -195,7 +198,7 @@ Partial Class FormInformes
         '
         'btnVentasLocales
         '
-        Me.btnVentasLocales.Location = New System.Drawing.Point(279, 192)
+        Me.btnVentasLocales.Location = New System.Drawing.Point(281, 206)
         Me.btnVentasLocales.Name = "btnVentasLocales"
         Me.btnVentasLocales.Size = New System.Drawing.Size(118, 80)
         Me.btnVentasLocales.TabIndex = 6
@@ -204,7 +207,7 @@ Partial Class FormInformes
         '
         'btnCorrelativoGuias
         '
-        Me.btnCorrelativoGuias.Location = New System.Drawing.Point(403, 192)
+        Me.btnCorrelativoGuias.Location = New System.Drawing.Point(405, 206)
         Me.btnCorrelativoGuias.Name = "btnCorrelativoGuias"
         Me.btnCorrelativoGuias.Size = New System.Drawing.Size(118, 80)
         Me.btnCorrelativoGuias.TabIndex = 7
@@ -213,7 +216,7 @@ Partial Class FormInformes
         '
         'btnVentasProductos
         '
-        Me.btnVentasProductos.Location = New System.Drawing.Point(527, 192)
+        Me.btnVentasProductos.Location = New System.Drawing.Point(529, 206)
         Me.btnVentasProductos.Name = "btnVentasProductos"
         Me.btnVentasProductos.Size = New System.Drawing.Size(118, 80)
         Me.btnVentasProductos.TabIndex = 8
@@ -222,7 +225,7 @@ Partial Class FormInformes
         '
         'btnResumenProduccion
         '
-        Me.btnResumenProduccion.Location = New System.Drawing.Point(155, 192)
+        Me.btnResumenProduccion.Location = New System.Drawing.Point(157, 206)
         Me.btnResumenProduccion.Name = "btnResumenProduccion"
         Me.btnResumenProduccion.Size = New System.Drawing.Size(118, 80)
         Me.btnResumenProduccion.TabIndex = 9
@@ -231,7 +234,7 @@ Partial Class FormInformes
         '
         'btnProduccionProductos
         '
-        Me.btnProduccionProductos.Location = New System.Drawing.Point(651, 192)
+        Me.btnProduccionProductos.Location = New System.Drawing.Point(653, 206)
         Me.btnProduccionProductos.Name = "btnProduccionProductos"
         Me.btnProduccionProductos.Size = New System.Drawing.Size(118, 80)
         Me.btnProduccionProductos.TabIndex = 10
@@ -254,12 +257,32 @@ Partial Class FormInformes
         Me.txtTotalInforme.Size = New System.Drawing.Size(100, 20)
         Me.txtTotalInforme.TabIndex = 12
         '
+        'btnLimpiarTabla
+        '
+        Me.btnLimpiarTabla.Location = New System.Drawing.Point(405, 163)
+        Me.btnLimpiarTabla.Name = "btnLimpiarTabla"
+        Me.btnLimpiarTabla.Size = New System.Drawing.Size(118, 27)
+        Me.btnLimpiarTabla.TabIndex = 13
+        Me.btnLimpiarTabla.Text = "Limpiar Tabla"
+        Me.btnLimpiarTabla.UseVisualStyleBackColor = True
+        '
+        'btnImprimirInforme
+        '
+        Me.btnImprimirInforme.Location = New System.Drawing.Point(653, 582)
+        Me.btnImprimirInforme.Name = "btnImprimirInforme"
+        Me.btnImprimirInforme.Size = New System.Drawing.Size(118, 23)
+        Me.btnImprimirInforme.TabIndex = 14
+        Me.btnImprimirInforme.Text = "Imprimir Informe"
+        Me.btnImprimirInforme.UseVisualStyleBackColor = True
+        '
         'FormInformes
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.SystemColors.ButtonFace
         Me.ClientSize = New System.Drawing.Size(936, 616)
+        Me.Controls.Add(Me.btnImprimirInforme)
+        Me.Controls.Add(Me.btnLimpiarTabla)
         Me.Controls.Add(Me.txtTotalInforme)
         Me.Controls.Add(Me.Label5)
         Me.Controls.Add(Me.btnProduccionProductos)
@@ -305,4 +328,7 @@ Partial Class FormInformes
     Friend WithEvents btnProduccionProductos As Button
     Friend WithEvents Label5 As Label
     Friend WithEvents txtTotalInforme As TextBox
+    Friend WithEvents btnLimpiarTabla As Button
+    Friend WithEvents btnImprimirInforme As Button
+    Friend WithEvents documentoImpresion As Printing.PrintDocument
 End Class

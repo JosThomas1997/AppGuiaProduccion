@@ -42,4 +42,9 @@ Public Class FormLocal
         Me.Close()
     End Sub
 
+    Private Sub btnTodoLocales_Click(sender As Object, e As EventArgs) Handles btnTodoLocales.Click
+        LocalID = 0
+        Me.DialogResult = DialogResult.OK
+        Me.Close()
+    End Sub
 End Class

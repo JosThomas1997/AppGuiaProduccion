@@ -1,8 +1,11 @@
 ﻿Imports System.Data.OleDb
 Imports System.IO
 
+
+
 Public Class FormInformeProducto
 
+    Public MostrarTodosLosProductos As Boolean = False
 
     Private Sub FormInformeProducto_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         IniciarPanelProductos()
@@ -315,5 +318,11 @@ Public Class FormInformeProducto
         Finally
             CerrarConexion()
         End Try
+    End Sub
+
+    Private Sub btnTodosLosProductos_Click(sender As Object, e As EventArgs) Handles btnTodosLosProductos.Click
+        MostrarTodosLosProductos = True
+        Me.DialogResult = DialogResult.OK
+        Me.Close()
     End Sub
 End Class
