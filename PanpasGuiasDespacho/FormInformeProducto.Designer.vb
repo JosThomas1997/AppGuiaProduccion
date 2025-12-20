@@ -77,9 +77,13 @@ Partial Class FormInformeProducto
         '
         'dgvInformeProductos
         '
+        Me.dgvInformeProductos.AllowUserToAddRows = False
+        Me.dgvInformeProductos.AllowUserToDeleteRows = False
         Me.dgvInformeProductos.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.dgvInformeProductos.Location = New System.Drawing.Point(760, 12)
         Me.dgvInformeProductos.Name = "dgvInformeProductos"
+        Me.dgvInformeProductos.ReadOnly = True
+        Me.dgvInformeProductos.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect
         Me.dgvInformeProductos.Size = New System.Drawing.Size(361, 480)
         Me.dgvInformeProductos.TabIndex = 3
         '

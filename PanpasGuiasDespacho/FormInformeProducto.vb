@@ -1,8 +1,6 @@
 ﻿Imports System.Data.OleDb
 Imports System.IO
 
-
-
 Public Class FormInformeProducto
 
     Public MostrarTodosLosProductos As Boolean = False
@@ -325,4 +323,5 @@ Public Class FormInformeProducto
         Me.DialogResult = DialogResult.OK
         Me.Close()
     End Sub
+
 End Class

@@ -151,17 +151,15 @@ Public Class FormInformes
 
         If selector.ShowDialog() = DialogResult.OK Then
 
-            If selector.ShowDialog() = DialogResult.OK Then
-
-                If selector.EmpleadoID = 0 Then
-                    CargarTodaLaProduccion()
-                    Exit Sub
-                End If
-
-                Dim IDEmpleado As Integer = selector.EmpleadoID
-                CargarProduccionPorEmpleado(IDEmpleado)
-
+            ' Si se selecciona "Todos"
+            If selector.EmpleadoID = 0 Then
+                CargarTodaLaProduccion()
+                Exit Sub
             End If
+
+            ' Si se selecciona un empleado específico
+            Dim IDEmpleado As Integer = selector.EmpleadoID
+            CargarProduccionPorEmpleado(IDEmpleado)
 
         End If
     End Sub
@@ -393,57 +391,6 @@ Public Class FormInformes
         End Try
     End Sub
 
-    'Venta por productos de guias
-    Private Sub BuscarProductoEnGuias(codigoProd As String)
-        Try
-            AbrirConexion()
-
-            Dim fechas = ObtenerRangoFechas()
-            Dim desde As Date = fechas.Item1
-            Dim hasta As Date = fechas.Item2
-
-            Dim sql As String =
-            "SELECT g.numero_guia AS NumeroGuia, g.fecha AS Fecha, " &
-            "c.nombre_fantasia AS Cliente, d.nombre_producto AS Producto, " &
-            "d.cantidad AS Cantidad, d.subtotal AS subtotal " &
-            "FROM (guia AS g " &
-            "INNER JOIN guia_detalle AS d ON g.id_guia = d.id_guia) " &
-            "LEFT JOIN cliente AS c ON g.id_cliente = c.id_cliente " &
-            "WHERE d.codigo_producto = ? AND g.fecha BETWEEN ? AND ? " &
-            "ORDER BY g.fecha DESC"
-
-
-            Using cmd As New OleDbCommand(sql, conexionDB)
-                cmd.Parameters.AddWithValue("?", codigoProd)
-                cmd.Parameters.AddWithValue("?", desde)
-                cmd.Parameters.AddWithValue("?", hasta)
-
-                Dim tabla As New DataTable()
-                tabla.Load(cmd.ExecuteReader())
-
-                dgvResultados.DataSource = tabla
-
-                FormatoGuiayProduccion()
-
-                'Sumatoria
-                Dim total As Decimal = 0
-                For Each row As DataGridViewRow In dgvResultados.Rows
-                    If Not IsDBNull(row.Cells("subtotal").Value) Then
-                        total += Convert.ToDecimal(row.Cells("subtotal").Value)
-                    End If
-                Next
-
-                txtTotalInforme.Text = total.ToString("C0",
-                Globalization.CultureInfo.CreateSpecificCulture("es-CL"))
-            End Using
-
-        Catch ex As Exception
-            MessageBox.Show("Error al generar informe: " & ex.Message)
-        Finally
-            CerrarConexion()
-        End Try
-    End Sub
-
     'Formato de celdas titulares para guias y produccion
     Private Sub FormatoGuiayProduccion()
         'Formato Guias
@@ -544,86 +491,147 @@ Public Class FormInformes
     Private Sub btnVentasProductos_Click(sender As Object, e As EventArgs) Handles btnVentasProductos.Click
         informeActual = TipoInforme.VentaPorProductos
 
-        Dim form As New FormInformeProducto()
+        Using form As New FormInformeProducto()
 
-        If form.ShowDialog() = DialogResult.OK Then
+            If form.ShowDialog() <> DialogResult.OK Then Exit Sub
 
-            ' Si seleccionó todos:
             If form.MostrarTodosLosProductos Then
-                CargarVentasProductosAgrupado()
-                informeActual = TipoInforme.VentaPorProductos
+                CargarVentasPorProducto()
                 Exit Sub
             End If
 
-            ' Si seleccionó un producto específico
             If form.CodigoSeleccionado <> "" Then
-                BuscarProductoEnGuias(form.CodigoSeleccionado)
-                informeActual = TipoInforme.VentaPorProductos
+                CargarVentasPorProducto(form.CodigoSeleccionado)
             End If
 
-        End If
+        End Using
     End Sub
 
-    Private Sub CargarVentasProductosAgrupado()
+    Private Sub CargarVentasPorProducto(Optional codigoProducto As String = "")
         Try
             AbrirConexion()
 
-            Dim fechas = ObtenerRangoFechas()
-            Dim desde As Date = fechas.Item1
-            Dim hasta As Date = fechas.Item2
+            Dim rango = ObtenerRangoFechas()
+            Dim desde As Date = rango.Item1
+            Dim hasta As Date = rango.Item2
 
-            Dim sql As String =
+            Dim sql As String
+
+            If codigoProducto = "" Then
+                ' =========================
+                ' TODOS LOS PRODUCTOS
+                ' =========================
+                sql =
             "SELECT 
-            d.codigo_producto,
-            d.nombre_producto,
-            SUM(d.cantidad) AS CantidadTotal,
-            SUM(d.subtotal) AS TotalVendido
-        FROM guia AS g
-        INNER JOIN guia_detalle AS d ON g.id_guia = d.id_guia
-        WHERE g.fecha BETWEEN ? AND ?
-        GROUP BY d.codigo_producto, d.nombre_producto
-        ORDER BY d.nombre_producto;"
+                g.numero_guia,
+                g.fecha,
+                c.nombre_fantasia AS Cliente,
+                d.nombre_producto AS Producto,
+                d.cantidad,
+                d.subtotal
+             FROM (guia AS g
+                INNER JOIN guia_detalle AS d ON g.id_guia = d.id_guia)
+                LEFT JOIN cliente AS c ON g.id_cliente = c.id_cliente
+             WHERE g.fecha BETWEEN ? AND ?
+             ORDER BY g.fecha, g.numero_guia;"
+            Else
+                ' =========================
+                ' PRODUCTO ESPECÍFICO
+                ' =========================
+                sql =
+            "SELECT 
+                g.numero_guia,
+                g.fecha,
+                c.nombre_fantasia AS Cliente,
+                d.nombre_producto AS Producto,
+                d.cantidad,
+                d.subtotal
+             FROM (guia AS g
+                INNER JOIN guia_detalle AS d ON g.id_guia = d.id_guia)
+                LEFT JOIN cliente AS c ON g.id_cliente = c.id_cliente
+             WHERE d.codigo_producto = ?
+               AND g.fecha BETWEEN ? AND ?
+             ORDER BY g.fecha, g.numero_guia;"
+            End If
 
             Dim tabla As New DataTable()
 
             Using cmd As New OleDbCommand(sql, conexionDB)
+
+                If codigoProducto <> "" Then
+                    cmd.Parameters.AddWithValue("?", codigoProducto)
+                End If
+
                 cmd.Parameters.AddWithValue("?", desde)
                 cmd.Parameters.AddWithValue("?", hasta)
+
                 tabla.Load(cmd.ExecuteReader())
             End Using
 
             dgvResultados.DataSource = tabla
-
-            dgvResultados.Columns("codigo_producto").HeaderText = "Código"
-            dgvResultados.Columns("nombre_producto").HeaderText = "Producto"
-            dgvResultados.Columns("CantidadTotal").HeaderText = "Cantidad"
-            dgvResultados.Columns("TotalVendido").HeaderText = "Total Vendido"
-
-            dgvResultados.Columns("TotalVendido").DefaultCellStyle.Format = "C0"
-            dgvResultados.Columns("TotalVendido").DefaultCellStyle.FormatProvider =
-                Globalization.CultureInfo.CreateSpecificCulture("es-CL")
-
-            Dim totalGeneral As Decimal = 0
-            For Each row As DataGridViewRow In dgvResultados.Rows
-                If Not IsDBNull(row.Cells("TotalVendido").Value) Then
-                    totalGeneral += Convert.ToDecimal(row.Cells("TotalVendido").Value)
-                End If
-            Next
-
-            txtTotalInforme.Text = totalGeneral.ToString("C0",
-                Globalization.CultureInfo.CreateSpecificCulture("es-CL"))
-
-            MessageBox.Show("Se generó el informe de todos los productos.",
-                            "Ventas por Productos",
-                            MessageBoxButtons.OK,
-                            MessageBoxIcon.Information)
+            FormatearVentasPorProducto()
+            CalcularTotalVentasProducto()
 
         Catch ex As Exception
-            MessageBox.Show("Error al cargar informe agrupado: " & ex.Message)
+            MessageBox.Show("Error al cargar ventas por productos: " & ex.Message,
+                        "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         Finally
             CerrarConexion()
         End Try
     End Sub
+
+    Private Sub CalcularTotalVentasProducto()
+        Dim total As Decimal = 0
+
+        For Each fila As DataGridViewRow In dgvResultados.Rows
+            If fila.IsNewRow Then Continue For
+            If Not IsDBNull(fila.Cells("subtotal").Value) Then
+                total += Convert.ToDecimal(fila.Cells("subtotal").Value)
+            End If
+        Next
+
+        txtTotalInforme.Text = total.ToString("C0",
+        Globalization.CultureInfo.CreateSpecificCulture("es-CL"))
+    End Sub
+
+    Private Sub FormatearVentasPorProducto()
+
+        With dgvResultados
+
+            If .Columns.Contains("numero_guia") Then
+                .Columns("numero_guia").HeaderText = "N° Guía"
+            End If
+
+            If .Columns.Contains("fecha") Then
+                .Columns("fecha").HeaderText = "Fecha"
+                .Columns("fecha").DefaultCellStyle.Format = "dd-MM-yyyy"
+            End If
+
+            If .Columns.Contains("Cliente") Then
+                .Columns("Cliente").HeaderText = "Cliente"
+            End If
+
+            If .Columns.Contains("Producto") Then
+                .Columns("Producto").HeaderText = "Producto"
+            End If
+
+            If .Columns.Contains("cantidad") Then
+                .Columns("cantidad").HeaderText = "Cant."
+            End If
+
+            If .Columns.Contains("subtotal") Then
+                .Columns("subtotal").HeaderText = "Subtotal"
+                .Columns("subtotal").DefaultCellStyle.Format = "C0"
+                .Columns("subtotal").DefaultCellStyle.FormatProvider =
+                Globalization.CultureInfo.CreateSpecificCulture("es-CL")
+            End If
+
+            .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+
+        End With
+
+    End Sub
+
 
     Private Sub btnProduccionProductos_Click(sender As Object, e As EventArgs) Handles btnProduccionProductos.Click
         informeActual = TipoInforme.ProduccionProductos
@@ -633,7 +641,6 @@ Public Class FormInformes
         Dim hasta As Date = rango.Item2
 
         CargarProduccionProductos(desde, hasta)
-
     End Sub
 
     Private Sub CargarProduccionProductos(desde As Date, hasta As Date)
@@ -739,17 +746,24 @@ Public Class FormInformes
         End Try
     End Sub
 
+    '========================
+    ' IMPRESION DE INFORMES DE TICKETS EN 80mm
+    '========================
     Private Sub documentoImpresion_PrintPage(sender As Object, e As PrintPageEventArgs) Handles documentoImpresion.PrintPage
         Dim g = e.Graphics
         Dim margen = e.MarginBounds.Left
         yPos = e.MarginBounds.Top
         Dim salto = fuenteCuerpo.GetHeight(g) + 2
 
+        '=== ENCABEZADO DE PANPAS GENERICO ===
         g.DrawString("Panadería y Pastelería PANPAS", fuenteTitulo, Brushes.Black, margen, yPos)
         yPos += salto * 2
 
         Select Case informeActual
 
+                '========================
+                ' INFORME : CORRELATIVO DE GUIAS
+                '========================
             Case TipoInforme.CorrelativoGuias
 
                 yPos = e.MarginBounds.Top
@@ -761,9 +775,6 @@ Public Class FormInformes
                 Dim anchoTotal As Integer = 11
 
                 ' ---------------- ENCABEZADO -------------------
-                g.DrawString("Panadería y Pastelería PANPAS", fuenteTitulo, Brushes.Black, margen, yPos)
-                yPos += salto
-
                 g.DrawString("Correlativo de Guías", fuenteTitulo, Brushes.Black, margen, yPos)
                 yPos += salto
 
@@ -825,20 +836,472 @@ Public Class FormInformes
 
                 yPos += salto
 
+                '========================
+                ' INFORME : VENTA POR LOCALES (Por Local y Todos los Locales)
+                '========================
             Case TipoInforme.VentaPorLocales
-                g.DrawString("IMPRIMIENDO: VENTA POR LOCALES", fuenteTitulo, Brushes.Black, margen, yPos)
 
+                ' ----- ANCHOS DE COLUMNAS -----
+                Dim anchoGuia As Integer = 6
+                Dim anchoFecha As Integer = 6
+                Dim anchoCliente As Integer = 20
+                Dim anchoTotal As Integer = 11
+
+                ' ----- ENCABEZADO -----
+                g.DrawString("VENTAS POR LOCAL", fuenteTitulo, Brushes.Black, margen, yPos)
+                yPos += salto
+
+                g.DrawString("Desde: " & dtpDesde.Value.ToString("dd-MM-yyyy"), fuenteCuerpo, Brushes.Black, margen, yPos)
+                yPos += salto
+
+                g.DrawString("Hasta: " & dtpHasta.Value.ToString("dd-MM-yyyy"), fuenteCuerpo, Brushes.Black, margen, yPos)
+                yPos += salto * 2
+
+                ' ----- CABECERA TABLA -----
+                Dim header As String =
+                    "Guía".PadRight(anchoGuia) & " " &
+                    "Fecha".PadRight(anchoFecha) & " " &
+                    "Cliente".PadRight(anchoCliente) & " " &
+                    "Total".PadLeft(anchoTotal)
+
+                g.DrawString(header, fuenteCuerpo, Brushes.Black, margen, yPos)
+                yPos += salto
+
+                g.DrawString(New String("-"c, anchoGuia + anchoFecha + anchoCliente + anchoTotal + 3),
+                             fuenteCuerpo, Brushes.Black, margen, yPos)
+                yPos += salto
+
+                ' ----- CONTENIDO -----
+                Dim totalGeneral As Decimal = 0
+
+                For Each fila As DataGridViewRow In dgvResultados.Rows
+                    If fila.IsNewRow Then Continue For
+
+                    Dim guia As String = ""
+
+                    If dgvResultados.Columns.Contains("NumeroGuia") Then
+                        guia = fila.Cells("NumeroGuia").Value.ToString()
+                    ElseIf dgvResultados.Columns.Contains("numero_guia") Then
+                        guia = fila.Cells("numero_guia").Value.ToString()
+                    End If
+
+                    guia = guia.PadRight(anchoGuia)
+
+                    Dim fecha As String = CDate(fila.Cells("Fecha").Value).ToString("dd-MM").PadRight(anchoFecha)
+
+                    ' Detectar columna cliente / nombre_fantasia
+                    Dim cliente As String = ""
+                    If dgvResultados.Columns.Contains("nombre_fantasia") Then
+                        cliente = fila.Cells("nombre_fantasia").Value.ToString()
+                    ElseIf dgvResultados.Columns.Contains("Cliente") Then
+                        cliente = fila.Cells("Cliente").Value.ToString()
+                    End If
+
+                    If cliente.Length > anchoCliente Then
+                        cliente = cliente.Substring(0, anchoCliente)
+                    End If
+                    cliente = cliente.PadRight(anchoCliente)
+
+                    Dim monto As Decimal = Convert.ToDecimal(fila.Cells("Total").Value)
+                    Dim montoTxt As String = ("$ " & monto.ToString("N0")).PadLeft(anchoTotal)
+
+                    Dim linea As String =
+                        guia & " " &
+                        fecha & " " &
+                        cliente & " " &
+                        montoTxt
+
+                    g.DrawString(linea, fuenteCuerpo, Brushes.Black, margen, yPos)
+                    yPos += salto
+
+                    totalGeneral += monto
+                Next
+
+                ' ----- TOTAL GENERAL -----
+                g.DrawString(New String("-"c, anchoGuia + anchoFecha + anchoCliente + anchoTotal + 3),
+                             fuenteCuerpo, Brushes.Black, margen, yPos)
+                yPos += salto
+
+                g.DrawString("TOTAL GENERAL: ".PadRight(25) & "$ " & totalGeneral.ToString("N0"),
+                             fuenteTitulo, Brushes.Black, margen, yPos)
+
+                yPos += salto
+
+                '========================
+                ' INFORME : VENTA POR PRODUCTOS (Por producto y todos los productos)
+                '========================
             Case TipoInforme.VentaPorProductos
-                g.DrawString("IMPRIMIENDO: VENTA POR PRODUCTOS", fuenteTitulo, Brushes.Black, margen, yPos)
 
+                ' ================== ANCHOS ==================
+                Dim anchoCliente As Integer = 16
+                Dim anchoProducto As Integer = 18
+                Dim anchoCant As Integer = 4
+                Dim anchoSub As Integer = 8
+
+                ' ================== ENCABEZADO ==================
+                g.DrawString("VENTAS POR PRODUCTO", fuenteTitulo, Brushes.Black, margen, yPos)
+                yPos += salto
+
+                g.DrawString("Desde: " & dtpDesde.Value.ToString("dd-MM-yyyy"),
+                 fuenteCuerpo, Brushes.Black, margen, yPos)
+                yPos += salto
+
+                g.DrawString("Hasta: " & dtpHasta.Value.ToString("dd-MM-yyyy"),
+                 fuenteCuerpo, Brushes.Black, margen, yPos)
+                yPos += salto
+
+                ' ================== N° GUÍA (opcional) ==================
+                If dgvResultados.Columns.Contains("NumeroGuia") AndAlso dgvResultados.Rows.Count > 0 Then
+                    Dim guia = dgvResultados.Rows(0).Cells("NumeroGuia").Value
+                    If guia IsNot Nothing Then
+                        yPos += salto
+                        g.DrawString("N° Guía: " & guia.ToString(),
+                         fuenteCuerpo, Brushes.Black, margen, yPos)
+                        yPos += salto
+                    End If
+                End If
+
+                yPos += salto
+
+                ' ================== CABECERA TABLA ==================
+                Dim header As String =
+                "Cliente".PadRight(anchoCliente) & " " &
+                "Producto".PadRight(anchoProducto) & " " &
+                "Cnt".PadLeft(anchoCant) & " " &
+                "SubTot".PadLeft(anchoSub)
+
+                g.DrawString(header, fuenteCuerpo, Brushes.Black, margen, yPos)
+                yPos += salto
+
+                g.DrawString(New String("-"c, anchoCliente + anchoProducto + anchoCant + anchoSub + 3),
+                fuenteCuerpo, Brushes.Black, margen, yPos)
+                yPos += salto
+
+                ' ================== CONTENIDO ==================
+                Dim totalGeneral As Decimal = 0
+
+                For Each fila As DataGridViewRow In dgvResultados.Rows
+                    If fila.IsNewRow Then Continue For
+
+                    ' Cliente
+                    Dim cliente As String = fila.Cells("cliente").Value.ToString()
+                    If cliente.Length > anchoCliente Then cliente = cliente.Substring(0, anchoCliente)
+                    cliente = cliente.PadRight(anchoCliente)
+
+                    ' Producto (SIN PRECIO)
+                    ' Producto
+                    Dim producto As String = fila.Cells("Producto").Value.ToString()
+
+                    If producto.Length > anchoProducto Then
+                        producto = producto.Substring(0, anchoProducto)
+                    End If
+                    producto = producto.PadRight(anchoProducto)
+
+                    ' Cantidad
+                    Dim cant As String = fila.Cells("cantidad").Value.ToString().PadLeft(anchoCant)
+
+                    ' Subtotal
+                    Dim subt As Decimal = Convert.ToDecimal(fila.Cells("subtotal").Value)
+                    Dim subTxt As String = subt.ToString("N0").PadLeft(anchoSub)
+
+                    totalGeneral += subt
+
+                    Dim linea As String =
+                    cliente & " " &
+                    producto & " " &
+                    cant & " " &
+                    subTxt
+
+                    g.DrawString(linea, fuenteCuerpo, Brushes.Black, margen, yPos)
+                    yPos += salto
+                Next
+
+                ' ================== TOTAL ==================
+                yPos += salto
+                g.DrawString(New String("-"c, 46), fuenteCuerpo, Brushes.Black, margen, yPos)
+                yPos += salto
+
+                g.DrawString("TOTAL:".PadRight(30) & "$ " & totalGeneral.ToString("N0"),
+                fuenteTitulo, Brushes.Black, margen, yPos)
+
+                yPos += salto
+
+                '========================
+                ' INFORME : PRODUCCION DE PRODUCTOS
+                '========================
             Case TipoInforme.ProduccionProductos
-                g.DrawString("IMPRIMIENDO: PRODUCCION PRODUCTOS", fuenteTitulo, Brushes.Black, margen, yPos)
 
+                ' ========= ANCHOS (80mm) =========
+                Dim aProd As Integer = 18
+                Dim aCant As Integer = 4
+                Dim aSub As Integer = 8
+
+                ' ========= ENCABEZADO =========
+                g.DrawString("PRODUCCIÓN DE PRODUCTOS", fuenteTitulo, Brushes.Black, margen, yPos)
+                yPos += salto
+
+                g.DrawString("Desde: " & dtpDesde.Value.ToString("dd-MM-yyyy"),
+                             fuenteCuerpo, Brushes.Black, margen, yPos)
+                yPos += salto
+
+                g.DrawString("Hasta: " & dtpHasta.Value.ToString("dd-MM-yyyy"),
+                             fuenteCuerpo, Brushes.Black, margen, yPos)
+                yPos += salto * 2
+
+                ' ========= AGRUPAR POR PRODUCCIÓN =========
+                Dim producciones =
+                    dgvResultados.Rows.
+                    Cast(Of DataGridViewRow)().
+                    Where(Function(r) Not r.IsNewRow).
+                    GroupBy(Function(r) r.Cells("id_produccion").Value.ToString())
+
+                Dim totalGeneral As Decimal = 0
+
+                For Each prod In producciones
+
+                    Dim filas = prod.ToList()
+
+                    Dim idProd As String = prod.Key
+                    Dim fecha As String = CDate(filas(0).Cells("fecha_produccion").Value).ToString("dd-MM-yyyy")
+                    Dim empleado As String = filas(0).Cells("nombre_empleado").Value.ToString()
+                    Dim comentario As String = ""
+
+                    If dgvResultados.Columns.Contains("comentario") Then
+                        comentario = filas(0).Cells("comentario").Value?.ToString().Trim()
+                    End If
+
+                    ' ===== CABECERA PRODUCCIÓN =====
+                    g.DrawString("PRODUCCIÓN N° " & idProd, fuenteTitulo, Brushes.Black, margen, yPos)
+                    yPos += salto
+
+                    g.DrawString("Empleado: " & empleado, fuenteCuerpo, Brushes.Black, margen, yPos)
+                    yPos += salto
+
+                    g.DrawString("Fecha: " & fecha, fuenteCuerpo, Brushes.Black, margen, yPos)
+                    yPos += salto
+
+                    ' ===== CABECERA TABLA =====
+                    Dim header As String =
+                        "Producto".PadRight(aProd) & " " &
+                        "Cnt".PadLeft(aCant) & " " &
+                        "SubTot".PadLeft(aSub)
+
+                    g.DrawString(header, fuenteCuerpo, Brushes.Black, margen, yPos)
+                    yPos += salto
+
+                    g.DrawString(New String("-"c, aProd + aCant + aSub + 2),
+                                 fuenteCuerpo, Brushes.Black, margen, yPos)
+                    yPos += salto
+
+                    ' ===== AGRUPAR PRODUCTOS =====
+                    Dim productos =
+                        filas.GroupBy(Function(r) r.Cells("nombre_producto").Value.ToString())
+
+                    For Each p In productos
+                        Dim nombre As String = p.Key
+                        If nombre.Length > aProd Then nombre = nombre.Substring(0, aProd)
+                        nombre = nombre.PadRight(aProd)
+
+                        Dim cant As Integer = p.Sum(Function(r) Convert.ToInt32(r.Cells("cantidad").Value))
+                        Dim subt As Decimal = p.Sum(Function(r) Convert.ToDecimal(r.Cells("subtotal").Value))
+
+                        Dim linea As String =
+                            nombre & " " &
+                            cant.ToString().PadLeft(aCant) & " " &
+                            subt.ToString("N0").PadLeft(aSub)
+
+                        g.DrawString(linea, fuenteCuerpo, Brushes.Black, margen, yPos)
+                        yPos += salto
+
+                        totalGeneral += subt
+                    Next
+
+                    ' ===== COMENTARIO =====
+                    If comentario <> "" Then
+                        yPos += salto
+                        g.DrawString("Comentario:", fuenteTitulo, Brushes.Black, margen, yPos)
+                        yPos += salto
+
+                        For Each linea In comentario.Split({Environment.NewLine}, StringSplitOptions.None)
+                            g.DrawString(linea, fuenteCuerpo, Brushes.Black, margen, yPos)
+                            yPos += salto
+                        Next
+                    End If
+
+                    ' ===== SEPARADOR ENTRE PRODUCCIONES =====
+                    yPos += salto
+                    g.DrawString(New String("-"c, 46), fuenteCuerpo, Brushes.Black, margen, yPos)
+                    yPos += salto
+                Next
+
+                ' ========= TOTAL GENERAL =========
+                g.DrawString("TOTAL GENERAL:".PadRight(30) & "$ " & totalGeneral.ToString("N0"),
+                             fuenteTitulo, Brushes.Black, margen, yPos)
+
+                yPos += salto
+
+                '========================
+                ' INFORME : RESUMEN PRODUCCION (Por General y Empleado)
+                '========================
             Case TipoInforme.ResumenProduccion
-                g.DrawString("IMPRIMIENDO: RESUMEN PRODUCCION", fuenteTitulo, Brushes.Black, margen, yPos)
+
+                '========================
+                ' ENCABEZADO DE TICKET
+                '========================
+                g.DrawString("RESUMEN DE PRODUCCIÓN", fuenteTitulo, Brushes.Black, margen, yPos)
+                yPos += salto
+
+                g.DrawString("Desde: " & dtpDesde.Value.ToString("dd-MM-yyyy"), fuenteCuerpo, Brushes.Black, margen, yPos)
+                yPos += salto
+
+                g.DrawString("Hasta: " & dtpHasta.Value.ToString("dd-MM-yyyy"), fuenteCuerpo, Brushes.Black, margen, yPos)
+                yPos += salto
+
+                '====================================================
+                ' FORMATO A → PRODUCCIÓN POR EMPLEADO (DETALLADO)
+                '====================================================
+                If dgvResultados.Columns.Contains("codigo_producto") Then
+
+                    ' Obtener nombre del empleado
+                    Dim nombreEmpleado As String = ""
+                    If dgvResultados.Rows.Count > 0 AndAlso dgvResultados.Columns.Contains("nombre_empleado") Then
+                        nombreEmpleado = dgvResultados.Rows(0).Cells("nombre_empleado").Value.ToString()
+                    End If
+
+                    If nombreEmpleado <> "" Then
+                        g.DrawString("Empleado: " & nombreEmpleado, fuenteTitulo, Brushes.Black, margen, yPos)
+                        yPos += salto
+                    End If
+
+                    yPos += salto
+
+                    ' ---- Anchos ----
+                    Dim aFecha = 6, aProd = 26, aCant = 4, aPrecio = 8, aSub = 10
+
+                    ' ---- Cabecera ----
+                    Dim header =
+                        "Fecha".PadRight(aFecha) & " " &
+                        "Producto".PadRight(aProd) & " " &
+                        "Cant".PadLeft(aCant) & " " &
+                        "P.Unit".PadLeft(aPrecio) & " " &
+                        "SubTot".PadLeft(aSub)
+
+                    g.DrawString(header, fuenteCuerpo, Brushes.Black, margen, yPos)
+                    yPos += salto
+
+                    g.DrawString(New String("-"c, aFecha + aProd + aCant + aPrecio + aSub + 4),
+                                 fuenteCuerpo, Brushes.Black, margen, yPos)
+                    yPos += salto
+
+                    Dim totalGeneral As Decimal = 0
+
+                    For Each fila As DataGridViewRow In dgvResultados.Rows
+                        If fila.IsNewRow Then Continue For
+
+                        Dim fecha = CDate(fila.Cells("fecha_produccion").Value).ToString("dd-MM").PadRight(aFecha)
+
+                        Dim prod = fila.Cells("nombre_producto").Value.ToString()
+                        If prod.Length > aProd Then prod = prod.Substring(0, aProd)
+                        prod = prod.PadRight(aProd)
+
+                        Dim cant = fila.Cells("cantidad").Value.ToString().PadLeft(aCant)
+                        Dim precio = Convert.ToDecimal(fila.Cells("precio_unitario").Value).ToString("N0").PadLeft(aPrecio)
+                        Dim subt = Convert.ToDecimal(fila.Cells("subtotal").Value)
+                        Dim subtTxt = subt.ToString("N0").PadLeft(aSub)
+
+                        totalGeneral += subt
+
+                        Dim linea =
+                            fecha & " " & prod & " " &
+                            cant & " " & precio & " " & subtTxt
+
+
+                        g.DrawString(linea, fuenteCuerpo, Brushes.Black, margen, yPos)
+                        yPos += salto
+                    Next
+
+                    yPos += salto
+                    g.DrawString(New String("-"c, 55), fuenteCuerpo, Brushes.Black, margen, yPos)
+                    yPos += salto
+
+                    g.DrawString("TOTAL GENERAL:     $ " & totalGeneral.ToString("N0"),
+                                 fuenteTitulo, Brushes.Black, margen, yPos)
+
+                    '====================================================
+                    ' FORMATO B → TODA LA PRODUCCIÓN (RESUMEN)
+                    '====================================================
+                Else
+
+                    yPos += salto
+
+                    Dim aFecha = 6, aEmp = 20, aTotal = 11
+
+                    Dim header =
+                        "Fecha".PadRight(aFecha) & " " &
+                        "Empleado".PadRight(aEmp) & " " &
+                        "Total".PadLeft(aTotal)
+
+                    g.DrawString(header, fuenteCuerpo, Brushes.Black, margen, yPos)
+                    yPos += salto
+
+                    g.DrawString(New String("-"c, aFecha + aEmp + aTotal + 3),
+                                 fuenteCuerpo, Brushes.Black, margen, yPos)
+                    yPos += salto
+
+                    Dim totalGeneral As Decimal = 0
+
+                    For Each fila As DataGridViewRow In dgvResultados.Rows
+                        If fila.IsNewRow Then Continue For
+
+                        Dim fecha = CDate(fila.Cells("fecha_produccion").Value).ToString("dd-MM").PadRight(aFecha)
+
+                        Dim emp = fila.Cells("nombre_empleado").Value.ToString()
+                        If emp.Length > aEmp Then emp = emp.Substring(0, aEmp)
+                        emp = emp.PadRight(aEmp)
+
+                        Dim total = Convert.ToDecimal(fila.Cells("total").Value)
+                        Dim totalTxt = ("$ " & total.ToString("N0")).PadLeft(aTotal)
+
+                        totalGeneral += total
+
+                        g.DrawString(fecha & " " & emp & " " & totalTxt,
+                                     fuenteCuerpo, Brushes.Black, margen, yPos)
+                        yPos += salto
+
+                        ' ----- Comentario -----
+                        If dgvResultados.Columns.Contains("comentario") Then
+                            Dim comentario = fila.Cells("comentario").Value?.ToString().Trim()
+
+                            If comentario <> "" Then
+                                yPos += salto
+                                g.DrawString(New String("-"c, 55), fuenteCuerpo, Brushes.Black, margen, yPos)
+                                yPos += salto
+
+                                g.DrawString("Comentario:", fuenteTitulo, Brushes.Black, margen, yPos)
+                                yPos += salto
+
+                                For Each linea In comentario.Split({Environment.NewLine}, StringSplitOptions.None)
+                                    g.DrawString(linea, fuenteCuerpo, Brushes.Black, margen, yPos)
+                                    yPos += salto
+                                Next
+
+                                yPos += salto
+                                g.DrawString(New String("-"c, 55), fuenteCuerpo, Brushes.Black, margen, yPos)
+                                yPos += salto
+                            End If
+                        End If
+                    Next
+
+                    yPos += salto
+                    g.DrawString(New String("-"c, 55), fuenteCuerpo, Brushes.Black, margen, yPos)
+                    yPos += salto
+
+                    g.DrawString("TOTAL GENERAL:     $ " & totalGeneral.ToString("N0"),
+                                 fuenteTitulo, Brushes.Black, margen, yPos)
+                End If
 
             Case Else
-                g.DrawString("NINGUN INFORME SELECCIONADO", fuenteTitulo, Brushes.Black, margen, yPos)
+                g.DrawString("Ningun Informe ha sido Seleccionado.", fuenteTitulo, Brushes.Black, margen, yPos)
 
         End Select
 
