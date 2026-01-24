@@ -73,7 +73,7 @@ Partial Class FormResumenProduccion
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.cbEmpleado)
         Me.Name = "FormResumenProduccion"
-        Me.Text = "FormResumenProduccion"
+        Me.Text = "Seleccionar Empleado"
         Me.ResumeLayout(False)
         Me.PerformLayout()
 

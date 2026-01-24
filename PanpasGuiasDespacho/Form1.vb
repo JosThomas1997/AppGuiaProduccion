@@ -624,10 +624,11 @@ Public Class Form1
     'GUARDADO DE GUIAS NUEVO
     Public Sub guardarGuia()
         Try
-            'conexion a la db
+            'Conexion a la DB
             If conexionDB.State <> ConnectionState.Closed Then conexionDB.Close()
             conexionDB.Open()
 
+            'Se calcula el total
             CalcularTotal()
             Dim total As Integer = ObtenerTotalGuia()
             Dim fecha As Date = dtpFecha.Value

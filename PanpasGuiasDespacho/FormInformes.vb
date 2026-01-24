@@ -45,6 +45,17 @@ Public Class FormInformes
 
     End Sub
 
+    Private Function ValorCelda(fila As DataGridViewRow, ParamArray nombres() As String) As String
+        For Each n In nombres
+            If dgvResultados.Columns.Contains(n) Then
+                Dim v = fila.Cells(n).Value
+                If v IsNot Nothing AndAlso Not IsDBNull(v) Then
+                    Return v.ToString()
+                End If
+            End If
+        Next
+        Return ""
+    End Function
 
     Private Sub ModoFecha_Changed(sender As Object, e As EventArgs)
         ActualizarEstadoFiltros()
@@ -134,7 +145,7 @@ Public Class FormInformes
 
                 'Ventana de confirmacion
                 MessageBox.Show($"Se encontraron {tabla.Rows.Count} guías entre {desde:d} y {hasta:d}.",
-                            "Correlativo de Guías", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                            "Correlativo de Guias", MessageBoxButtons.OK, MessageBoxIcon.Information)
             End Using
 
             CerrarConexion()
@@ -166,12 +177,15 @@ Public Class FormInformes
 
     Private Sub CargarTodaLaProduccion()
         Try
+            'Apertura a la DB
             AbrirConexion()
 
+            'Se obtiene el rango de fecha a traves de los selectores de fecha
             Dim fechas = ObtenerRangoFechas()
             Dim desde As Date = fechas.Item1
             Dim hasta As Date = fechas.Item2
 
+            'Se usa la siguiente consulta SQL para traer toda la producciones realizadas 
             Dim consultaSQL As String = "SELECT p.id_produccion,
                 p.fecha_produccion,
                 e.nombre_empleado,
@@ -182,18 +196,23 @@ Public Class FormInformes
          WHERE p.fecha_produccion BETWEEN ? AND ?
          ORDER BY p.fecha_produccion DESC"
 
+            'Se genera la tabla DataGrid para mostrar los datos consultados en la consulta SQL
             Dim tabla As New DataTable()
 
+            'Se determina la fecha desde y hasta de las producciones
             Using cmd As New OleDbCommand(consultaSQL, conexionDB)
                 cmd.Parameters.AddWithValue("?", desde)
                 cmd.Parameters.AddWithValue("?", hasta)
                 tabla.Load(cmd.ExecuteReader())
             End Using
 
+            'Se muestra el resultado final
             dgvResultados.DataSource = tabla
 
+            'Se entrega en los titulos de las columnas sus nombres determinados para su identificacion
             FormatoGuiayProduccion()
 
+            'Se entrega el total de los subtotal, con el formato hispanico adecuado para su muestra adecuada
             Dim totalGeneral As Decimal = 0
             For Each fila As DataGridViewRow In dgvResultados.Rows
                 If Not IsDBNull(fila.Cells("total").Value) Then
@@ -521,37 +540,42 @@ Public Class FormInformes
                 ' =========================
                 ' TODOS LOS PRODUCTOS
                 ' =========================
-                sql =
-            "SELECT 
-                g.numero_guia,
-                g.fecha,
-                c.nombre_fantasia AS Cliente,
-                d.nombre_producto AS Producto,
-                d.cantidad,
-                d.subtotal
-             FROM (guia AS g
-                INNER JOIN guia_detalle AS d ON g.id_guia = d.id_guia)
-                LEFT JOIN cliente AS c ON g.id_cliente = c.id_cliente
-             WHERE g.fecha BETWEEN ? AND ?
-             ORDER BY g.fecha, g.numero_guia;"
+                sql = "SELECT
+                        d.nombre_producto AS Producto,
+                        c.nombre_fantasia AS Cliente,
+                        SUM(d.cantidad) AS cantidad,
+                        SUM(d.subtotal) AS subtotal
+                    FROM (guia AS g
+                        INNER JOIN guia_detalle AS d ON g.id_guia = d.id_guia)
+                        LEFT JOIN cliente AS c ON g.id_cliente = c.id_cliente
+                    WHERE g.fecha BETWEEN ? AND ?
+                    GROUP BY
+                        d.nombre_producto,
+                        c.nombre_fantasia
+                    ORDER BY
+                        d.nombre_producto,
+                        c.nombre_fantasia;"
+
             Else
                 ' =========================
                 ' PRODUCTO ESPECÍFICO
                 ' =========================
-                sql =
-            "SELECT 
-                g.numero_guia,
-                g.fecha,
-                c.nombre_fantasia AS Cliente,
-                d.nombre_producto AS Producto,
-                d.cantidad,
-                d.subtotal
-             FROM (guia AS g
-                INNER JOIN guia_detalle AS d ON g.id_guia = d.id_guia)
-                LEFT JOIN cliente AS c ON g.id_cliente = c.id_cliente
-             WHERE d.codigo_producto = ?
-               AND g.fecha BETWEEN ? AND ?
-             ORDER BY g.fecha, g.numero_guia;"
+                sql = "SELECT
+                        c.nombre_fantasia AS Cliente,
+                        d.nombre_producto AS Producto,
+                        SUM(d.cantidad) AS cantidad,
+                        SUM(d.subtotal) AS subtotal
+                    FROM (guia AS g
+                        INNER JOIN guia_detalle AS d ON g.id_guia = d.id_guia)
+                        LEFT JOIN cliente AS c ON g.id_cliente = c.id_cliente
+                    WHERE
+                        d.codigo_producto = ?
+                        AND g.fecha BETWEEN ? AND ?
+                    GROUP BY
+                        c.nombre_fantasia,
+                        d.nombre_producto
+                    ORDER BY
+                        c.nombre_fantasia;"
             End If
 
             Dim tabla As New DataTable()
@@ -729,6 +753,18 @@ Public Class FormInformes
     Dim yPos As Integer = 0
 
     Private Sub btnImprimirInforme_Click(sender As Object, e As EventArgs) Handles btnImprimirInforme.Click
+        If informeActual = TipoInforme.Ninguno Then
+            MessageBox.Show("Debe generar un informe antes de imprimir.", "Aviso",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Exit Sub
+        End If
+
+        If dgvResultados.Rows.Count = 0 OrElse dgvResultados.DataSource Is Nothing Then
+            MessageBox.Show("No hay datos para imprimir.", "Aviso",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Exit Sub
+        End If
+
         Try
             Dim tamañoPapel As New PaperSize("Ticket80mm", 283, 2000)
             documentoImpresion.DefaultPageSettings.PaperSize = tamañoPapel
@@ -747,6 +783,23 @@ Public Class FormInformes
     End Sub
 
     '========================
+    ' Eliminar Acentos de Futuros Tickes
+    '========================
+    Function TextoTicketSeguro(AcentoTexto As String) As String
+        Dim AcentoReemplazar As New Dictionary(Of String, String) From {
+        {"á", "a"}, {"é", "e"}, {"í", "i"}, {"ó", "o"}, {"ú", "u"},
+        {"Á", "A"}, {"É", "E"}, {"Í", "I"}, {"Ó", "O"}, {"Ú", "U"},
+        {"ñ", "n"}, {"Ñ", "N"}
+    }
+
+        For Each r In AcentoReemplazar
+            AcentoTexto = AcentoTexto.Replace(r.Key, r.Value)
+        Next
+
+        Return AcentoTexto
+    End Function
+
+    '========================
     ' IMPRESION DE INFORMES DE TICKETS EN 80mm
     '========================
     Private Sub documentoImpresion_PrintPage(sender As Object, e As PrintPageEventArgs) Handles documentoImpresion.PrintPage
@@ -756,17 +809,14 @@ Public Class FormInformes
         Dim salto = fuenteCuerpo.GetHeight(g) + 2
 
         '=== ENCABEZADO DE PANPAS GENERICO ===
-        g.DrawString("Panadería y Pastelería PANPAS", fuenteTitulo, Brushes.Black, margen, yPos)
+        g.DrawString("Panaderia y Pasteleria PANPAS", fuenteTitulo, Brushes.Black, margen, yPos)
         yPos += salto * 2
 
         Select Case informeActual
-
                 '========================
                 ' INFORME : CORRELATIVO DE GUIAS
                 '========================
             Case TipoInforme.CorrelativoGuias
-
-                yPos = e.MarginBounds.Top
 
                 ' ---- ANCHOS DE COLUMNA ----
                 Dim anchoGuia As Integer = 6
@@ -775,7 +825,7 @@ Public Class FormInformes
                 Dim anchoTotal As Integer = 11
 
                 ' ---------------- ENCABEZADO -------------------
-                g.DrawString("Correlativo de Guías", fuenteTitulo, Brushes.Black, margen, yPos)
+                g.DrawString(TextoTicketSeguro("Correlativo de Guias"), fuenteTitulo, Brushes.Black, margen, yPos)
                 yPos += salto
 
                 g.DrawString("Desde: " & dtpDesde.Value.ToString("dd/MM/yyyy"), fuenteCuerpo, Brushes.Black, margen, yPos)
@@ -788,7 +838,7 @@ Public Class FormInformes
 
                 ' ---------------- CABECERA TABLA -------------------
                 Dim header As String =
-                    "Guía".PadRight(anchoGuia) & " " &
+                    "Guia".PadRight(anchoGuia) & " " &
                     "Fecha".PadRight(anchoFecha) & " " &
                     "Cliente".PadRight(anchoCliente) & " " &
                     "Total".PadLeft(anchoTotal)
@@ -848,7 +898,7 @@ Public Class FormInformes
                 Dim anchoTotal As Integer = 11
 
                 ' ----- ENCABEZADO -----
-                g.DrawString("VENTAS POR LOCAL", fuenteTitulo, Brushes.Black, margen, yPos)
+                g.DrawString(TextoTicketSeguro("VENTAS POR LOCAL"), fuenteTitulo, Brushes.Black, margen, yPos)
                 yPos += salto
 
                 g.DrawString("Desde: " & dtpDesde.Value.ToString("dd-MM-yyyy"), fuenteCuerpo, Brushes.Black, margen, yPos)
@@ -932,14 +982,14 @@ Public Class FormInformes
                 '========================
             Case TipoInforme.VentaPorProductos
 
-                ' ================== ANCHOS ==================
+                ' ==== ANCHOS ====
                 Dim anchoCliente As Integer = 16
                 Dim anchoProducto As Integer = 18
                 Dim anchoCant As Integer = 4
                 Dim anchoSub As Integer = 8
 
-                ' ================== ENCABEZADO ==================
-                g.DrawString("VENTAS POR PRODUCTO", fuenteTitulo, Brushes.Black, margen, yPos)
+                ' ==== ENCABEZADO ====
+                g.DrawString(TextoTicketSeguro("VENTAS POR PRODUCTO"), fuenteTitulo, Brushes.Black, margen, yPos)
                 yPos += salto
 
                 g.DrawString("Desde: " & dtpDesde.Value.ToString("dd-MM-yyyy"),
@@ -950,7 +1000,7 @@ Public Class FormInformes
                  fuenteCuerpo, Brushes.Black, margen, yPos)
                 yPos += salto
 
-                ' ================== N° GUÍA (opcional) ==================
+                ' ==== N° GUÍA (opcional) ====
                 If dgvResultados.Columns.Contains("NumeroGuia") AndAlso dgvResultados.Rows.Count > 0 Then
                     Dim guia = dgvResultados.Rows(0).Cells("NumeroGuia").Value
                     If guia IsNot Nothing Then
@@ -963,7 +1013,7 @@ Public Class FormInformes
 
                 yPos += salto
 
-                ' ================== CABECERA TABLA ==================
+                ' ==== CABECERA TABLA ====
                 Dim header As String =
                 "Cliente".PadRight(anchoCliente) & " " &
                 "Producto".PadRight(anchoProducto) & " " &
@@ -977,20 +1027,20 @@ Public Class FormInformes
                 fuenteCuerpo, Brushes.Black, margen, yPos)
                 yPos += salto
 
-                ' ================== CONTENIDO ==================
+                ' ==== CONTENIDO ====
                 Dim totalGeneral As Decimal = 0
 
                 For Each fila As DataGridViewRow In dgvResultados.Rows
                     If fila.IsNewRow Then Continue For
 
                     ' Cliente
-                    Dim cliente As String = fila.Cells("cliente").Value.ToString()
+                    Dim cliente As String = ValorCelda(fila, "Cliente")
                     If cliente.Length > anchoCliente Then cliente = cliente.Substring(0, anchoCliente)
                     cliente = cliente.PadRight(anchoCliente)
 
                     ' Producto (SIN PRECIO)
                     ' Producto
-                    Dim producto As String = fila.Cells("Producto").Value.ToString()
+                    Dim producto As String = ValorCelda(fila, "Producto", "nombre_producto")
 
                     If producto.Length > anchoProducto Then
                         producto = producto.Substring(0, anchoProducto)
@@ -998,10 +1048,10 @@ Public Class FormInformes
                     producto = producto.PadRight(anchoProducto)
 
                     ' Cantidad
-                    Dim cant As String = fila.Cells("cantidad").Value.ToString().PadLeft(anchoCant)
+                    Dim cant As String = ValorCelda(fila, "cantidad").PadLeft(anchoCant)
 
                     ' Subtotal
-                    Dim subt As Decimal = Convert.ToDecimal(fila.Cells("subtotal").Value)
+                    Dim subt As Decimal = Convert.ToDecimal(ValorCelda(fila, "subtotal"))
                     Dim subTxt As String = subt.ToString("N0").PadLeft(anchoSub)
 
                     totalGeneral += subt
@@ -1016,7 +1066,7 @@ Public Class FormInformes
                     yPos += salto
                 Next
 
-                ' ================== TOTAL ==================
+                ' ==== TOTAL ====
                 yPos += salto
                 g.DrawString(New String("-"c, 46), fuenteCuerpo, Brushes.Black, margen, yPos)
                 yPos += salto
@@ -1031,13 +1081,13 @@ Public Class FormInformes
                 '========================
             Case TipoInforme.ProduccionProductos
 
-                ' ========= ANCHOS (80mm) =========
+                ' ==== ANCHOS (80mm) ====
                 Dim aProd As Integer = 18
                 Dim aCant As Integer = 4
                 Dim aSub As Integer = 8
 
-                ' ========= ENCABEZADO =========
-                g.DrawString("PRODUCCIÓN DE PRODUCTOS", fuenteTitulo, Brushes.Black, margen, yPos)
+                ' ==== ENCABEZADO ====
+                g.DrawString(TextoTicketSeguro("PRODUCCION DE PRODUCTOS"), fuenteTitulo, Brushes.Black, margen, yPos)
                 yPos += salto
 
                 g.DrawString("Desde: " & dtpDesde.Value.ToString("dd-MM-yyyy"),
@@ -1048,7 +1098,7 @@ Public Class FormInformes
                              fuenteCuerpo, Brushes.Black, margen, yPos)
                 yPos += salto * 2
 
-                ' ========= AGRUPAR POR PRODUCCIÓN =========
+                ' ==== AGRUPAR POR PRODUCCIÓN ====
                 Dim producciones =
                     dgvResultados.Rows.
                     Cast(Of DataGridViewRow)().
@@ -1071,7 +1121,7 @@ Public Class FormInformes
                     End If
 
                     ' ===== CABECERA PRODUCCIÓN =====
-                    g.DrawString("PRODUCCIÓN N° " & idProd, fuenteTitulo, Brushes.Black, margen, yPos)
+                    g.DrawString("PRODUCCION N° " & idProd, fuenteTitulo, Brushes.Black, margen, yPos)
                     yPos += salto
 
                     g.DrawString("Empleado: " & empleado, fuenteCuerpo, Brushes.Black, margen, yPos)
@@ -1148,7 +1198,7 @@ Public Class FormInformes
                 '========================
                 ' ENCABEZADO DE TICKET
                 '========================
-                g.DrawString("RESUMEN DE PRODUCCIÓN", fuenteTitulo, Brushes.Black, margen, yPos)
+                g.DrawString(TextoTicketSeguro("RESUMEN DE PRODUCCION"), fuenteTitulo, Brushes.Black, margen, yPos)
                 yPos += salto
 
                 g.DrawString("Desde: " & dtpDesde.Value.ToString("dd-MM-yyyy"), fuenteCuerpo, Brushes.Black, margen, yPos)
@@ -1158,7 +1208,7 @@ Public Class FormInformes
                 yPos += salto
 
                 '====================================================
-                ' FORMATO A → PRODUCCIÓN POR EMPLEADO (DETALLADO)
+                ' FORMATO A - PRODUCCIÓN POR EMPLEADO (DETALLADO)
                 '====================================================
                 If dgvResultados.Columns.Contains("codigo_producto") Then
 
@@ -1228,7 +1278,7 @@ Public Class FormInformes
                                  fuenteTitulo, Brushes.Black, margen, yPos)
 
                     '====================================================
-                    ' FORMATO B → TODA LA PRODUCCIÓN (RESUMEN)
+                    ' FORMATO B - TODA LA PRODUCCIÓN (RESUMEN)
                     '====================================================
                 Else
 
@@ -1302,7 +1352,6 @@ Public Class FormInformes
 
             Case Else
                 g.DrawString("Ningun Informe ha sido Seleccionado.", fuenteTitulo, Brushes.Black, margen, yPos)
-
         End Select
 
     End Sub
