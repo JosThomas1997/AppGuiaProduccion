@@ -22,17 +22,20 @@ Partial Class FormInventario
     'No lo modifique con el editor de código.
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
+        Me.components = New System.ComponentModel.Container()
         Me.lblFechaInventario = New System.Windows.Forms.Label()
         Me.DateTimePicker1 = New System.Windows.Forms.DateTimePicker()
         Me.dgvInventario = New System.Windows.Forms.DataGridView()
         Me.btnNuevoInventario = New System.Windows.Forms.Button()
         Me.Label1 = New System.Windows.Forms.Label()
-        Me.ComboBox1 = New System.Windows.Forms.ComboBox()
+        Me.cbPasteleroDia = New System.Windows.Forms.ComboBox()
         Me.btnSiguienteInventario = New System.Windows.Forms.Button()
         Me.btnAnteriorInventario = New System.Windows.Forms.Button()
         Me.gbInventariosExistentes = New System.Windows.Forms.GroupBox()
         Me.DataGridView1 = New System.Windows.Forms.DataGridView()
         Me.gbSaquitosBerlines = New System.Windows.Forms.GroupBox()
+        Me.lblSaquitos = New System.Windows.Forms.Label()
+        Me.Label17 = New System.Windows.Forms.Label()
         Me.Label8 = New System.Windows.Forms.Label()
         Me.txtProduccionTotal = New System.Windows.Forms.TextBox()
         Me.Label7 = New System.Windows.Forms.Label()
@@ -60,11 +63,20 @@ Partial Class FormInventario
         Me.Label9 = New System.Windows.Forms.Label()
         Me.txtPrecioPan = New System.Windows.Forms.TextBox()
         Me.txtVentaPesos = New System.Windows.Forms.TextBox()
+        Me.gbRendimiento = New System.Windows.Forms.GroupBox()
+        Me.txtKilosVenta = New System.Windows.Forms.TextBox()
+        Me.Label18 = New System.Windows.Forms.Label()
+        Me.txtFaltante = New System.Windows.Forms.TextBox()
+        Me.Label16 = New System.Windows.Forms.Label()
+        Me.txtRendimiento = New System.Windows.Forms.TextBox()
+        Me.Label15 = New System.Windows.Forms.Label()
+        Me.tmrGuardar = New System.Windows.Forms.Timer(Me.components)
         CType(Me.dgvInventario, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.gbInventariosExistentes.SuspendLayout()
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.gbSaquitosBerlines.SuspendLayout()
         Me.gbVentaPan.SuspendLayout()
+        Me.gbRendimiento.SuspendLayout()
         Me.SuspendLayout()
         '
         'lblFechaInventario
@@ -114,13 +126,14 @@ Partial Class FormInventario
         Me.Label1.TabIndex = 4
         Me.Label1.Text = "Producción Pastelero:"
         '
-        'ComboBox1
+        'cbPasteleroDia
         '
-        Me.ComboBox1.FormattingEnabled = True
-        Me.ComboBox1.Location = New System.Drawing.Point(218, 24)
-        Me.ComboBox1.Name = "ComboBox1"
-        Me.ComboBox1.Size = New System.Drawing.Size(121, 21)
-        Me.ComboBox1.TabIndex = 5
+        Me.cbPasteleroDia.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cbPasteleroDia.FormattingEnabled = True
+        Me.cbPasteleroDia.Location = New System.Drawing.Point(218, 24)
+        Me.cbPasteleroDia.Name = "cbPasteleroDia"
+        Me.cbPasteleroDia.Size = New System.Drawing.Size(121, 21)
+        Me.cbPasteleroDia.TabIndex = 5
         '
         'btnSiguienteInventario
         '
@@ -160,6 +173,8 @@ Partial Class FormInventario
         '
         'gbSaquitosBerlines
         '
+        Me.gbSaquitosBerlines.Controls.Add(Me.lblSaquitos)
+        Me.gbSaquitosBerlines.Controls.Add(Me.Label17)
         Me.gbSaquitosBerlines.Controls.Add(Me.Label8)
         Me.gbSaquitosBerlines.Controls.Add(Me.txtProduccionTotal)
         Me.gbSaquitosBerlines.Controls.Add(Me.Label7)
@@ -180,6 +195,25 @@ Partial Class FormInventario
         Me.gbSaquitosBerlines.TabIndex = 9
         Me.gbSaquitosBerlines.TabStop = False
         Me.gbSaquitosBerlines.Text = "Saquitos / Berlines"
+        '
+        'lblSaquitos
+        '
+        Me.lblSaquitos.AutoSize = True
+        Me.lblSaquitos.Location = New System.Drawing.Point(308, 183)
+        Me.lblSaquitos.Name = "lblSaquitos"
+        Me.lblSaquitos.Size = New System.Drawing.Size(10, 13)
+        Me.lblSaquitos.TabIndex = 15
+        Me.lblSaquitos.Text = "-"
+        '
+        'Label17
+        '
+        Me.Label17.AutoSize = True
+        Me.Label17.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.Label17.Location = New System.Drawing.Point(273, 183)
+        Me.Label17.Name = "Label17"
+        Me.Label17.Size = New System.Drawing.Size(29, 13)
+        Me.Label17.TabIndex = 14
+        Me.Label17.Text = "QQ:"
         '
         'Label8
         '
@@ -378,6 +412,7 @@ Partial Class FormInventario
         '
         Me.txtVentaPanKg.Location = New System.Drawing.Point(116, 93)
         Me.txtVentaPanKg.Name = "txtVentaPanKg"
+        Me.txtVentaPanKg.ReadOnly = True
         Me.txtVentaPanKg.Size = New System.Drawing.Size(100, 20)
         Me.txtVentaPanKg.TabIndex = 4
         '
@@ -413,17 +448,92 @@ Partial Class FormInventario
         Me.txtVentaPesos.Size = New System.Drawing.Size(100, 20)
         Me.txtVentaPesos.TabIndex = 0
         '
+        'gbRendimiento
+        '
+        Me.gbRendimiento.Controls.Add(Me.txtKilosVenta)
+        Me.gbRendimiento.Controls.Add(Me.Label18)
+        Me.gbRendimiento.Controls.Add(Me.txtFaltante)
+        Me.gbRendimiento.Controls.Add(Me.Label16)
+        Me.gbRendimiento.Controls.Add(Me.txtRendimiento)
+        Me.gbRendimiento.Controls.Add(Me.Label15)
+        Me.gbRendimiento.Location = New System.Drawing.Point(1032, 444)
+        Me.gbRendimiento.Name = "gbRendimiento"
+        Me.gbRendimiento.Size = New System.Drawing.Size(220, 225)
+        Me.gbRendimiento.TabIndex = 11
+        Me.gbRendimiento.TabStop = False
+        Me.gbRendimiento.Text = "Rendimiento"
+        '
+        'txtKilosVenta
+        '
+        Me.txtKilosVenta.Location = New System.Drawing.Point(48, 180)
+        Me.txtKilosVenta.Name = "txtKilosVenta"
+        Me.txtKilosVenta.ReadOnly = True
+        Me.txtKilosVenta.Size = New System.Drawing.Size(133, 20)
+        Me.txtKilosVenta.TabIndex = 5
+        '
+        'Label18
+        '
+        Me.Label18.AutoSize = True
+        Me.Label18.Font = New System.Drawing.Font("Microsoft Sans Serif", 15.75!, System.Drawing.FontStyle.Italic)
+        Me.Label18.Location = New System.Drawing.Point(33, 153)
+        Me.Label18.Name = "Label18"
+        Me.Label18.Size = New System.Drawing.Size(157, 25)
+        Me.Label18.TabIndex = 4
+        Me.Label18.Text = "Kilos en Venta:"
+        '
+        'txtFaltante
+        '
+        Me.txtFaltante.Location = New System.Drawing.Point(48, 116)
+        Me.txtFaltante.Name = "txtFaltante"
+        Me.txtFaltante.ReadOnly = True
+        Me.txtFaltante.Size = New System.Drawing.Size(133, 20)
+        Me.txtFaltante.TabIndex = 3
+        '
+        'Label16
+        '
+        Me.Label16.AutoSize = True
+        Me.Label16.Font = New System.Drawing.Font("Microsoft Sans Serif", 15.75!, System.Drawing.FontStyle.Italic)
+        Me.Label16.Location = New System.Drawing.Point(68, 88)
+        Me.Label16.Name = "Label16"
+        Me.Label16.Size = New System.Drawing.Size(96, 25)
+        Me.Label16.TabIndex = 2
+        Me.Label16.Text = "Faltante:"
+        '
+        'txtRendimiento
+        '
+        Me.txtRendimiento.Location = New System.Drawing.Point(48, 54)
+        Me.txtRendimiento.Name = "txtRendimiento"
+        Me.txtRendimiento.ReadOnly = True
+        Me.txtRendimiento.Size = New System.Drawing.Size(133, 20)
+        Me.txtRendimiento.TabIndex = 1
+        '
+        'Label15
+        '
+        Me.Label15.AutoSize = True
+        Me.Label15.Font = New System.Drawing.Font("Microsoft Sans Serif", 15.75!, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.Label15.Location = New System.Drawing.Point(43, 26)
+        Me.Label15.Name = "Label15"
+        Me.Label15.Size = New System.Drawing.Size(138, 25)
+        Me.Label15.TabIndex = 0
+        Me.Label15.Text = "Rendimiento:"
+        '
+        'tmrGuardar
+        '
+        Me.tmrGuardar.Enabled = True
+        Me.tmrGuardar.Interval = 1000
+        '
         'FormInventario
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1264, 681)
+        Me.Controls.Add(Me.gbRendimiento)
         Me.Controls.Add(Me.gbVentaPan)
         Me.Controls.Add(Me.gbSaquitosBerlines)
         Me.Controls.Add(Me.gbInventariosExistentes)
         Me.Controls.Add(Me.btnAnteriorInventario)
         Me.Controls.Add(Me.btnSiguienteInventario)
-        Me.Controls.Add(Me.ComboBox1)
+        Me.Controls.Add(Me.cbPasteleroDia)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.btnNuevoInventario)
         Me.Controls.Add(Me.dgvInventario)
@@ -438,6 +548,8 @@ Partial Class FormInventario
         Me.gbSaquitosBerlines.PerformLayout()
         Me.gbVentaPan.ResumeLayout(False)
         Me.gbVentaPan.PerformLayout()
+        Me.gbRendimiento.ResumeLayout(False)
+        Me.gbRendimiento.PerformLayout()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -448,7 +560,7 @@ Partial Class FormInventario
     Friend WithEvents dgvInventario As DataGridView
     Friend WithEvents btnNuevoInventario As Button
     Friend WithEvents Label1 As Label
-    Friend WithEvents ComboBox1 As ComboBox
+    Friend WithEvents cbPasteleroDia As ComboBox
     Friend WithEvents btnSiguienteInventario As Button
     Friend WithEvents btnAnteriorInventario As Button
     Friend WithEvents gbInventariosExistentes As GroupBox
@@ -481,4 +593,14 @@ Partial Class FormInventario
     Friend WithEvents txtTotalPan As TextBox
     Friend WithEvents Label13 As Label
     Friend WithEvents txtSalidaPan As TextBox
+    Friend WithEvents gbRendimiento As GroupBox
+    Friend WithEvents txtRendimiento As TextBox
+    Friend WithEvents Label15 As Label
+    Friend WithEvents txtFaltante As TextBox
+    Friend WithEvents Label16 As Label
+    Friend WithEvents Label17 As Label
+    Friend WithEvents lblSaquitos As Label
+    Friend WithEvents txtKilosVenta As TextBox
+    Friend WithEvents Label18 As Label
+    Friend WithEvents tmrGuardar As Timer
 End Class

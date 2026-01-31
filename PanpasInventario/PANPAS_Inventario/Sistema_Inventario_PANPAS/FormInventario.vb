@@ -1,10 +1,28 @@
-﻿Public Class FormInventario
+﻿Imports System.Data.OleDb
+
+Public Class FormInventario
 
     Private Sub FormInventario_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        AddHandler txtVentaPesos.KeyPress, AddressOf SoloDecimal
+        AddHandler txtPrecioPan.KeyPress, AddressOf SoloDecimal
+        AddHandler txtLlegoPan.KeyPress, AddressOf SoloDecimal
+        AddHandler txtSalidaPan.KeyPress, AddressOf SoloDecimal
+
         AbrirConexionDB()
+
         BaseGridinventario()
+
         CargarPasteleros()
+        CargarPastelerosDia()
+        CargarOCrearInventario()
+
+        CargarInventarioCabecera(InventarioActual)
+        CargarInventarioDetalle(InventarioActual)
+
+        CalcularTotalesInventario()
     End Sub
+
+
 
     Private Sub FormInventario_FormClosing(sender As Object, e As FormClosingEventArgs) _
     Handles MyBase.FormClosing
@@ -24,10 +42,13 @@
         Dim colPastelero As New DataGridViewComboBoxColumn()
         colPastelero.Name = "id_pastelero"
         colPastelero.HeaderText = "Pastelero"
-        colPastelero.DisplayMember = "nombre_pastelero"
-        colPastelero.ValueMember = "id_pastelero"
         colPastelero.FlatStyle = FlatStyle.Flat
         colPastelero.Width = 150
+
+        Dim colIdProducto As New DataGridViewTextBoxColumn()
+        colIdProducto.Name = "id_producto"
+        colIdProducto.Visible = False
+        dgvInventario.Columns.Add(colIdProducto)
 
         'Agregado de columnas al Grid
         dgvInventario.Columns.Add("codigo", "Codigo")
@@ -133,6 +154,22 @@
         Else
             RecalcularFila(e.RowIndex)
         End If
+
+        If Not GuardarAuto Then Exit Sub
+        GuardadoPendiente = True
+        If e.RowIndex < 0 Then Exit Sub
+
+    End Sub
+
+    Private Sub dgvInventario_CurrentCellDirtyStateChanged(
+    sender As Object,
+    e As EventArgs
+) Handles dgvInventario.CurrentCellDirtyStateChanged
+
+        If TypeOf dgvInventario.CurrentCell Is DataGridViewComboBoxCell Then
+            dgvInventario.CommitEdit(DataGridViewDataErrorContexts.Commit)
+        End If
+
     End Sub
 
     'Limpieza de la fila en caso de que el codigo quede vacio o se elimine el producto
@@ -160,22 +197,17 @@
 
     End Sub
 
+    Private CargandoInventario As Boolean = False
+
     'Recalculo de la fila al cambiar algun valor numerico
     Private Sub dgvInventario_CellValueChanged(sender As Object, e As DataGridViewCellEventArgs) _
-        Handles dgvInventario.CellValueChanged
+Handles dgvInventario.CellValueChanged
 
+        If CargandoInventario Then Exit Sub
+        If Not GuardarAuto Then Exit Sub
         If e.RowIndex < 0 Then Exit Sub
 
-        Dim col As String = dgvInventario.Columns(e.ColumnIndex).Name
-
-        If col = "inventario" OrElse
-       col = "llegada" OrElse
-       col = "despacho" OrElse
-       col = "bajas" OrElse
-       col = "ofertas" Then
-
-            RecalcularFila(e.RowIndex)
-        End If
+        GuardadoPendiente = True
     End Sub
 
     'Validacion de datos ingresados en celdas numericas
@@ -213,6 +245,7 @@
     End Sub
 
     Private Sub CalcularPanVenta()
+        If Not GuardarAuto Then Exit Sub
 
         Dim ventaPesos As Decimal = LeerDecimal(txtVentaPesos)
         Dim precioPan As Decimal = LeerDecimal(txtPrecioPan)
@@ -232,34 +265,56 @@
         salidaPan
 
         txtTotalPan.Text = totalPan.ToString("0.00")
-
-        EvaluarRendimiento(totalPan)
-
     End Sub
 
-    Private Sub EvaluarRendimiento(totalPan As Decimal)
+    Private Sub CalcularKilosEnVenta()
+        If Not GuardarAuto Then Exit Sub
 
-        If totalPan >= 65D Then
-            txtTotalPan.BackColor = Color.LightGreen
-            txtTotalPan.ForeColor = Color.Black
-        Else
-            txtTotalPan.BackColor = Color.MistyRose
-            txtTotalPan.ForeColor = Color.DarkRed
+        Dim ventaPesos As Decimal = LeerDecimal(txtVentaPesos)
+        Dim precioPan As Decimal = LeerDecimal(txtPrecioPan)
+
+        If precioPan <= 0 Then
+            txtKilosVenta.Text = "0"
+            Exit Sub
         End If
 
+        Dim kilosReales As Decimal = ventaPesos / precioPan
+        Dim kilosEnteros As Integer = Math.Floor(kilosReales)
+
+        txtKilosVenta.Text = kilosEnteros.ToString()
     End Sub
 
-    Private Sub txtPan_TextChanged(sender As Object, e As EventArgs) _
-    Handles txtVentaPesos.TextChanged,
-            txtPrecioPan.TextChanged,
-            txtLlegoPan.TextChanged,
-            txtSalidaPan.TextChanged
+    Private Sub CalcularSaquitosLabel()
+        If Not GuardarAuto Then Exit Sub
 
-        CalcularPanVenta()
+        Dim produccionTotal As Decimal = LeerDecimal(txtProduccionTotal)
 
+        If produccionTotal <= 0 Then
+            lblSaquitos.Text = "0"
+            Exit Sub
+        End If
+
+        Dim saquitos As Decimal = produccionTotal / 2D
+        lblSaquitos.Text = saquitos.ToString("N1")
+    End Sub
+
+    Private Sub ValoresClave_TextChanged(sender As Object, e As EventArgs) _
+    Handles txtProduccionTotal.TextChanged,
+        txtVentaPesos.TextChanged,
+        txtPrecioPan.TextChanged,
+        txtLlegoPan.TextChanged,
+        txtSalidaPan.TextChanged
+
+        If Not GuardarAuto Then Exit Sub
+
+        RecalcularPan()
+        CalcularRendimiento()
+        CalcularSaquitosLabel()
+        GuardarInventarioCabecera()
     End Sub
 
     Private Sub RecalcularSaquitos()
+        If Not GuardarAuto Then Exit Sub
 
         Dim produccionBerlines As Decimal = LeerDecimal(txtProdBerlines)
         Dim inicial As Decimal = LeerDecimal(txtInventarioInicialSaquitos)
@@ -292,7 +347,6 @@
 
         Return 0D
     End Function
-
 
     'Funcion para leer valores enteros de celdas, en caso de estar vacias, retorna 0
     Private Function LeerEntero(celda As DataGridViewCell) As Integer
@@ -330,21 +384,72 @@
 
     End Function
 
+    Private Function LeerDecimalCelda(valor As Object) As Decimal
+
+        If valor Is Nothing OrElse IsDBNull(valor) Then
+            Return 0D
+        End If
+
+        If IsNumeric(valor) Then
+            Return Convert.ToDecimal(valor)
+        End If
+
+        Dim texto As String = valor.ToString().Trim()
+
+        If texto = "" Then Return 0D
+
+        Decimal.TryParse(texto.Replace(",", "."), Globalization.NumberStyles.Any,
+                     Globalization.CultureInfo.InvariantCulture, Nothing)
+
+        Return Convert.ToDecimal(texto)
+
+    End Function
+
+    Private Sub RecalcularTotalesGenerales()
+        If Not GuardarAuto Then Exit Sub
+
+        Dim totalDespacho As Integer = 0
+
+        For Each row As DataGridViewRow In dgvInventario.Rows
+            If row.IsNewRow Then Continue For
+
+            totalDespacho += LeerEntero(row.Cells("despacho"))
+        Next
+    End Sub
+
+    'TEMPORAL: Manejo de errores en el DataGridView para evitar excepciones molestos
+    Private Sub dgvInventario_DataError(
+    sender As Object,
+    e As DataGridViewDataErrorEventArgs
+    ) Handles dgvInventario.DataError
+
+        e.ThrowException = False
+    End Sub
+
     'Cargar los pasteleros en el grid del combobox creado para tal fin
     Private Sub CargarPasteleros()
-        Dim dt As New DataTable()
-        Dim sql As String = "SELECT id_pastelero, nombre_pastelero FROM pastelero ORDER BY nombre_pastelero"
 
-        Using cmd As New OleDb.OleDbCommand(sql, Conexion.conexionDB)
-            Using da As New OleDb.OleDbDataAdapter(cmd)
+        Dim dt As New DataTable()
+        Dim sql As String =
+        "SELECT id_pastelero, nombre_pastelero 
+         FROM pastelero 
+         ORDER BY nombre_pastelero"
+
+        Using cmd As New OleDbCommand(sql, Conexion.conexionDB)
+            Using da As New OleDbDataAdapter(cmd)
                 da.Fill(dt)
             End Using
         End Using
 
-        Dim comboCol As DataGridViewComboBoxColumn =
+        Dim comboCol =
         CType(dgvInventario.Columns("id_pastelero"), DataGridViewComboBoxColumn)
 
         comboCol.DataSource = dt
+        comboCol.DisplayMember = "nombre_pastelero"
+        comboCol.ValueMember = "id_pastelero"
+        comboCol.ValueType = GetType(Integer)
+        comboCol.DisplayStyle = DataGridViewComboBoxDisplayStyle.DropDownButton
+
     End Sub
 
     'Cargar los productos en el grid a partir del codigo ingresado, si este ya existe, no es agregado al grid
@@ -363,14 +468,16 @@
         If String.IsNullOrWhiteSpace(codigo) Then Exit Sub
 
         Dim sql As String =
-        "SELECT nombre, precio_venta_boleta FROM producto WHERE codigo = ?"
+        "SELECT id_producto, nombre, precio_venta_boleta
+         FROM producto
+         WHERE codigo = ?"
 
         Using cmd As New OleDb.OleDbCommand(sql, Conexion.conexionDB)
             cmd.Parameters.AddWithValue("@codigo", codigo)
 
             Using dr = cmd.ExecuteReader()
                 If dr.Read() Then
-
+                    dgvInventario.Rows(fila).Cells("id_producto").Value = dr("id_producto")
                     dgvInventario.Rows(fila).Cells("nombre").Value = dr("nombre")
                     dgvInventario.Rows(fila).Cells("precio").Value = dr("precio_venta_boleta")
 
@@ -382,10 +489,10 @@
                     dgvInventario.Rows(fila).Cells("bajas").Value = 0
                     dgvInventario.Rows(fila).Cells("ofertas").Value = 0
                     dgvInventario.Rows(fila).Cells("caja1").Value = 0
-                    dgvInventario.Rows(fila).Cells("caja2").Value = 0 
+                    dgvInventario.Rows(fila).Cells("caja2").Value = 0
 
                     RecalcularFila(fila)
-
+                    GuardadoPendiente = True
                 Else
                     MessageBox.Show("Código de producto no encontrado",
                                 "Inventario",
@@ -399,7 +506,79 @@
 
     End Sub
 
+    Private Const RENDIMIENTO_OBJETIVO As Decimal = 32.5D
+
+    Private Sub CalcularRendimiento()
+        If Not GuardarAuto Then Exit Sub
+
+        Dim produccionTotal As Decimal = LeerDecimal(txtProduccionTotal)
+        Dim totalPan As Decimal = LeerDecimal(txtTotalPan)
+
+        If totalPan <= 0 Then
+            txtRendimiento.Text = "0.0"
+            txtFaltante.Text = ""
+            txtRendimiento.BackColor = Color.White
+            Exit Sub
+        End If
+
+        ' Rendimiento real (igual a FileMaker)
+        Dim rendimiento As Decimal = (produccionTotal / totalPan) * 1000D
+        rendimiento = Math.Round(rendimiento, 1, MidpointRounding.AwayFromZero)
+
+        txtRendimiento.Text = rendimiento.ToString("0.0")
+
+        If rendimiento < RENDIMIENTO_OBJETIVO Then
+
+            Dim faltante As Decimal = RENDIMIENTO_OBJETIVO - rendimiento
+            faltante = Math.Round(faltante, 1, MidpointRounding.AwayFromZero)
+
+            txtFaltante.Text = faltante.ToString("0.0")
+            txtRendimiento.BackColor = Color.MistyRose
+
+        Else
+            txtFaltante.Text = ""
+            txtRendimiento.BackColor = Color.LightGreen
+        End If
+
+    End Sub
+
+    Private Sub Rendimiento_TextChanged(sender As Object, e As EventArgs) _
+    Handles txtProduccionTotal.TextChanged,
+        txtTotalPan.TextChanged
+
+        CalcularRendimiento()
+
+    End Sub
+
+    'Calculo para la venta de pan, salida y entrada de pan
+    Private Sub RecalcularPan()
+        If Not GuardarAuto Then Exit Sub
+
+        Dim ventaPesos As Decimal = LeerDecimal(txtVentaPesos)
+        Dim precioPan As Decimal = LeerDecimal(txtPrecioPan)
+        Dim llego As Integer = CInt(LeerDecimal(txtLlegoPan))
+        Dim salida As Integer = CInt(LeerDecimal(txtSalidaPan))
+
+        If precioPan <= 0 Then
+            txtVentaPanKg.Text = "0"
+            txtTotalPan.Text = "0"
+            Exit Sub
+        End If
+
+        Dim kilosReales As Decimal = ventaPesos / precioPan
+        Dim kilosEnteros As Integer = CInt(Math.Floor(kilosReales))
+
+        txtVentaPanKg.Text = kilosReales.ToString("N2")
+        txtKilosVenta.Text = kilosEnteros.ToString()
+
+        Dim totalPan As Integer = kilosEnteros - llego + salida
+        txtTotalPan.Text = totalPan.ToString()
+    End Sub
+
+    'Recalcular las filas del grid de Inventario
     Private Sub RecalcularFila(fila As Integer)
+
+        If Not GuardarAuto Then Exit Sub
 
         'Obtencion de la fila a calcular
         Dim row = dgvInventario.Rows(fila)
@@ -481,5 +660,468 @@
             e.Handled = True
         End If
     End Sub
+
+    Private Sub btnAnteriorInventario_Click(sender As Object, e As EventArgs) Handles btnAnteriorInventario.Click
+
+        Dim sql As String =
+    "SELECT MAX(id_inventario)
+     FROM inventario
+     WHERE id_inventario < ?"
+
+        Using cmd As New OleDbCommand(sql, Conexion.conexionDB)
+            cmd.Parameters.AddWithValue("@id", InventarioActual)
+
+            Dim result = cmd.ExecuteScalar()
+
+            If result IsNot Nothing AndAlso Not IsDBNull(result) Then
+                CargarInventarioCompleto(CInt(result))
+            End If
+        End Using
+
+    End Sub
+
+    Private Sub btnSiguienteInventario_Click(sender As Object, e As EventArgs) Handles btnSiguienteInventario.Click
+
+        Dim sql As String =
+    "SELECT MIN(id_inventario)
+     FROM inventario
+     WHERE id_inventario > ?"
+
+        Using cmd As New OleDbCommand(sql, Conexion.conexionDB)
+            cmd.Parameters.AddWithValue("@id", InventarioActual)
+
+            Dim result = cmd.ExecuteScalar()
+
+            If result IsNot Nothing AndAlso Not IsDBNull(result) Then
+                CargarInventarioCompleto(CInt(result))
+            End If
+        End Using
+
+    End Sub
+
+    Private Sub btnNuevoInventario_Click(sender As Object, e As EventArgs) Handles btnNuevoInventario.Click
+        GuardarAuto = False
+        CargandoInventario = True
+
+        CrearNuevoInventario()
+
+        dgvInventario.Rows.Clear()
+
+        LimpiarCabeceraInventario()
+
+        CargandoInventario = False
+        GuardarAuto = True
+    End Sub
+
+    Private Sub LimpiarCabeceraInventario()
+
+        txtProduccionTotal.Clear()
+        txtProdBerlines.Clear()
+        txtVentaPesos.Clear()
+        txtPrecioPan.Clear()
+        txtVentaPanKg.Clear()
+        txtLlegoPan.Clear()
+        txtSalidaPan.Clear()
+        txtTotalPan.Clear()
+        txtKilosVenta.Clear()
+        txtRendimiento.Clear()
+        txtFaltante.Clear()
+
+        txtInventarioInicialSaquitos.Clear()
+        txtIngresoSaquitos.Clear()
+        txtSalidaSaquitos.Clear()
+        txtInventarioFinalSaquitos.Clear()
+
+        cbPasteleroDia.SelectedIndex = -1
+
+    End Sub
+
+    Private Sub CargarInventarioCompleto(id As Integer)
+
+        GuardarAuto = False
+        CargandoInventario = True
+
+        InventarioActual = id
+
+        CargarInventarioCabecera(id)
+        CargarInventarioDetalle(id)
+        CalcularTotalesInventario()
+
+        CargandoInventario = False
+        GuardarAuto = True
+
+    End Sub
+
+    Private Sub CargarPastelerosDia()
+
+        Dim dt As New DataTable
+        Dim sql As String = "SELECT id_pastelero, nombre_pastelero FROM pastelero ORDER BY nombre_pastelero"
+
+        Using cmd As New OleDbCommand(sql, Conexion.conexionDB)
+            Using da As New OleDbDataAdapter(cmd)
+                da.Fill(dt)
+            End Using
+        End Using
+
+        cbPasteleroDia.DataSource = dt
+        cbPasteleroDia.DisplayMember = "nombre_pastelero"
+        cbPasteleroDia.ValueMember = "id_pastelero"
+        cbPasteleroDia.SelectedIndex = -1
+
+    End Sub
+
+    '===========================
+    '==AUTOGUARDADO INVENTARIO==
+    '===========================
+    Private GuardadoPendiente As Boolean = False
+    Private GuardarAuto As Boolean = True
+    Private InventarioActual As Integer = 0
+
+    Private Sub tmrGuardar_Tick(sender As Object, e As EventArgs) Handles tmrGuardar.Tick
+
+        If Not GuardadoPendiente Then Exit Sub
+
+        GuardadoPendiente = False
+        GuardarInventarioDetalle()
+
+    End Sub
+
+    Private Sub GuardarInventarioDetalle()
+
+        If InventarioActual = 0 Then Exit Sub
+
+        GuardarAuto = False
+
+        Dim cn As OleDbConnection = Conexion.conexionDB
+
+        If cn.State <> ConnectionState.Open Then
+            cn.Open()
+        End If
+
+        For Each row As DataGridViewRow In dgvInventario.Rows
+
+            If row.IsNewRow Then Continue For
+            If row.Cells("id_producto").Value Is Nothing Then Continue For
+
+            Dim idProducto As Integer = CInt(row.Cells("id_producto").Value)
+
+            Dim sql As String
+
+            If ExisteDetalleInventario(InventarioActual, idProducto) Then
+                ' UPDATE
+                sql =
+        "UPDATE inventario_detalle SET
+            inventario_inicial = ?,
+            llegada = ?,
+            despacho = ?,
+            bajas = ?,
+            ofertas = ?,
+            caja1 = ?,
+            caja2 = ?,
+            id_pastelero = ?
+         WHERE id_inventario = ?
+           AND id_producto = ?"
+            Else
+                ' INSERT
+                sql =
+        "INSERT INTO inventario_detalle
+        (id_inventario, id_producto,
+         inventario_inicial, llegada, despacho, bajas, ofertas,
+         caja1, caja2, id_pastelero)
+        VALUES (?,?,?,?,?,?,?,?,?,?)"
+            End If
+
+            Using cmd As New OleDbCommand(sql, Conexion.conexionDB)
+
+                If ExisteDetalleInventario(InventarioActual, idProducto) Then
+                    ' UPDATE (orden correcto)
+                    cmd.Parameters.AddWithValue("@invini", LeerDecimalCelda(row.Cells("inventario").Value))
+                    cmd.Parameters.AddWithValue("@lleg", LeerDecimalCelda(row.Cells("llegada").Value))
+                    cmd.Parameters.AddWithValue("@desp", LeerDecimalCelda(row.Cells("despacho").Value))
+                    cmd.Parameters.AddWithValue("@baj", LeerDecimalCelda(row.Cells("bajas").Value))
+                    cmd.Parameters.AddWithValue("@ofe", LeerDecimalCelda(row.Cells("ofertas").Value))
+                    cmd.Parameters.AddWithValue("@c1", LeerDecimalCelda(row.Cells("caja1").Value))
+                    cmd.Parameters.AddWithValue("@c2", LeerDecimalCelda(row.Cells("caja2").Value))
+                    cmd.Parameters.AddWithValue("@past", If(IsDBNull(row.Cells("id_pastelero").Value), DBNull.Value, row.Cells("id_pastelero").Value))
+                    cmd.Parameters.AddWithValue("@inv", InventarioActual)
+                    cmd.Parameters.AddWithValue("@prod", idProducto)
+
+                Else
+                    ' INSERT (ORDEN EXACTO AL SQL)
+                    cmd.Parameters.AddWithValue("@inv", InventarioActual)
+                    cmd.Parameters.AddWithValue("@prod", idProducto)
+                    cmd.Parameters.AddWithValue("@invini", LeerDecimalCelda(row.Cells("inventario").Value))
+                    cmd.Parameters.AddWithValue("@lleg", LeerDecimalCelda(row.Cells("llegada").Value))
+                    cmd.Parameters.AddWithValue("@desp", LeerDecimalCelda(row.Cells("despacho").Value))
+                    cmd.Parameters.AddWithValue("@baj", LeerDecimalCelda(row.Cells("bajas").Value))
+                    cmd.Parameters.AddWithValue("@ofe", LeerDecimalCelda(row.Cells("ofertas").Value))
+                    cmd.Parameters.AddWithValue("@c1", LeerDecimalCelda(row.Cells("caja1").Value))
+                    cmd.Parameters.AddWithValue("@c2", LeerDecimalCelda(row.Cells("caja2").Value))
+                    cmd.Parameters.AddWithValue("@past", If(IsDBNull(row.Cells("id_pastelero").Value), DBNull.Value, row.Cells("id_pastelero").Value))
+                End If
+
+                cmd.ExecuteNonQuery()
+            End Using
+
+        Next
+
+        GuardarAuto = True
+
+    End Sub
+
+    Private Function ObtenerIdProducto(codigo As String) As Integer
+
+        Dim sql As String =
+    "SELECT id_producto FROM producto WHERE codigo = ?"
+
+        Using cmd As New OleDbCommand(sql, Conexion.conexionDB)
+            cmd.Parameters.AddWithValue("@codigo", codigo)
+
+            Dim resultado = cmd.ExecuteScalar()
+
+            If resultado Is Nothing OrElse IsDBNull(resultado) Then
+                Throw New Exception("Producto no existe en base de datos.")
+            End If
+
+            Return CInt(resultado)
+        End Using
+
+        Return 0
+
+    End Function
+
+    Private Function ExisteDetalleInventario(idInventario As Integer, idProducto As Integer) As Boolean
+
+        Dim sql As String =
+    "SELECT COUNT(*) 
+     FROM inventario_detalle 
+     WHERE id_inventario = ? AND id_producto = ?"
+
+        Using cmd As New OleDbCommand(sql, Conexion.conexionDB)
+            cmd.Parameters.AddWithValue("@inv", idInventario)
+            cmd.Parameters.AddWithValue("@prod", idProducto)
+
+            Return CInt(cmd.ExecuteScalar()) > 0
+        End Using
+
+    End Function
+
+    Private Sub GuardarInventarioCabecera()
+
+        If Not GuardarAuto OrElse InventarioActual = 0 Then Exit Sub
+
+        Dim sql As String =
+            "UPDATE inventario SET
+            id_pastelero_dia = ?,
+            produccion_pastelero = ?,
+            produccion_berlin = ?,
+            venta_pesos = ?,
+            precio_pan = ?,
+            venta_pan_kg = ?,
+            llego_pan = ?,
+            salida_pan_manual = ?,
+            total_pan = ?,
+            kilos_venta = ?,
+            rendimiento = ?,
+            faltante = ?,
+            saq_inv_inicial = ?,
+            saq_ingreso = ?,
+            saq_salida = ?,
+            saq_inv_final = ?
+        WHERE id_inventario = ?"
+
+        Using cmd As New OleDbCommand(sql, Conexion.conexionDB)
+
+            cmd.Parameters.AddWithValue("@id_pastelero",
+            If(cbPasteleroDia.SelectedIndex = -1,
+               DBNull.Value,
+               cbPasteleroDia.SelectedValue))
+
+            cmd.Parameters.AddWithValue("@p1", LeerDecimal(txtProduccionTotal))
+            cmd.Parameters.AddWithValue("@p2", LeerDecimal(txtProdBerlines))
+            cmd.Parameters.AddWithValue("@p3", LeerDecimal(txtVentaPesos))
+            cmd.Parameters.AddWithValue("@p4", LeerDecimal(txtPrecioPan))
+            cmd.Parameters.AddWithValue("@p5", LeerDecimal(txtVentaPanKg))
+            cmd.Parameters.AddWithValue("@p6", LeerDecimal(txtLlegoPan))
+            cmd.Parameters.AddWithValue("@p7", LeerDecimal(txtSalidaPan))
+            cmd.Parameters.AddWithValue("@p8", LeerDecimal(txtTotalPan))
+            cmd.Parameters.AddWithValue("@p9", LeerDecimal(txtKilosVenta))
+            cmd.Parameters.AddWithValue("@p10", LeerDecimal(txtRendimiento))
+            cmd.Parameters.AddWithValue("@p11", LeerDecimal(txtFaltante))
+            cmd.Parameters.AddWithValue("@p12", LeerDecimal(txtInventarioInicialSaquitos))
+            cmd.Parameters.AddWithValue("@p13", LeerDecimal(txtIngresoSaquitos))
+            cmd.Parameters.AddWithValue("@p14", LeerDecimal(txtSalidaSaquitos))
+            cmd.Parameters.AddWithValue("@p15", LeerDecimal(txtInventarioFinalSaquitos))
+            cmd.Parameters.AddWithValue("@p16", InventarioActual)
+
+            cmd.ExecuteNonQuery()
+        End Using
+
+    End Sub
+
+
+    Private Sub CargarOCrearInventario()
+
+        Dim sql As String =
+        "SELECT id_inventario 
+         FROM inventario 
+         WHERE fecha_inventario = Date()"
+
+        Using cmd As New OleDbCommand(sql, Conexion.conexionDB)
+            Dim resultado = cmd.ExecuteScalar()
+
+            If resultado IsNot Nothing Then
+                InventarioActual = CInt(resultado)
+            Else
+                CrearNuevoInventario()
+            End If
+
+        End Using
+
+    End Sub
+
+    Private Sub CargarInventarioDetalle(idInventario As Integer)
+
+        CargandoInventario = True
+        GuardarAuto = False
+
+        dgvInventario.Rows.Clear()
+
+        Dim sql As String =
+        "SELECT p.id_producto,
+               p.codigo,
+               p.nombre,
+               p.precio_venta_boleta,
+               d.inventario_inicial,
+               d.llegada,
+               d.despacho,
+               d.bajas,
+               d.ofertas,
+               d.caja1,
+               d.caja2,
+               d.id_pastelero
+        FROM inventario_detalle d
+        INNER JOIN producto p ON d.id_producto = p.id_producto
+        WHERE d.id_inventario = ?"
+
+        Dim dt As New DataTable()
+
+        Using cmd As New OleDbCommand(sql, Conexion.conexionDB)
+            cmd.Parameters.AddWithValue("@id", idInventario)
+
+            Using dr As OleDbDataReader = cmd.ExecuteReader()
+                dt.Load(dr)
+            End Using
+        End Using
+
+        For Each row As DataRow In dt.Rows
+
+            Dim fila As Integer = dgvInventario.Rows.Add()
+
+            With dgvInventario.Rows(fila)
+                .Cells("id_producto").Value = row("id_producto")
+                .Cells("codigo").Value = row("codigo")
+                .Cells("nombre").Value = row("nombre")
+                .Cells("precio").Value = row("precio_venta_boleta")
+
+                .Cells("inventario").Value = row("inventario_inicial")
+                .Cells("llegada").Value = row("llegada")
+                .Cells("despacho").Value = row("despacho")
+                .Cells("bajas").Value = row("bajas")
+                .Cells("ofertas").Value = row("ofertas")
+                .Cells("id_pastelero").Value =
+                If(IsDBNull(row("id_pastelero")),
+                   DBNull.Value,
+                   Convert.ToInt32(row("id_pastelero")))
+
+                .Cells("caja1").Value = row("caja1")
+                .Cells("caja2").Value = row("caja2")
+            End With
+
+            RecalcularFila(fila)
+        Next
+
+        GuardarAuto = True
+        CargandoInventario = False
+    End Sub
+
+    Private Sub CalcularTotalesInventario()
+        If Not GuardarAuto Then Exit Sub
+
+        ' recalcula filas
+        For Each row As DataGridViewRow In dgvInventario.Rows
+            If Not row.IsNewRow Then
+                RecalcularFila(row.Index)
+            End If
+        Next
+
+        ' recalcula totales generales
+        RecalcularTotalesGenerales()
+        RecalcularPan()
+        RecalcularSaquitos()
+        CalcularRendimiento()
+        CalcularSaquitosLabel()
+    End Sub
+
+    Private Sub CargarInventarioCabecera(idInventario As Integer)
+
+        GuardarAuto = False
+
+        Dim sql As String =
+    "SELECT *
+     FROM inventario
+     WHERE id_inventario = ?"
+
+        Using cmd As New OleDbCommand(sql, Conexion.conexionDB)
+            cmd.Parameters.AddWithValue("@id", idInventario)
+
+            Using dr = cmd.ExecuteReader()
+                If dr.Read() Then
+
+                    txtProduccionTotal.Text = dr("produccion_pastelero").ToString()
+                    txtProdBerlines.Text = dr("produccion_berlin").ToString()
+                    txtVentaPesos.Text = dr("venta_pesos").ToString()
+                    txtPrecioPan.Text = dr("precio_pan").ToString()
+                    txtVentaPanKg.Text = dr("venta_pan_kg").ToString()
+                    txtLlegoPan.Text = dr("llego_pan").ToString()
+                    txtSalidaPan.Text = dr("salida_pan_manual").ToString()
+                    txtTotalPan.Text = dr("total_pan").ToString()
+                    txtKilosVenta.Text = dr("kilos_venta").ToString()
+                    txtRendimiento.Text = dr("rendimiento").ToString()
+                    txtFaltante.Text = dr("faltante").ToString()
+
+                    txtInventarioInicialSaquitos.Text = dr("saq_inv_inicial").ToString()
+                    txtIngresoSaquitos.Text = dr("saq_ingreso").ToString()
+                    txtSalidaSaquitos.Text = dr("saq_salida").ToString()
+                    txtInventarioFinalSaquitos.Text = dr("saq_inv_final").ToString()
+                    If IsDBNull(dr("id_pastelero_dia")) Then
+                        cbPasteleroDia.SelectedIndex = -1
+                    Else
+                        cbPasteleroDia.SelectedValue = Convert.ToInt32(dr("id_pastelero_dia"))
+                    End If
+                End If
+            End Using
+        End Using
+
+        GuardarAuto = True
+
+    End Sub
+
+    Private Sub CrearNuevoInventario()
+
+        Dim sql As String =
+        "INSERT INTO inventario 
+        (fecha_inventario, produccion_pastelero, fecha_creacion)
+        VALUES (Date(), 0, Now())"
+
+        Using cmd As New OleDbCommand(sql, Conexion.conexionDB)
+            cmd.ExecuteNonQuery()
+
+            cmd.CommandText = "SELECT @@IDENTITY"
+            InventarioActual = CInt(cmd.ExecuteScalar())
+        End Using
+
+    End Sub
+
 
 End Class
