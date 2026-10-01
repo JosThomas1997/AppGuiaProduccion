@@ -1,0 +1,373 @@
+﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
+Partial Class FormEditarPrecios
+    Inherits System.Windows.Forms.Form
+
+    <System.Diagnostics.DebuggerNonUserCode()> _
+    Protected Overrides Sub Dispose(ByVal disposing As Boolean)
+        Try
+            If disposing AndAlso components IsNot Nothing Then
+                components.Dispose()
+            End If
+        Finally
+            MyBase.Dispose(disposing)
+        End Try
+    End Sub
+
+    Private components As System.ComponentModel.IContainer
+
+    <System.Diagnostics.DebuggerStepThrough()> _
+    Private Sub InitializeComponent()
+        Me.lblBuscar = New System.Windows.Forms.Label()
+        Me.txtBuscar = New System.Windows.Forms.TextBox()
+        Me.btnBuscar = New System.Windows.Forms.Button()
+        Me.chkMostrarInactivos = New System.Windows.Forms.CheckBox()
+        Me.dgvResultados = New System.Windows.Forms.DataGridView()
+        Me.colCodigo = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.colNombre = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.colPrecio = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.colEstado = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.lblProductoSeleccionado = New System.Windows.Forms.Label()
+        Me.lblNuevoNombre = New System.Windows.Forms.Label()
+        Me.txtNuevoNombreEditar = New System.Windows.Forms.TextBox()
+        Me.lblNuevoPrecio = New System.Windows.Forms.Label()
+        Me.txtNuevoPrecio = New System.Windows.Forms.TextBox()
+        Me.btnGuardar = New System.Windows.Forms.Button()
+        Me.btnEliminarReactivar = New System.Windows.Forms.Button()
+        Me.btnReactivarProductos = New System.Windows.Forms.Button()
+        Me.lblSeparadorNuevo = New System.Windows.Forms.Label()
+        Me.lblCodigoNuevo = New System.Windows.Forms.Label()
+        Me.txtCodigoNuevo = New System.Windows.Forms.TextBox()
+        Me.lblNombreNuevo = New System.Windows.Forms.Label()
+        Me.txtNombreNuevo = New System.Windows.Forms.TextBox()
+        Me.lblCategoriaNueva = New System.Windows.Forms.Label()
+        Me.cbCategoriaNueva = New System.Windows.Forms.ComboBox()
+        Me.lblSubcategoriaNueva = New System.Windows.Forms.Label()
+        Me.cbSubcategoriaNueva = New System.Windows.Forms.ComboBox()
+        Me.lblPrecioNuevoProducto = New System.Windows.Forms.Label()
+        Me.txtPrecioNuevoProducto = New System.Windows.Forms.TextBox()
+        Me.btnAgregarProducto = New System.Windows.Forms.Button()
+        CType(Me.dgvResultados, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.SuspendLayout()
+        '
+        'lblBuscar
+        '
+        Me.lblBuscar.AutoSize = True
+        Me.lblBuscar.Location = New System.Drawing.Point(12, 15)
+        Me.lblBuscar.Name = "lblBuscar"
+        Me.lblBuscar.Size = New System.Drawing.Size(120, 13)
+        Me.lblBuscar.TabIndex = 0
+        Me.lblBuscar.Text = "Buscar (código o nombre):"
+        '
+        'txtBuscar
+        '
+        Me.txtBuscar.Location = New System.Drawing.Point(160, 12)
+        Me.txtBuscar.Name = "txtBuscar"
+        Me.txtBuscar.Size = New System.Drawing.Size(240, 20)
+        Me.txtBuscar.TabIndex = 1
+        '
+        'btnBuscar
+        '
+        Me.btnBuscar.Location = New System.Drawing.Point(406, 10)
+        Me.btnBuscar.Name = "btnBuscar"
+        Me.btnBuscar.Size = New System.Drawing.Size(84, 25)
+        Me.btnBuscar.TabIndex = 2
+        Me.btnBuscar.Text = "Buscar"
+        Me.btnBuscar.UseVisualStyleBackColor = True
+        '
+        'chkMostrarInactivos
+        '
+        Me.chkMostrarInactivos.AutoSize = True
+        Me.chkMostrarInactivos.Location = New System.Drawing.Point(12, 42)
+        Me.chkMostrarInactivos.Name = "chkMostrarInactivos"
+        Me.chkMostrarInactivos.Size = New System.Drawing.Size(160, 17)
+        Me.chkMostrarInactivos.TabIndex = 3
+        Me.chkMostrarInactivos.Text = "Mostrar productos inactivos"
+        Me.chkMostrarInactivos.UseVisualStyleBackColor = True
+        '
+        'dgvResultados
+        '
+        Me.dgvResultados.AllowUserToAddRows = False
+        Me.dgvResultados.AllowUserToDeleteRows = False
+        Me.dgvResultados.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        Me.dgvResultados.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.colCodigo, Me.colNombre, Me.colPrecio, Me.colEstado})
+        Me.dgvResultados.Location = New System.Drawing.Point(12, 65)
+        Me.dgvResultados.MultiSelect = False
+        Me.dgvResultados.Name = "dgvResultados"
+        Me.dgvResultados.ReadOnly = True
+        Me.dgvResultados.RowHeadersVisible = False
+        Me.dgvResultados.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect
+        Me.dgvResultados.Size = New System.Drawing.Size(478, 280)
+        Me.dgvResultados.TabIndex = 4
+        '
+        'colCodigo
+        '
+        Me.colCodigo.HeaderText = "Código"
+        Me.colCodigo.Name = "codigo"
+        Me.colCodigo.ReadOnly = True
+        Me.colCodigo.Width = 70
+        '
+        'colNombre
+        '
+        Me.colNombre.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill
+        Me.colNombre.HeaderText = "Nombre"
+        Me.colNombre.Name = "nombre"
+        Me.colNombre.ReadOnly = True
+        '
+        'colPrecio
+        '
+        Me.colPrecio.HeaderText = "Precio Actual"
+        Me.colPrecio.Name = "precio"
+        Me.colPrecio.ReadOnly = True
+        Me.colPrecio.Width = 90
+        '
+        'colEstado
+        '
+        Me.colEstado.HeaderText = "Estado"
+        Me.colEstado.Name = "estado"
+        Me.colEstado.ReadOnly = True
+        Me.colEstado.Width = 70
+        '
+        'lblProductoSeleccionado
+        '
+        Me.lblProductoSeleccionado.AutoSize = True
+        Me.lblProductoSeleccionado.Location = New System.Drawing.Point(12, 352)
+        Me.lblProductoSeleccionado.Name = "lblProductoSeleccionado"
+        Me.lblProductoSeleccionado.Size = New System.Drawing.Size(295, 13)
+        Me.lblProductoSeleccionado.TabIndex = 5
+        Me.lblProductoSeleccionado.Text = "Selecciona un producto de la lista para editarlo"
+        '
+        'lblNuevoNombre
+        '
+        Me.lblNuevoNombre.AutoSize = True
+        Me.lblNuevoNombre.Location = New System.Drawing.Point(12, 381)
+        Me.lblNuevoNombre.Name = "lblNuevoNombre"
+        Me.lblNuevoNombre.Size = New System.Drawing.Size(55, 13)
+        Me.lblNuevoNombre.TabIndex = 6
+        Me.lblNuevoNombre.Text = "Nombre:"
+        '
+        'txtNuevoNombreEditar
+        '
+        Me.txtNuevoNombreEditar.Location = New System.Drawing.Point(90, 378)
+        Me.txtNuevoNombreEditar.Name = "txtNuevoNombreEditar"
+        Me.txtNuevoNombreEditar.Size = New System.Drawing.Size(300, 20)
+        Me.txtNuevoNombreEditar.TabIndex = 7
+        '
+        'lblNuevoPrecio
+        '
+        Me.lblNuevoPrecio.AutoSize = True
+        Me.lblNuevoPrecio.Location = New System.Drawing.Point(12, 409)
+        Me.lblNuevoPrecio.Name = "lblNuevoPrecio"
+        Me.lblNuevoPrecio.Size = New System.Drawing.Size(66, 13)
+        Me.lblNuevoPrecio.TabIndex = 8
+        Me.lblNuevoPrecio.Text = "Precio ($):"
+        '
+        'txtNuevoPrecio
+        '
+        Me.txtNuevoPrecio.Location = New System.Drawing.Point(90, 406)
+        Me.txtNuevoPrecio.Name = "txtNuevoPrecio"
+        Me.txtNuevoPrecio.Size = New System.Drawing.Size(120, 20)
+        Me.txtNuevoPrecio.TabIndex = 9
+        '
+        'btnGuardar
+        '
+        Me.btnGuardar.Enabled = False
+        Me.btnGuardar.Location = New System.Drawing.Point(320, 400)
+        Me.btnGuardar.Name = "btnGuardar"
+        Me.btnGuardar.Size = New System.Drawing.Size(170, 28)
+        Me.btnGuardar.TabIndex = 10
+        Me.btnGuardar.Text = "Guardar cambios"
+        Me.btnGuardar.UseVisualStyleBackColor = True
+        '
+        'btnEliminarReactivar
+        '
+        Me.btnEliminarReactivar.Enabled = False
+        Me.btnEliminarReactivar.Location = New System.Drawing.Point(320, 434)
+        Me.btnEliminarReactivar.Name = "btnEliminarReactivar"
+        Me.btnEliminarReactivar.Size = New System.Drawing.Size(170, 28)
+        Me.btnEliminarReactivar.TabIndex = 11
+        Me.btnEliminarReactivar.Text = "Eliminar producto"
+        Me.btnEliminarReactivar.UseVisualStyleBackColor = True
+        '
+        'btnReactivarProductos
+        '
+        Me.btnReactivarProductos.BackColor = System.Drawing.Color.FromArgb(CType(CType(76, Byte), Integer), CType(CType(175, Byte), Integer), CType(CType(80, Byte), Integer))
+        Me.btnReactivarProductos.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Bold)
+        Me.btnReactivarProductos.ForeColor = System.Drawing.Color.White
+        Me.btnReactivarProductos.Location = New System.Drawing.Point(320, 468)
+        Me.btnReactivarProductos.Name = "btnReactivarProductos"
+        Me.btnReactivarProductos.Size = New System.Drawing.Size(170, 28)
+        Me.btnReactivarProductos.TabIndex = 24
+        Me.btnReactivarProductos.Text = "Reactivar Catálogo"
+        Me.btnReactivarProductos.UseVisualStyleBackColor = False
+        '
+        'lblSeparadorNuevo
+        '
+        Me.lblSeparadorNuevo.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D
+        Me.lblSeparadorNuevo.Location = New System.Drawing.Point(12, 478)
+        Me.lblSeparadorNuevo.Name = "lblSeparadorNuevo"
+        Me.lblSeparadorNuevo.Size = New System.Drawing.Size(478, 2)
+        Me.lblSeparadorNuevo.TabIndex = 12
+        '
+        'lblCodigoNuevo
+        '
+        Me.lblCodigoNuevo.AutoSize = True
+        Me.lblCodigoNuevo.Location = New System.Drawing.Point(12, 493)
+        Me.lblCodigoNuevo.Name = "lblCodigoNuevo"
+        Me.lblCodigoNuevo.Size = New System.Drawing.Size(200, 13)
+        Me.lblCodigoNuevo.TabIndex = 13
+        Me.lblCodigoNuevo.Text = "Agregar producto nuevo — Código:"
+        '
+        'txtCodigoNuevo
+        '
+        Me.txtCodigoNuevo.Location = New System.Drawing.Point(210, 490)
+        Me.txtCodigoNuevo.Name = "txtCodigoNuevo"
+        Me.txtCodigoNuevo.Size = New System.Drawing.Size(80, 20)
+        Me.txtCodigoNuevo.TabIndex = 14
+        '
+        'lblNombreNuevo
+        '
+        Me.lblNombreNuevo.AutoSize = True
+        Me.lblNombreNuevo.Location = New System.Drawing.Point(12, 525)
+        Me.lblNombreNuevo.Name = "lblNombreNuevo"
+        Me.lblNombreNuevo.Size = New System.Drawing.Size(50, 13)
+        Me.lblNombreNuevo.TabIndex = 15
+        Me.lblNombreNuevo.Text = "Nombre:"
+        '
+        'txtNombreNuevo
+        '
+        Me.txtNombreNuevo.Location = New System.Drawing.Point(90, 522)
+        Me.txtNombreNuevo.Name = "txtNombreNuevo"
+        Me.txtNombreNuevo.Size = New System.Drawing.Size(300, 20)
+        Me.txtNombreNuevo.TabIndex = 16
+        '
+        'lblCategoriaNueva
+        '
+        Me.lblCategoriaNueva.AutoSize = True
+        Me.lblCategoriaNueva.Location = New System.Drawing.Point(12, 557)
+        Me.lblCategoriaNueva.Name = "lblCategoriaNueva"
+        Me.lblCategoriaNueva.Size = New System.Drawing.Size(60, 13)
+        Me.lblCategoriaNueva.TabIndex = 17
+        Me.lblCategoriaNueva.Text = "Categoría:"
+        '
+        'cbCategoriaNueva
+        '
+        Me.cbCategoriaNueva.FormattingEnabled = True
+        Me.cbCategoriaNueva.Location = New System.Drawing.Point(90, 554)
+        Me.cbCategoriaNueva.Name = "cbCategoriaNueva"
+        Me.cbCategoriaNueva.Size = New System.Drawing.Size(220, 21)
+        Me.cbCategoriaNueva.TabIndex = 18
+        '
+        'lblSubcategoriaNueva
+        '
+        Me.lblSubcategoriaNueva.AutoSize = True
+        Me.lblSubcategoriaNueva.Location = New System.Drawing.Point(12, 589)
+        Me.lblSubcategoriaNueva.Name = "lblSubcategoriaNueva"
+        Me.lblSubcategoriaNueva.Size = New System.Drawing.Size(120, 13)
+        Me.lblSubcategoriaNueva.TabIndex = 19
+        Me.lblSubcategoriaNueva.Text = "Sabor (solo si es Torta):"
+        '
+        'cbSubcategoriaNueva
+        '
+        Me.cbSubcategoriaNueva.Enabled = False
+        Me.cbSubcategoriaNueva.FormattingEnabled = True
+        Me.cbSubcategoriaNueva.Location = New System.Drawing.Point(140, 586)
+        Me.cbSubcategoriaNueva.Name = "cbSubcategoriaNueva"
+        Me.cbSubcategoriaNueva.Size = New System.Drawing.Size(170, 21)
+        Me.cbSubcategoriaNueva.TabIndex = 20
+        '
+        'lblPrecioNuevoProducto
+        '
+        Me.lblPrecioNuevoProducto.AutoSize = True
+        Me.lblPrecioNuevoProducto.Location = New System.Drawing.Point(12, 621)
+        Me.lblPrecioNuevoProducto.Name = "lblPrecioNuevoProducto"
+        Me.lblPrecioNuevoProducto.Size = New System.Drawing.Size(70, 13)
+        Me.lblPrecioNuevoProducto.TabIndex = 21
+        Me.lblPrecioNuevoProducto.Text = "Precio ($):"
+        '
+        'txtPrecioNuevoProducto
+        '
+        Me.txtPrecioNuevoProducto.Location = New System.Drawing.Point(90, 618)
+        Me.txtPrecioNuevoProducto.Name = "txtPrecioNuevoProducto"
+        Me.txtPrecioNuevoProducto.Size = New System.Drawing.Size(100, 20)
+        Me.txtPrecioNuevoProducto.TabIndex = 22
+        '
+        'btnAgregarProducto
+        '
+        Me.btnAgregarProducto.Location = New System.Drawing.Point(320, 615)
+        Me.btnAgregarProducto.Name = "btnAgregarProducto"
+        Me.btnAgregarProducto.Size = New System.Drawing.Size(170, 30)
+        Me.btnAgregarProducto.TabIndex = 23
+        Me.btnAgregarProducto.Text = "Agregar Producto"
+        Me.btnAgregarProducto.UseVisualStyleBackColor = True
+        '
+        'FormEditarPrecios
+        '
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.ClientSize = New System.Drawing.Size(502, 665)
+        Me.Controls.Add(Me.btnAgregarProducto)
+        Me.Controls.Add(Me.btnReactivarProductos)
+        Me.Controls.Add(Me.txtPrecioNuevoProducto)
+        Me.Controls.Add(Me.lblPrecioNuevoProducto)
+        Me.Controls.Add(Me.cbSubcategoriaNueva)
+        Me.Controls.Add(Me.lblSubcategoriaNueva)
+        Me.Controls.Add(Me.cbCategoriaNueva)
+        Me.Controls.Add(Me.lblCategoriaNueva)
+        Me.Controls.Add(Me.txtNombreNuevo)
+        Me.Controls.Add(Me.lblNombreNuevo)
+        Me.Controls.Add(Me.txtCodigoNuevo)
+        Me.Controls.Add(Me.lblCodigoNuevo)
+        Me.Controls.Add(Me.lblSeparadorNuevo)
+        Me.Controls.Add(Me.btnEliminarReactivar)
+        Me.Controls.Add(Me.btnGuardar)
+        Me.Controls.Add(Me.txtNuevoPrecio)
+        Me.Controls.Add(Me.lblNuevoPrecio)
+        Me.Controls.Add(Me.txtNuevoNombreEditar)
+        Me.Controls.Add(Me.lblNuevoNombre)
+        Me.Controls.Add(Me.lblProductoSeleccionado)
+        Me.Controls.Add(Me.dgvResultados)
+        Me.Controls.Add(Me.chkMostrarInactivos)
+        Me.Controls.Add(Me.btnBuscar)
+        Me.Controls.Add(Me.txtBuscar)
+        Me.Controls.Add(Me.lblBuscar)
+        Me.MaximizeBox = False
+        Me.Name = "FormEditarPrecios"
+        Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
+        Me.Text = "Editar Precios de Productos"
+        CType(Me.dgvResultados, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.ResumeLayout(False)
+        Me.PerformLayout()
+
+    End Sub
+
+    Friend WithEvents lblBuscar As Label
+    Friend WithEvents txtBuscar As TextBox
+    Friend WithEvents btnBuscar As Button
+    Friend WithEvents chkMostrarInactivos As CheckBox
+    Friend WithEvents dgvResultados As DataGridView
+    Friend WithEvents colCodigo As DataGridViewTextBoxColumn
+    Friend WithEvents colNombre As DataGridViewTextBoxColumn
+    Friend WithEvents colPrecio As DataGridViewTextBoxColumn
+    Friend WithEvents colEstado As DataGridViewTextBoxColumn
+    Friend WithEvents lblProductoSeleccionado As Label
+    Friend WithEvents lblNuevoNombre As Label
+    Friend WithEvents txtNuevoNombreEditar As TextBox
+    Friend WithEvents lblNuevoPrecio As Label
+    Friend WithEvents txtNuevoPrecio As TextBox
+    Friend WithEvents btnGuardar As Button
+    Friend WithEvents btnEliminarReactivar As Button
+    Friend WithEvents btnReactivarProductos As Button
+    Friend WithEvents lblSeparadorNuevo As Label
+    Friend WithEvents lblCodigoNuevo As Label
+    Friend WithEvents txtCodigoNuevo As TextBox
+    Friend WithEvents lblNombreNuevo As Label
+    Friend WithEvents txtNombreNuevo As TextBox
+    Friend WithEvents lblCategoriaNueva As Label
+    Friend WithEvents cbCategoriaNueva As ComboBox
+    Friend WithEvents lblSubcategoriaNueva As Label
+    Friend WithEvents cbSubcategoriaNueva As ComboBox
+    Friend WithEvents lblPrecioNuevoProducto As Label
+    Friend WithEvents txtPrecioNuevoProducto As TextBox
+    Friend WithEvents btnAgregarProducto As Button
+End Class
+

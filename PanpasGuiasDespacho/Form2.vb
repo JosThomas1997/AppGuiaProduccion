@@ -15,6 +15,7 @@ Public Class Form2
 
     'Variable para Impresion
     Private WithEvents impresionProduccion As New PrintDocument()
+    Private impresora_Seleccionada As String = ""
 
     'Inicios del Form2
     Private Sub Form2_Load(sender As Object, e As EventArgs) Handles MyBase.Load
@@ -40,6 +41,9 @@ Public Class Form2
 
         'Cargar Empleados de Produccion
         CargarEmpleados()
+
+        'Cargar lista de impresoras disponibles
+        CargarImpresorasEnCombo(cbImpresora)
 
         'Cargar lista de producciones
         CargarListadoProduccion()
@@ -841,6 +845,12 @@ Public Class Form2
             ' Margen mínimo para aprovechar mejor el espacio
             impresionProduccion.DefaultPageSettings.Margins = New Margins(5, 5, 5, 5)
 
+            ' Especificar impresora (usar la seleccionada)
+            ' Si hay una impresora seleccionada, usarla; de lo contrario, usar la predeterminada
+            If Not String.IsNullOrEmpty(impresora_Seleccionada) Then
+                impresionProduccion.PrinterSettings.PrinterName = impresora_Seleccionada
+            End If
+
             ' Fuente estándar para tickets
             fuenteCuerpo = New Font("Consolas", 7)
 
@@ -954,6 +964,13 @@ Public Class Form2
             yPos += salto
         End If
 
+    End Sub
+
+    'Actualizar la impresora seleccionada
+    Private Sub cbImpresora_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cbImpresora.SelectedIndexChanged
+        If cbImpresora.SelectedIndex >= 0 AndAlso cbImpresora.SelectedItem <> Nothing Then
+            impresora_Seleccionada = cbImpresora.SelectedItem.ToString()
+        End If
     End Sub
 
 End Class

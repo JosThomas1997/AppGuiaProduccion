@@ -43,6 +43,8 @@ Partial Class Form1
         Me.cbCodCliente = New System.Windows.Forms.ComboBox()
         Me.btnProduccion = New System.Windows.Forms.Button()
         Me.btnEliminarGuia = New System.Windows.Forms.Button()
+        Me.cbImpresora = New System.Windows.Forms.ComboBox()
+        Me.Label2 = New System.Windows.Forms.Label()
         CType(Me.dgvGuiaProductos, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvGuias, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
@@ -173,7 +175,7 @@ Partial Class Form1
         '
         Me.Label1.AutoSize = True
         Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 15.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label1.Location = New System.Drawing.Point(942, 20)
+        Me.Label1.Location = New System.Drawing.Point(810, 22)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(69, 25)
         Me.Label1.TabIndex = 26
@@ -227,12 +229,32 @@ Partial Class Form1
         Me.btnEliminarGuia.Text = "Eliminar Guia"
         Me.btnEliminarGuia.UseVisualStyleBackColor = True
         '
+        'cbImpresora
+        '
+        Me.cbImpresora.FormattingEnabled = True
+        Me.cbImpresora.Location = New System.Drawing.Point(1003, 34)
+        Me.cbImpresora.Name = "cbImpresora"
+        Me.cbImpresora.Size = New System.Drawing.Size(115, 21)
+        Me.cbImpresora.TabIndex = 32
+        '
+        'Label2
+        '
+        Me.Label2.AutoSize = True
+        Me.Label2.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.Label2.Location = New System.Drawing.Point(999, 11)
+        Me.Label2.Name = "Label2"
+        Me.Label2.Size = New System.Drawing.Size(85, 20)
+        Me.Label2.TabIndex = 33
+        Me.Label2.Text = "Impresora:"
+        '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.Color.LightGreen
         Me.ClientSize = New System.Drawing.Size(1132, 504)
+        Me.Controls.Add(Me.Label2)
+        Me.Controls.Add(Me.cbImpresora)
         Me.Controls.Add(Me.btnEliminarGuia)
         Me.Controls.Add(Me.btnProduccion)
         Me.Controls.Add(Me.cbCodCliente)
@@ -283,4 +305,6 @@ Partial Class Form1
     Friend WithEvents cbCodCliente As ComboBox
     Friend WithEvents btnProduccion As Button
     Friend WithEvents btnEliminarGuia As Button
+    Friend WithEvents cbImpresora As ComboBox
+    Friend WithEvents Label2 As Label
 End Class

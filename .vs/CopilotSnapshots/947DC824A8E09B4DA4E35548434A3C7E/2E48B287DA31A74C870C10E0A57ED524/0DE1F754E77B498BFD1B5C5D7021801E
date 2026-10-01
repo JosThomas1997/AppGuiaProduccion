@@ -1,0 +1,159 @@
+﻿Imports System.Data.OleDb
+
+''' <summary>
+''' Módulo para reactivar productos en lote que están marcados como inactivos
+''' Se usa cuando se detecta que catalogo de productos está desactivado
+''' </summary>
+Public Class UtilReactivarProductos
+
+    ''' <summary>
+    ''' Reactiva los productos hardcodeados en FormProductos.vb
+    ''' Estos son los productos que DEBERÍAN estar activos
+    ''' </summary>
+    Public Shared Function ReactivarProductosEsperados() As Integer
+
+        ' Lista de códigos que están hardcodeados en FormProductos.vb
+        Dim codigosEsperados As New List(Of String)
+
+        ' Galletas
+        codigosEsperados.AddRange(New String() {"1304", "1305", "1310", "1311", "1313"})
+        ' Empanadas
+        codigosEsperados.AddRange(New String() {"1410", "1411", "1414", "9012"})
+        ' Masas Dulces
+        codigosEsperados.AddRange(New String() {"1502", "1503", "1504", "1505"})
+        ' Kuchen
+        codigosEsperados.AddRange(New String() {"1200", "1201", "1202", "1203", "1206", "1207", "8014", "8015"})
+        ' Cocadas
+        codigosEsperados.AddRange(New String() {"1309"})
+        ' Alfajores
+        codigosEsperados.AddRange(New String() {"1300", "1302", "1303", "1319"})
+        ' Brazos de Reina
+        codigosEsperados.AddRange(New String() {"1211"})
+        ' Queques y Muffins
+        codigosEsperados.AddRange(New String() {"1307", "1316", "9013"})
+        ' Pasteles
+        codigosEsperados.AddRange(New String() {"8000", "8006", "8001", "8007", "8017", "8009", "8003", "8010", "8004", "8011", "8005", "8013"})
+        ' Pan de Completo
+        codigosEsperados.AddRange(New String() {"1402"})
+        ' Materia Prima
+        codigosEsperados.AddRange(New String() {"9000", "10007"})
+        ' Mote con Huesillo
+        codigosEsperados.AddRange(New String() {"1514"})
+        ' Pan de Pascua
+        codigosEsperados.AddRange(New String() {"1513", "1509"})
+
+        Return ReactivarProductosPorCodigo(codigosEsperados)
+
+    End Function
+
+    ''' <summary>
+    ''' Reactiva TODOS los productos de la base de datos
+    ''' Usar solo si sabes que todos deberían estar activos
+    ''' </summary>
+    Public Shared Function ReactivarTodos() As Integer
+
+        Try
+            AbrirConexion()
+
+            Using cmd As New OleDbCommand("UPDATE producto SET productoActivo = True", conexionDB)
+                Dim filasAfectadas As Integer = cmd.ExecuteNonQuery()
+                Return filasAfectadas
+            End Using
+
+        Catch ex As Exception
+            MessageBox.Show("Error al reactivar productos: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Return 0
+        Finally
+            CerrarConexion()
+        End Try
+
+    End Function
+
+    ''' <summary>
+    ''' Reactiva productos específicos por lista de códigos
+    ''' </summary>
+    Private Shared Function ReactivarProductosPorCodigo(codigosEsperados As List(Of String)) As Integer
+
+        If codigosEsperados.Count = 0 Then
+            Return 0
+        End If
+
+        Try
+            AbrirConexion()
+
+            ' Construir placeholders para la consulta IN (?, ?, ?, ...)
+            Dim placeholders As New System.Text.StringBuilder()
+            placeholders.Append("(")
+            For i As Integer = 0 To codigosEsperados.Count - 1
+                If i > 0 Then placeholders.Append(", ")
+                placeholders.Append("?")
+            Next
+            placeholders.Append(")")
+
+            Dim sql As String = "UPDATE producto SET productoActivo = True WHERE codigo IN " & placeholders.ToString()
+
+            Using cmd As New OleDbCommand(sql, conexionDB)
+                ' Agregar parámetros en orden
+                For Each codigo In codigosEsperados
+                    cmd.Parameters.AddWithValue("?", codigo)
+                Next
+
+                Dim filasAfectadas As Integer = cmd.ExecuteNonQuery()
+                Return filasAfectadas
+            End Using
+
+        Catch ex As Exception
+            MessageBox.Show("Error al reactivar productos: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Return 0
+        Finally
+            CerrarConexion()
+        End Try
+
+    End Function
+
+    ''' <summary>
+    ''' Verifica cuántos de los productos esperados están inactivos
+    ''' </summary>
+    Public Shared Function VerificarProductosInactivos() As Integer
+
+        Dim codigosEsperados As New List(Of String)
+        codigosEsperados.AddRange(New String() {"1304", "1305", "1310", "1311", "1313"})
+        codigosEsperados.AddRange(New String() {"1410", "1411", "1414", "9012"})
+        codigosEsperados.AddRange(New String() {"1502", "1503", "1504", "1505"})
+        codigosEsperados.AddRange(New String() {"1200", "1201", "1202", "1203", "1206", "1207", "8014", "8015"})
+        codigosEsperados.AddRange(New String() {"1309", "1300", "1302", "1303", "1319", "1211"})
+        codigosEsperados.AddRange(New String() {"1307", "1316", "9013"})
+        codigosEsperados.AddRange(New String() {"8000", "8006", "8001", "8007", "8017", "8009", "8003", "8010", "8004", "8011", "8005", "8013"})
+        codigosEsperados.AddRange(New String() {"1402", "9000", "10007", "1514", "1513", "1509"})
+
+        Try
+            AbrirConexion()
+
+            ' Construir placeholders
+            Dim placeholders As New System.Text.StringBuilder("(")
+            For i As Integer = 0 To codigosEsperados.Count - 1
+                If i > 0 Then placeholders.Append(", ")
+                placeholders.Append("?")
+            Next
+            placeholders.Append(")")
+
+            Dim sql As String = "SELECT COUNT(*) FROM producto WHERE codigo IN " & placeholders.ToString() & " AND (productoActivo = False OR productoActivo IS NULL)"
+
+            Using cmd As New OleDbCommand(sql, conexionDB)
+                For Each codigo In codigosEsperados
+                    cmd.Parameters.AddWithValue("?", codigo)
+                Next
+                Dim inactivos As Integer = Convert.ToInt32(cmd.ExecuteScalar())
+                Return inactivos
+            End Using
+
+        Catch ex As Exception
+            MessageBox.Show("Error al verificar productos: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Return -1
+        Finally
+            CerrarConexion()
+        End Try
+
+    End Function
+
+End Class

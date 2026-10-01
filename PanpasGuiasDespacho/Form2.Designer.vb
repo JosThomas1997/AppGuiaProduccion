@@ -29,6 +29,7 @@ Partial Class Form2
         Me.btnImprimirProduccion = New System.Windows.Forms.Button()
         Me.lblNombreEmpleado = New System.Windows.Forms.Label()
         Me.cbIDEmpleado = New System.Windows.Forms.ComboBox()
+        Me.cbImpresora = New System.Windows.Forms.ComboBox()
         Me.dgvProduccionHechas = New System.Windows.Forms.DataGridView()
         Me.btnSiguienteProduccion = New System.Windows.Forms.Button()
         Me.btnAnteriorProduccion = New System.Windows.Forms.Button()
@@ -39,6 +40,7 @@ Partial Class Form2
         Me.lblFechaProduccion = New System.Windows.Forms.Label()
         Me.rtxtComentario = New System.Windows.Forms.RichTextBox()
         Me.btnEliminarProduccion = New System.Windows.Forms.Button()
+        Me.Label1 = New System.Windows.Forms.Label()
         CType(Me.dgvProduccionHechas, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvProduccion, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
@@ -103,6 +105,14 @@ Partial Class Form2
         Me.cbIDEmpleado.Name = "cbIDEmpleado"
         Me.cbIDEmpleado.Size = New System.Drawing.Size(121, 21)
         Me.cbIDEmpleado.TabIndex = 26
+        '
+        'cbImpresora
+        '
+        Me.cbImpresora.FormattingEnabled = True
+        Me.cbImpresora.Location = New System.Drawing.Point(883, 21)
+        Me.cbImpresora.Name = "cbImpresora"
+        Me.cbImpresora.Size = New System.Drawing.Size(200, 21)
+        Me.cbImpresora.TabIndex = 27
         '
         'dgvProduccionHechas
         '
@@ -190,12 +200,23 @@ Partial Class Form2
         Me.btnEliminarProduccion.Text = "Eliminar Produccion"
         Me.btnEliminarProduccion.UseVisualStyleBackColor = True
         '
+        'Label1
+        '
+        Me.Label1.AutoSize = True
+        Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.Label1.Location = New System.Drawing.Point(792, 19)
+        Me.Label1.Name = "Label1"
+        Me.Label1.Size = New System.Drawing.Size(85, 20)
+        Me.Label1.TabIndex = 36
+        Me.Label1.Text = "Impresora:"
+        '
         'Form2
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.Color.DodgerBlue
         Me.ClientSize = New System.Drawing.Size(1132, 504)
+        Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.btnEliminarProduccion)
         Me.Controls.Add(Me.rtxtComentario)
         Me.Controls.Add(Me.btnActualizarProduccion)
@@ -205,6 +226,7 @@ Partial Class Form2
         Me.Controls.Add(Me.btnImprimirProduccion)
         Me.Controls.Add(Me.lblNombreEmpleado)
         Me.Controls.Add(Me.cbIDEmpleado)
+        Me.Controls.Add(Me.cbImpresora)
         Me.Controls.Add(Me.dgvProduccionHechas)
         Me.Controls.Add(Me.btnSiguienteProduccion)
         Me.Controls.Add(Me.btnAnteriorProduccion)
@@ -229,6 +251,7 @@ Partial Class Form2
     Friend WithEvents btnImprimirProduccion As Button
     Friend WithEvents lblNombreEmpleado As Label
     Friend WithEvents cbIDEmpleado As ComboBox
+    Friend WithEvents cbImpresora As ComboBox
     Friend WithEvents dgvProduccionHechas As DataGridView
     Friend WithEvents btnSiguienteProduccion As Button
     Friend WithEvents btnAnteriorProduccion As Button
@@ -239,4 +262,5 @@ Partial Class Form2
     Friend WithEvents lblFechaProduccion As Label
     Friend WithEvents rtxtComentario As RichTextBox
     Friend WithEvents btnEliminarProduccion As Button
+    Friend WithEvents Label1 As Label
 End Class

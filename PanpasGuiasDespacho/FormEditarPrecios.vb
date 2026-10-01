@@ -147,8 +147,11 @@ Public Class FormEditarPrecios
 
         txtNuevoNombreEditar.Text = fila.Cells("nombre").Value.ToString()
 
-        Dim precioTexto As String = fila.Cells("precio").Value.ToString().Replace("$ ", "").Replace(".", "").Trim()
-        txtNuevoPrecio.Text = precioTexto
+        ' Extraer precio de forma más robusta: remover símbolos de formato
+        Dim precioFormato As String = fila.Cells("precio").Value.ToString()
+        ' Remover $ y espacios, luego puntos de formato (1.234 -> 1234)
+        Dim precioLimpio As String = precioFormato.Replace("$", "").Replace(".", "").Trim()
+        txtNuevoPrecio.Text = precioLimpio
 
         btnGuardar.Enabled = True
         btnEliminarReactivar.Enabled = True
@@ -375,18 +378,31 @@ Public Class FormEditarPrecios
             ' La subcategoria queda en NULL para todo lo que no sea "Tortas".
             Dim valorSubcategoria As Object = If(esTorta, CType(subcategoriaNueva, Object), DBNull.Value)
 
-            Using cmdInsertar As New OleDbCommand("INSERT INTO producto (codigo, nombre, precio_venta_boleta, productoActivo, categoria, subcategoria) VALUES (?, ?, ?, ?, ?, ?)", conexionDB)
-                cmdInsertar.Parameters.AddWithValue("?", codigoNuevo)
-                cmdInsertar.Parameters.AddWithValue("?", nombreNuevo)
-                cmdInsertar.Parameters.AddWithValue("?", precioNuevo)
-                cmdInsertar.Parameters.AddWithValue("?", True)
-                cmdInsertar.Parameters.AddWithValue("?", categoriaNueva)
-                cmdInsertar.Parameters.AddWithValue("?", valorSubcategoria)
-                cmdInsertar.ExecuteNonQuery()
-            End Using
+            ' Usar transacción para garantizar que se inserta completamente o no se inserta nada
+            Dim transaction As OleDbTransaction = Nothing
+            Try
+                transaction = conexionDB.BeginTransaction()
 
-            MsgBox("Producto agregado correctamente. Ya debería aparecer en el panel de """ & categoriaNueva & """ para los empleados, sin necesidad de tocar nada más.",
-                   MsgBoxStyle.Information)
+                Using cmdInsertar As New OleDbCommand("INSERT INTO producto (codigo, nombre, precio_venta_boleta, productoActivo, categoria, subcategoria) VALUES (?, ?, ?, ?, ?, ?)", conexionDB, transaction)
+                    cmdInsertar.Parameters.AddWithValue("?", codigoNuevo)
+                    cmdInsertar.Parameters.AddWithValue("?", nombreNuevo)
+                    cmdInsertar.Parameters.AddWithValue("?", precioNuevo)
+                    cmdInsertar.Parameters.AddWithValue("?", True)
+                    cmdInsertar.Parameters.AddWithValue("?", categoriaNueva)
+                    cmdInsertar.Parameters.AddWithValue("?", valorSubcategoria)
+                    cmdInsertar.ExecuteNonQuery()
+                End Using
+
+                transaction.Commit()
+                MsgBox("Producto agregado correctamente. Ya debería aparecer en el panel de """ & categoriaNueva & """ para los empleados, sin necesidad de tocar nada más.",
+                       MsgBoxStyle.Information)
+
+            Catch ex As Exception
+                If transaction IsNot Nothing Then
+                    transaction.Rollback()
+                End If
+                Throw ' Re-lanzar excepción para ser manejada por catch externo
+            End Try
 
         Catch ex As Exception
             MsgBox("Error al agregar el producto: " & ex.Message, MsgBoxStyle.Critical)
@@ -402,6 +418,30 @@ Public Class FormEditarPrecios
         cbSubcategoriaNueva.Text = ""
         CargarProductos(txtBuscar.Text.Trim())
         CargarCategoriasDisponibles()
+    End Sub
+
+    ''' <summary>
+    ''' Abre el formulario para reactivar productos
+    ''' Permite gestionar la activación/desactivación de productos en lote
+    ''' </summary>
+    Private Sub btnReactivarProductos_Click(sender As Object, e As EventArgs) Handles btnReactivarProductos.Click
+        Dim formAbierto As Boolean = False
+
+        ' Verifica si el formulario ya está abierto
+        For Each form As Form In Application.OpenForms
+            If TypeOf form Is FormReactivarProductos Then
+                formAbierto = True
+                form.BringToFront()
+                Exit For
+            End If
+        Next
+
+        If formAbierto Then
+            MessageBox.Show("Reactivar Productos se encuentra en ejecución.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+        Else
+            Dim form As New FormReactivarProductos()
+            form.Show()
+        End If
     End Sub
 
 End Class

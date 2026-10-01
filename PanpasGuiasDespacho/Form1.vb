@@ -7,6 +7,8 @@ Imports System.Drawing.Printing
 Public Class Form1
     Private autoGuardadoHabilitado As Boolean = True
     Private idGuiaActual As Integer = -1
+    Private numeroGuiaAnterior As String = ""
+    Private impresora_Seleccionada As String = ""
 
     ' Controla si dgvGuias muestra todo el historial o solo lo reciente (ver GuiasListado).
     ' Empieza en False: por defecto se ve solo lo reciente, mas rapido en PC modestas.
@@ -56,6 +58,9 @@ Public Class Form1
 
         'Carga del ComboBox de los ID Clientes
         CargarClientes()
+
+        'Cargar lista de impresoras disponibles
+        CargarImpresorasEnCombo(cbImpresora)
 
         'Cargar ultima guia realizada
         CargarUltimaGuia()
@@ -428,6 +433,10 @@ Public Class Form1
             End Using
 
             CargarDetalleGuia(idGuia)
+
+            'Actualizar el número de guía anterior después de cargar la guía
+            numeroGuiaAnterior = txtNumeroGuia.Text
+            cargarGuia = False
 
         Catch ex As Exception
             MsgBox("Error al cargar la guia: " & ex.Message)
@@ -858,7 +867,8 @@ Public Class Form1
 
     'Numero de guia editado
     Private Sub txtNumeroGuia_Leave(sender As Object, e As EventArgs) Handles txtNumeroGuia.Leave
-        If Not cargarGuia Then
+        'Solo procesar si el número cambió realmente y no estamos en modo carga
+        If Not cargarGuia AndAlso txtNumeroGuia.Text <> numeroGuiaAnterior Then
             Try
                 Dim nuevoNumero As Integer
                 If Integer.TryParse(txtNumeroGuia.Text, nuevoNumero) Then
@@ -870,8 +880,10 @@ Public Class Form1
                     End If
 
                     guardarGuia()
+                    numeroGuiaAnterior = txtNumeroGuia.Text
                 Else
                     MsgBox("Numero de Guia invalido!", MsgBoxStyle.Exclamation)
+                    txtNumeroGuia.Text = numeroGuiaAnterior
                 End If
             Catch ex As Exception
                 MsgBox("Error al actualizar el numero de guia!" & ex.Message, MsgBoxStyle.Critical)
@@ -930,6 +942,12 @@ Public Class Form1
 
             ' Margen para el espacio
             documentoImpresion.DefaultPageSettings.Margins = New Margins(5, 5, 5, 5)
+
+            ' Especificar impresora (usar la seleccionada)
+            ' Si hay una impresora seleccionada, usarla; de lo contrario, usar la predeterminada
+            If Not String.IsNullOrEmpty(impresora_Seleccionada) Then
+                documentoImpresion.PrinterSettings.PrinterName = impresora_Seleccionada
+            End If
 
             ' Fuente estandar para tickets
             fuenteCuerpo = New Font("Consolas", 7)
@@ -1056,6 +1074,13 @@ Public Class Form1
         'Si la ventana no esta abierta, abrir la misma
         Dim ventanaProduccion As New Form2() 'Declarar la ventana de produccion
         ventanaProduccion.Show() 'Mostrar la ventana de produccion
+    End Sub
+
+    'Actualizar la impresora seleccionada
+    Private Sub cbImpresora_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cbImpresora.SelectedIndexChanged
+        If cbImpresora.SelectedIndex >= 0 AndAlso cbImpresora.SelectedItem <> Nothing Then
+            impresora_Seleccionada = cbImpresora.SelectedItem.ToString()
+        End If
     End Sub
 
 End Class

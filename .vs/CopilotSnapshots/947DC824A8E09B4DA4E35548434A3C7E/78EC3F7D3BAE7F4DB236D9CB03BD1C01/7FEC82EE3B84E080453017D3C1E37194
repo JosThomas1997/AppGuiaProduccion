@@ -1,0 +1,407 @@
+﻿Imports System.Data.OleDb
+
+Public Class FormEditarPrecios
+
+    Private codigoSeleccionado As String = Nothing
+    Private productoSeleccionadoActivo As Boolean = True
+
+    Private Sub FormEditarPrecios_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        CenterToScreen()
+        CargarProductos()
+        CargarCategoriasDisponibles()
+    End Sub
+
+    ''' <summary>
+    ''' Llena los desplegables de categoria y sub-categoria (sabor de torta) leyendo
+    ''' los valores que YA existen en la base de datos, en vez de tenerlos escritos
+    ''' en el codigo. Como los ComboBox quedan editables (DropDown, no DropDownList),
+    ''' tambien se puede escribir una categoria completamente nueva si hace falta.
+    ''' </summary>
+    Private Sub CargarCategoriasDisponibles()
+        Try
+            AbrirConexion()
+
+            cbCategoriaNueva.Items.Clear()
+            Using cmd As New OleDbCommand("SELECT DISTINCT categoria FROM producto WHERE categoria IS NOT NULL ORDER BY categoria", conexionDB)
+                Using reader As OleDbDataReader = cmd.ExecuteReader()
+                    While reader.Read()
+                        cbCategoriaNueva.Items.Add(reader("categoria").ToString())
+                    End While
+                End Using
+            End Using
+
+            cbSubcategoriaNueva.Items.Clear()
+            Using cmd As New OleDbCommand("SELECT DISTINCT subcategoria FROM producto WHERE subcategoria IS NOT NULL ORDER BY subcategoria", conexionDB)
+                Using reader As OleDbDataReader = cmd.ExecuteReader()
+                    While reader.Read()
+                        cbSubcategoriaNueva.Items.Add(reader("subcategoria").ToString())
+                    End While
+                End Using
+            End Using
+
+        Catch ex As Exception
+            MsgBox("Error al cargar las categorías: " & ex.Message, MsgBoxStyle.Critical)
+        Finally
+            CerrarConexion()
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' El campo de sabor (subcategoria) solo tiene sentido cuando la categoria es "Tortas".
+    ''' Se habilita/deshabilita segun lo que se escriba o elija en cbCategoriaNueva.
+    ''' </summary>
+    Private Sub cbCategoriaNueva_TextChanged(sender As Object, e As EventArgs) Handles cbCategoriaNueva.TextChanged
+        Dim esTorta As Boolean = cbCategoriaNueva.Text.Trim().Equals("Tortas", StringComparison.OrdinalIgnoreCase)
+        cbSubcategoriaNueva.Enabled = esTorta
+        If Not esTorta Then cbSubcategoriaNueva.Text = ""
+    End Sub
+
+    ''' <summary>
+    ''' Carga la lista de productos. Si "filtro" viene vacio, trae todos los productos que
+    ''' correspondan (activos, o tambien inactivos si el checkbox esta marcado); si no,
+    ''' ademas filtra por codigo o nombre que contengan el texto buscado.
+    ''' </summary>
+    Private Sub CargarProductos(Optional filtro As String = "")
+        dgvResultados.SuspendLayout()
+        Try
+            AbrirConexion()
+
+            Dim sql As String = "SELECT codigo, nombre, precio_venta_boleta, productoActivo FROM producto WHERE 1=1 "
+            If Not chkMostrarInactivos.Checked Then
+                ' OJO: se incluye "OR productoActivo IS NULL" a proposito. Productos creados
+                ' antes de que existiera esta columna quedaron con el valor en blanco (NULL),
+                ' y en SQL, NULL nunca es igual a True/False -- sin este OR, esos productos
+                ' antiguos nunca apareceerian en la vista de "solo activos", sin importar
+                ' que se compare contra -1 o contra un parametro Boolean.
+                sql &= "AND (productoActivo = ? OR productoActivo IS NULL) "
+            End If
+            If Not String.IsNullOrWhiteSpace(filtro) Then
+                sql &= "AND (codigo LIKE ? OR nombre LIKE ?) "
+            End If
+            sql &= "ORDER BY nombre"
+
+            Using cmd As New OleDbCommand(sql, conexionDB)
+                ' El orden de los parametros debe calzar con el orden de los "?" en el SQL de arriba
+                If Not chkMostrarInactivos.Checked Then
+                    cmd.Parameters.AddWithValue("?", True)
+                End If
+                If Not String.IsNullOrWhiteSpace(filtro) Then
+                    cmd.Parameters.AddWithValue("?", "%" & filtro & "%")
+                    cmd.Parameters.AddWithValue("?", "%" & filtro & "%")
+                End If
+
+                Using reader As OleDbDataReader = cmd.ExecuteReader()
+                    dgvResultados.Rows.Clear()
+                    While reader.Read()
+                        Dim codigo As String = reader("codigo").ToString()
+                        Dim nombre As String = reader("nombre").ToString()
+                        Dim precio As Integer = Convert.ToInt32(reader("precio_venta_boleta"))
+
+                        ' Si productoActivo viene en NULL (producto antiguo, de antes de que
+                        ' existiera esta columna), se trata como activo por defecto en vez
+                        ' de fallar -- para no dejar la lista entera sin mostrar nada.
+                        Dim estaActivo As Boolean = IsDBNull(reader("productoActivo")) OrElse Convert.ToBoolean(reader("productoActivo"))
+                        Dim textoEstado As String = If(estaActivo, "Activo", "Inactivo")
+
+                        Dim filaIndex As Integer = dgvResultados.Rows.Add(codigo, nombre, String.Format("$ {0:N0}", precio), textoEstado)
+                        dgvResultados.Rows(filaIndex).Tag = estaActivo
+                    End While
+                End Using
+            End Using
+
+        Catch ex As Exception
+            MsgBox("Error al cargar los productos: " & ex.Message, MsgBoxStyle.Critical)
+        Finally
+            CerrarConexion()
+            dgvResultados.ResumeLayout()
+        End Try
+    End Sub
+
+    Private Sub btnBuscar_Click(sender As Object, e As EventArgs) Handles btnBuscar.Click
+        CargarProductos(txtBuscar.Text.Trim())
+    End Sub
+
+    Private Sub txtBuscar_KeyDown(sender As Object, e As KeyEventArgs) Handles txtBuscar.KeyDown
+        If e.KeyCode = Keys.Enter Then
+            e.SuppressKeyPress = True
+            CargarProductos(txtBuscar.Text.Trim())
+        End If
+    End Sub
+
+    Private Sub chkMostrarInactivos_CheckedChanged(sender As Object, e As EventArgs) Handles chkMostrarInactivos.CheckedChanged
+        CargarProductos(txtBuscar.Text.Trim())
+    End Sub
+
+    ''' <summary>
+    ''' Al hacer clic en una fila de resultados, se muestra el producto elegido
+    ''' y se dejan su nombre y precio actuales listos para editar.
+    ''' </summary>
+    Private Sub dgvResultados_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvResultados.CellClick
+        If e.RowIndex < 0 Then Exit Sub
+
+        Dim fila = dgvResultados.Rows(e.RowIndex)
+        codigoSeleccionado = fila.Cells("codigo").Value.ToString()
+        productoSeleccionadoActivo = Convert.ToBoolean(fila.Tag)
+
+        lblProductoSeleccionado.Text = "Producto: " & fila.Cells("nombre").Value.ToString() & " (Código " & codigoSeleccionado & ")"
+
+        txtNuevoNombreEditar.Text = fila.Cells("nombre").Value.ToString()
+
+        Dim precioTexto As String = fila.Cells("precio").Value.ToString().Replace("$ ", "").Replace(".", "").Trim()
+        txtNuevoPrecio.Text = precioTexto
+
+        btnGuardar.Enabled = True
+        btnEliminarReactivar.Enabled = True
+        btnEliminarReactivar.Text = If(productoSeleccionadoActivo, "Eliminar producto", "Reactivar producto")
+    End Sub
+
+    Private Sub btnGuardar_Click(sender As Object, e As EventArgs) Handles btnGuardar.Click
+        If String.IsNullOrEmpty(codigoSeleccionado) Then
+            MsgBox("Primero selecciona un producto de la lista.", MsgBoxStyle.Exclamation)
+            Exit Sub
+        End If
+
+        Dim nombreNuevo As String = txtNuevoNombreEditar.Text.Trim()
+        If String.IsNullOrEmpty(nombreNuevo) Then
+            MsgBox("El nombre no puede quedar vacío.", MsgBoxStyle.Exclamation)
+            Exit Sub
+        End If
+
+        Dim nuevoPrecio As Integer
+        If Not Integer.TryParse(txtNuevoPrecio.Text.Trim(), nuevoPrecio) OrElse nuevoPrecio < 0 Then
+            MsgBox("El precio debe ser un número entero válido (sin puntos ni símbolos).", MsgBoxStyle.Exclamation)
+            Exit Sub
+        End If
+
+        Dim confirmacion = MsgBox(
+            "¿Confirmas actualizar el producto " & codigoSeleccionado & "?" & vbCrLf &
+            "Nombre: " & nombreNuevo & vbCrLf &
+            "Precio: $ " & nuevoPrecio.ToString("N0") & vbCrLf & vbCrLf &
+            "Este cambio se aplicará de inmediato a nuevas guías y producciones.",
+            MsgBoxStyle.YesNo Or MsgBoxStyle.Question, "Confirmar cambios")
+
+        If confirmacion <> MsgBoxResult.Yes Then Exit Sub
+
+        Try
+            AbrirConexion()
+
+            Using cmd As New OleDbCommand("UPDATE producto SET nombre = ?, precio_venta_boleta = ? WHERE codigo = ?", conexionDB)
+                cmd.Parameters.AddWithValue("?", nombreNuevo)
+                cmd.Parameters.AddWithValue("?", nuevoPrecio)
+                cmd.Parameters.AddWithValue("?", codigoSeleccionado)
+                Dim filasAfectadas As Integer = cmd.ExecuteNonQuery()
+
+                If filasAfectadas = 0 Then
+                    MsgBox("No se encontró el producto con código " & codigoSeleccionado & ". No se modificó nada.", MsgBoxStyle.Exclamation)
+                Else
+                    MsgBox("Producto actualizado correctamente.", MsgBoxStyle.Information)
+                End If
+            End Using
+
+        Catch ex As Exception
+            MsgBox("Error al actualizar el producto: " & ex.Message, MsgBoxStyle.Critical)
+        Finally
+            CerrarConexion()
+        End Try
+
+        LimpiarSeleccion()
+        CargarProductos(txtBuscar.Text.Trim())
+    End Sub
+
+    ''' <summary>
+    ''' Elimina o reactiva el producto seleccionado, segun su estado actual.
+    ''' Si el producto ya se uso en alguna guia o produccion, no se borra de verdad
+    ''' (para no romper el historial) -- en su lugar se marca como inactivo.
+    ''' </summary>
+    Private Sub btnEliminarReactivar_Click(sender As Object, e As EventArgs) Handles btnEliminarReactivar.Click
+        If String.IsNullOrEmpty(codigoSeleccionado) Then
+            MsgBox("Primero selecciona un producto de la lista.", MsgBoxStyle.Exclamation)
+            Exit Sub
+        End If
+
+        ' === CASO: reactivar un producto inactivo ===
+        If Not productoSeleccionadoActivo Then
+            Dim confirmarReactivar = MsgBox(
+                "¿Confirmas reactivar el producto " & codigoSeleccionado & "? Volverá a aparecer en los formularios de selección.",
+                MsgBoxStyle.YesNo Or MsgBoxStyle.Question, "Confirmar reactivación")
+
+            If confirmarReactivar <> MsgBoxResult.Yes Then Exit Sub
+
+            Try
+                AbrirConexion()
+                Using cmd As New OleDbCommand("UPDATE producto SET productoActivo = ? WHERE codigo = ?", conexionDB)
+                    cmd.Parameters.AddWithValue("?", True)
+                    cmd.Parameters.AddWithValue("?", codigoSeleccionado)
+                    cmd.ExecuteNonQuery()
+                End Using
+                MsgBox("Producto reactivado.", MsgBoxStyle.Information)
+            Catch ex As Exception
+                MsgBox("Error al reactivar el producto: " & ex.Message, MsgBoxStyle.Critical)
+            Finally
+                CerrarConexion()
+            End Try
+
+            LimpiarSeleccion()
+            CargarProductos(txtBuscar.Text.Trim())
+            Exit Sub
+        End If
+
+        ' === CASO: eliminar (o desactivar) un producto activo ===
+        Try
+            AbrirConexion()
+
+            ' Revisar si el codigo aparece en el historial de guias o producciones
+            Dim tieneHistorial As Boolean = False
+
+            Using cmdGuia As New OleDbCommand("SELECT COUNT(*) FROM guia_detalle WHERE codigo_producto = ?", conexionDB)
+                cmdGuia.Parameters.AddWithValue("?", codigoSeleccionado)
+                If Convert.ToInt32(cmdGuia.ExecuteScalar()) > 0 Then tieneHistorial = True
+            End Using
+
+            If Not tieneHistorial Then
+                Using cmdProduccion As New OleDbCommand("SELECT COUNT(*) FROM produccion_detalle WHERE codigo_producto = ?", conexionDB)
+                    cmdProduccion.Parameters.AddWithValue("?", codigoSeleccionado)
+                    If Convert.ToInt32(cmdProduccion.ExecuteScalar()) > 0 Then tieneHistorial = True
+                End Using
+            End If
+
+            If tieneHistorial Then
+                ' Tiene historial: no se borra de verdad, se desactiva para no romper guias/producciones antiguas
+                Dim confirmarDesactivar = MsgBox(
+                    "El producto " & codigoSeleccionado & " ya aparece en guías o producciones anteriores." & vbCrLf &
+                    "Para no alterar ese historial, no se puede eliminar de verdad." & vbCrLf & vbCrLf &
+                    "¿Deseas marcarlo como INACTIVO en su lugar? Dejará de aparecer en los formularios de selección, pero el historial existente no se toca.",
+                    MsgBoxStyle.YesNo Or MsgBoxStyle.Question, "Producto con historial")
+
+                If confirmarDesactivar <> MsgBoxResult.Yes Then Exit Sub
+
+                Using cmd As New OleDbCommand("UPDATE producto SET productoActivo = ? WHERE codigo = ?", conexionDB)
+                    cmd.Parameters.AddWithValue("?", False)
+                    cmd.Parameters.AddWithValue("?", codigoSeleccionado)
+                    cmd.ExecuteNonQuery()
+                End Using
+                MsgBox("Producto marcado como inactivo.", MsgBoxStyle.Information)
+
+            Else
+                ' Sin historial: se puede eliminar de verdad sin riesgo
+                Dim confirmarEliminar = MsgBox(
+                    "El producto " & codigoSeleccionado & " no tiene historial de uso en guías ni producciones." & vbCrLf &
+                    "¿Confirmas ELIMINARLO definitivamente? Esta acción no se puede deshacer.",
+                    MsgBoxStyle.YesNo Or MsgBoxStyle.Question, "Confirmar eliminación definitiva")
+
+                If confirmarEliminar <> MsgBoxResult.Yes Then Exit Sub
+
+                Using cmd As New OleDbCommand("DELETE FROM producto WHERE codigo = ?", conexionDB)
+                    cmd.Parameters.AddWithValue("?", codigoSeleccionado)
+                    cmd.ExecuteNonQuery()
+                End Using
+                MsgBox("Producto eliminado definitivamente.", MsgBoxStyle.Information)
+            End If
+
+        Catch ex As Exception
+            MsgBox("Error al eliminar/desactivar el producto: " & ex.Message, MsgBoxStyle.Critical)
+        Finally
+            CerrarConexion()
+        End Try
+
+        LimpiarSeleccion()
+        CargarProductos(txtBuscar.Text.Trim())
+    End Sub
+
+    Private Sub LimpiarSeleccion()
+        codigoSeleccionado = Nothing
+        productoSeleccionadoActivo = True
+        btnGuardar.Enabled = False
+        btnEliminarReactivar.Enabled = False
+        btnEliminarReactivar.Text = "Eliminar producto"
+        lblProductoSeleccionado.Text = "Selecciona un producto de la lista para editarlo"
+        txtNuevoNombreEditar.Clear()
+        txtNuevoPrecio.Clear()
+    End Sub
+
+    Private Sub btnAgregarProducto_Click(sender As Object, e As EventArgs) Handles btnAgregarProducto.Click
+        Dim codigoNuevo As String = txtCodigoNuevo.Text.Trim()
+        Dim nombreNuevo As String = txtNombreNuevo.Text.Trim()
+        Dim categoriaNueva As String = cbCategoriaNueva.Text.Trim()
+
+        If String.IsNullOrEmpty(codigoNuevo) OrElse String.IsNullOrEmpty(nombreNuevo) Then
+            MsgBox("Debes ingresar código y nombre del producto.", MsgBoxStyle.Exclamation)
+            Exit Sub
+        End If
+
+        If String.IsNullOrEmpty(categoriaNueva) Then
+            MsgBox("Debes elegir (o escribir) una categoría. Así el producto va a aparecer solo en el panel correcto para los empleados.", MsgBoxStyle.Exclamation)
+            Exit Sub
+        End If
+
+        Dim esTorta As Boolean = categoriaNueva.Equals("Tortas", StringComparison.OrdinalIgnoreCase)
+        Dim subcategoriaNueva As String = cbSubcategoriaNueva.Text.Trim()
+
+        If esTorta AndAlso String.IsNullOrEmpty(subcategoriaNueva) Then
+            MsgBox("La categoría ""Tortas"" necesita también un sabor (subcategoría).", MsgBoxStyle.Exclamation)
+            Exit Sub
+        End If
+
+        Dim precioNuevo As Integer
+        If Not Integer.TryParse(txtPrecioNuevoProducto.Text.Trim(), precioNuevo) OrElse precioNuevo < 0 Then
+            MsgBox("El precio debe ser un número entero válido (sin puntos ni símbolos).", MsgBoxStyle.Exclamation)
+            Exit Sub
+        End If
+
+        Try
+            AbrirConexion()
+
+            ' Verificar que el codigo no exista ya (evita choques con codigos existentes)
+            Using cmdVerificar As New OleDbCommand("SELECT COUNT(*) FROM producto WHERE codigo = ?", conexionDB)
+                cmdVerificar.Parameters.AddWithValue("?", codigoNuevo)
+                Dim yaExiste As Integer = Convert.ToInt32(cmdVerificar.ExecuteScalar())
+
+                If yaExiste > 0 Then
+                    MsgBox("Ya existe un producto con el código " & codigoNuevo & ". Elige un código distinto.", MsgBoxStyle.Exclamation)
+                    Exit Sub
+                End If
+            End Using
+
+            Dim resumenSabor As String = If(esTorta, " (sabor: " & subcategoriaNueva & ")", "")
+            Dim confirmacion = MsgBox(
+                "¿Confirmas crear el producto """ & nombreNuevo & """ con código " & codigoNuevo & "?" & vbCrLf &
+                "Categoría: " & categoriaNueva & resumenSabor & vbCrLf &
+                "Precio: $ " & precioNuevo.ToString("N0"),
+                MsgBoxStyle.YesNo Or MsgBoxStyle.Question, "Confirmar producto nuevo")
+
+            If confirmacion <> MsgBoxResult.Yes Then Exit Sub
+
+            ' El producto nuevo se crea activo por defecto (True = productoActivo).
+            ' La subcategoria queda en NULL para todo lo que no sea "Tortas".
+            Dim valorSubcategoria As Object = If(esTorta, CType(subcategoriaNueva, Object), DBNull.Value)
+
+            Using cmdInsertar As New OleDbCommand("INSERT INTO producto (codigo, nombre, precio_venta_boleta, productoActivo, categoria, subcategoria) VALUES (?, ?, ?, ?, ?, ?)", conexionDB)
+                cmdInsertar.Parameters.AddWithValue("?", codigoNuevo)
+                cmdInsertar.Parameters.AddWithValue("?", nombreNuevo)
+                cmdInsertar.Parameters.AddWithValue("?", precioNuevo)
+                cmdInsertar.Parameters.AddWithValue("?", True)
+                cmdInsertar.Parameters.AddWithValue("?", categoriaNueva)
+                cmdInsertar.Parameters.AddWithValue("?", valorSubcategoria)
+                cmdInsertar.ExecuteNonQuery()
+            End Using
+
+            MsgBox("Producto agregado correctamente. Ya debería aparecer en el panel de """ & categoriaNueva & """ para los empleados, sin necesidad de tocar nada más.",
+                   MsgBoxStyle.Information)
+
+        Catch ex As Exception
+            MsgBox("Error al agregar el producto: " & ex.Message, MsgBoxStyle.Critical)
+        Finally
+            CerrarConexion()
+        End Try
+
+        ' Limpiar el formulario y refrescar la lista y las categorías disponibles
+        txtCodigoNuevo.Clear()
+        txtNombreNuevo.Clear()
+        txtPrecioNuevoProducto.Clear()
+        cbCategoriaNueva.Text = ""
+        cbSubcategoriaNueva.Text = ""
+        CargarProductos(txtBuscar.Text.Trim())
+        CargarCategoriasDisponibles()
+    End Sub
+
+End Class

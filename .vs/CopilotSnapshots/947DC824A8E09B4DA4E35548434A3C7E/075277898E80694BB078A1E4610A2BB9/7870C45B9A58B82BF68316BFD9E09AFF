@@ -1,0 +1,960 @@
+﻿Imports System.Data.OleDb
+Imports System.Drawing.Printing
+Imports System.Globalization
+
+Public Class Form2
+
+    '=== Variables globales ===
+    Private autoGuardadoHabilitado As Boolean = True
+    Private idProduccionActual As Integer = -1
+    Private cargarProduccion As Boolean = False
+
+    ' Controla si dgvProduccionHechas muestra todo el historial o solo lo reciente.
+    Private mostrarHistorialCompletoProduccion As Boolean = False
+    Public dgvProductos As New DataGridView()
+
+    'Variable para Impresion
+    Private WithEvents impresionProduccion As New PrintDocument()
+    Private impresora_Seleccionada As String = ""
+
+    'Inicios del Form2
+    Private Sub Form2_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        Debug.WriteLine(">> Form2_Load")
+        cargarProduccion = True
+
+        ' Doble buffer: evita el parpadeo al limpiar/repoblar la lista lateral de producciones.
+        ' DoubleBuffered es una propiedad protegida, por eso se activa via reflexion.
+        GetType(DataGridView).GetProperty("DoubleBuffered", Reflection.BindingFlags.Instance Or Reflection.BindingFlags.NonPublic).
+            SetValue(dgvProduccionHechas, True, Nothing)
+
+        'Iniciar Tabla de Produccion
+        IniciarTablaProduccion()
+
+        ' Se desactiva la seleccion multiple por el mismo motivo que en Form1:
+        ' esta grilla es de carga secuencial, y una seleccion multiple accidental
+        ' puede disparar CellEndEdit en filas no deseadas, pisando su cantidad real.
+        dgvProduccion.MultiSelect = False
+
+        'Cargar Columnas
+        ConfigurarColumnas()
+
+        'Cargar Empleados de Produccion
+        CargarEmpleados()
+
+        'Cargar lista de producciones
+        CargarListadoProduccion()
+        'Lista configurada para no ser editable y elegir toda la fila 
+        With dgvProduccionHechas
+            .ReadOnly = True
+            .AllowUserToAddRows = False
+            .AllowUserToDeleteRows = False
+            .SelectionMode = DataGridViewSelectionMode.FullRowSelect
+            .MultiSelect = False
+        End With
+
+        'Cargar ultima lista realizada
+        Me.BeginInvoke(Sub()
+                           CargarUltimaProduccion()
+                       End Sub)
+
+        For Each col As DataGridViewColumn In dgvProduccionHechas.Columns
+            col.SortMode = DataGridViewColumnSortMode.NotSortable
+        Next
+
+        cargarProduccion = False
+
+        'Label por default para el nombre de empleado
+        lblEmpleadoID.Text = "Ingrese al Empleado para Produccion."
+    End Sub
+
+    'Estructura de la produccion
+    Private Sub IniciarTablaProduccion()
+        With dgvProduccion
+            'Limpieza y creacion de columnas
+            .Columns.Clear()
+            .Columns.Add("codigo", "Código Producto")
+            .Columns.Add("nombre", "Nombre Producto")
+            .Columns.Add("cantidad", "Cantidad")
+            .Columns.Add("subtotal", "Subtotal")
+
+            'Solo "cantidad" es editable
+            .Columns("nombre").ReadOnly = True
+            .Columns("subtotal").ReadOnly = True
+
+            'Botón para eliminar filas 
+            Dim eliminarBtn As New DataGridViewButtonColumn()
+            eliminarBtn.Name = "Eliminar"
+            eliminarBtn.HeaderText = ""
+            eliminarBtn.Text = "Eliminar"
+            eliminarBtn.UseColumnTextForButtonValue = True
+            .Columns.Add(eliminarBtn)
+        End With
+    End Sub
+
+    'Carga de los empleados para su seleccion
+    Private Sub CargarEmpleados()
+        Try
+            'Conexion a la base de datos para la obtencion de los empleados
+            Using conexionLocal As New OleDbConnection(conexionDB.ConnectionString)
+                conexionLocal.Open()
+
+                'Consulta SQL para obtener empleados de la tabla empleados
+                Dim query As String = "SELECT id_empleado, nombre_empleado FROM empleado ORDER BY nombre_empleado"
+                Dim da As New OleDbDataAdapter(query, conexionLocal)
+                Dim dt As New DataTable()
+                da.Fill(dt)
+
+                'Designacion de datos en el ComboBox
+                cbIDEmpleado.DataSource = dt
+                cbIDEmpleado.DisplayMember = "nombre_empleado" ' Nombre del Empleado
+                cbIDEmpleado.ValueMember = "id_empleado"       ' Guardar ID del Empleado
+
+                'Dejar sin seleccion por defecto
+                cbIDEmpleado.SelectedIndex = -1
+
+                'Mostrar texto guia por defecto
+                lblEmpleadoID.Text = "Seleccionar el empleado para produccion."
+
+            End Using
+
+            'Catch para errores en la carga de empleados
+        Catch ex As Exception
+            MsgBox("Error al cargar empleados: " & ex.Message, MsgBoxStyle.Critical)
+        End Try
+    End Sub
+
+    'Autoactualizar la produccion al momento de realizar cambios
+    Private Sub AutoActualizarProduccion()
+        CargarListadoProduccion()
+        dgvProduccionHechas.Refresh()
+    End Sub
+
+    'Texto de empleado al ser elegido
+    Private Sub cbIDEmpleado_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cbIDEmpleado.SelectedIndexChanged
+        ' Evitar que se ejecute durante carga inicial
+        If cargarProduccion OrElse idProduccionActual <= 0 Then Exit Sub
+
+        ' Si hay selección válida
+        If cbIDEmpleado.SelectedIndex >= 0 AndAlso cbIDEmpleado.SelectedValue IsNot Nothing Then
+            lblEmpleadoID.Text = cbIDEmpleado.Text
+
+            Try
+                AbrirConexion()
+
+                ' Actualizar el id_empleado en la producción actual
+                Using cmdUpdate As New OleDbCommand("UPDATE produccion SET id_empleado = ? WHERE id_produccion = ?", conexionDB)
+                    cmdUpdate.Parameters.AddWithValue("?", Convert.ToInt32(cbIDEmpleado.SelectedValue))
+                    cmdUpdate.Parameters.AddWithValue("?", idProduccionActual)
+                    cmdUpdate.ExecuteNonQuery()
+                End Using
+
+                ' Refrescar lista lateral
+                CargarListadoProduccion()
+
+            Catch ex As Exception
+                MsgBox("Error al actualizar empleado: " & ex.Message, MsgBoxStyle.Critical)
+            Finally
+                CerrarConexion()
+            End Try
+        Else
+            lblEmpleadoID.Text = "Sin empleado"
+        End If
+    End Sub
+
+    'Autoguardar al cambiar la fecha de produccion
+    Private Sub dtpFechaProduccion_ValueChanged(sender As Object, e As EventArgs) Handles dtpFechaProduccion.ValueChanged
+        If cargarProduccion Then Exit Sub
+        GuardarProduccion()
+        AutoActualizarProduccion()
+    End Sub
+
+    'Activado de autoguardado en cuanto se realizan cambios en el grid de produccion
+    Private Sub dgvProduccion_CellValueChanged(sender As Object, e As DataGridViewCellEventArgs) Handles dgvProduccion.CellValueChanged
+        If cargarProduccion Then Exit Sub
+        BeginInvoke(Sub()
+                        Try
+                            GuardarProduccion()
+                        Catch ex As Exception
+                            MsgBox("Error durante autoguardado: " & ex.Message, MsgBoxStyle.Critical)
+                        End Try
+                    End Sub)
+    End Sub
+
+    Private Sub dgvProduccion_RowsRemoved(sender As Object, e As DataGridViewRowsRemovedEventArgs) Handles dgvProduccion.RowsRemoved
+        If cargarProduccion Then Exit Sub
+        BeginInvoke(Sub()
+                        Try
+                            GuardarProduccion()
+                        Catch ex As Exception
+                            MsgBox("Error durante autoguardado: " & ex.Message, MsgBoxStyle.Critical)
+                        End Try
+                    End Sub)
+    End Sub
+
+    '=== Autoguardado cuando cambia el comentario ===
+    Private Sub rtxtComentario_TextChanged(sender As Object, e As EventArgs) Handles rtxtComentario.TextChanged
+        If cargarProduccion Then Exit Sub
+        BeginInvoke(Sub()
+                        Try
+                            GuardarProduccion()
+                        Catch ex As Exception
+                            MsgBox("Error al guardar comentario: " & ex.Message, MsgBoxStyle.Critical)
+                        End Try
+                    End Sub)
+    End Sub
+
+    '=== Tabulacion de Codigo a Cantidad en el DataGrid
+    Private Sub dgvProduccion_KeyDown(sender As Object, e As KeyEventArgs) Handles dgvProduccion.KeyDown
+        If e.KeyCode = Keys.Enter Then
+            e.SuppressKeyPress = True ' Evita el beep y el salto de fila automático
+
+            Dim filaActual As Integer = dgvProduccion.CurrentCell.RowIndex
+            Dim colActual As Integer = dgvProduccion.CurrentCell.ColumnIndex
+
+            ' Si estamos en la columna "Código" (columna 0)
+            If colActual = 0 Then
+                ' Mover a la columna de "Cantidad" (columna 2)
+                dgvProduccion.CurrentCell = dgvProduccion.Rows(filaActual).Cells(2)
+                dgvProduccion.BeginEdit(True)
+
+                ' Si estamos en la columna "Cantidad" (columna 2)
+            ElseIf colActual = 2 Then
+                ' Si no es la última fila, mover a la siguiente fila, columna 0 (Código)
+                If filaActual = dgvProduccion.Rows.Count - 1 Then
+                    ' Crear nueva fila automáticamente si estamos en la última
+                    dgvProduccion.Rows.Add()
+                End If
+
+                dgvProduccion.CurrentCell = dgvProduccion.Rows(filaActual + 1).Cells(0)
+                dgvProduccion.BeginEdit(True)
+            End If
+        End If
+    End Sub
+
+    '=== CONFIGURAR COLUMNAS DEL LISTADO LATERAL ===
+    Private Sub ConfigurarColumnas()
+        dgvProduccionHechas.Columns.Clear()
+        dgvProduccionHechas.Columns.Add("fecha_produccion", "Fecha")
+        dgvProduccionHechas.Columns.Add("nombre_empleado", "Empleado")
+        dgvProduccionHechas.Columns.Add("total", "Total")
+
+        dgvProduccionHechas.Columns("fecha_produccion").Width = 100
+        dgvProduccionHechas.Columns("nombre_empleado").AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+        dgvProduccionHechas.Columns("total").Width = 90
+    End Sub
+
+    '=== CARGAR LISTADO DE PRODUCCIONES ===
+    Private Sub CargarListadoProduccion()
+        dgvProduccionHechas.SuspendLayout()
+        Try
+            AbrirConexion()
+
+            Dim sql As String =
+            "SELECT p.id_produccion, p.fecha_produccion, e.nombre_empleado, p.total " &
+            "FROM produccion AS p " &
+            "INNER JOIN empleado AS e ON p.id_empleado = e.id_empleado "
+
+            ' Por defecto solo se traen los ultimos 60 dias (mas rapido en PC modestas).
+            ' El boton "Ver historial completo" permite alternar a traer todo cuando haga falta.
+            If Not mostrarHistorialCompletoProduccion Then
+                sql &= "WHERE p.fecha_produccion BETWEEN ? AND ? "
+            End If
+
+            sql &= "ORDER BY p.fecha_produccion DESC, p.id_produccion DESC"
+
+            Using cmd As New OleDbCommand(sql, conexionDB)
+                If Not mostrarHistorialCompletoProduccion Then
+                    cmd.Parameters.AddWithValue("?", Date.Today.AddDays(-60))
+                    cmd.Parameters.AddWithValue("?", Date.Today)
+                End If
+
+                Using reader = cmd.ExecuteReader()
+                    dgvProduccionHechas.Rows.Clear()
+
+                    While reader.Read()
+                        Dim fechaProd As String = Convert.ToDateTime(reader("fecha_produccion")).ToShortDateString()
+                        Dim nombreEmp As String = reader("nombre_empleado").ToString()
+                        Dim totalProd As String = String.Format("{0:N0}", reader("total")) & " $"
+
+                        Dim filaIndex As Integer = dgvProduccionHechas.Rows.Add(fechaProd, nombreEmp, totalProd)
+                        dgvProduccionHechas.Rows(filaIndex).Tag = reader("id_produccion")
+                    End While
+                End Using
+            End Using
+
+        Catch ex As Exception
+            MsgBox("Error al cargar la lista de producciones: " & ex.Message, MsgBoxStyle.Critical)
+        Finally
+            CerrarConexion()
+            dgvProduccionHechas.ResumeLayout()
+        End Try
+    End Sub
+
+    '=== BOTÓN ACTUALIZAR ===
+    Private Sub btnActualizarProduccion_Click(sender As Object, e As EventArgs) Handles btnActualizarProduccion.Click
+        mostrarHistorialCompletoProduccion = Not mostrarHistorialCompletoProduccion
+
+        If mostrarHistorialCompletoProduccion Then
+            btnActualizarProduccion.Text = "Ver solo recientes"
+        Else
+            btnActualizarProduccion.Text = "Ver historial completo"
+        End If
+
+        ConfigurarColumnas()
+        CargarListadoProduccion()
+    End Sub
+
+    '=== BOTON PARA ELIMINAR PRODUCCION
+    Private Sub btnEliminarProduccion_Click(sender As Object, e As EventArgs) Handles btnEliminarProduccion.Click
+        'Verificar si hay produccion cargada
+        If idProduccionActual <= 0 Then
+            MsgBox("No hay produccion cargada en pantalla.", MsgBoxStyle.Information)
+            Exit Sub
+        End If
+
+        'Confirmacion de la eliminacion de la produccion
+        Dim EliminarProduccion = MsgBox("Estas seguro de Eliminar la Produccion Nº " & idProduccionActual & "?", MsgBoxStyle.YesNo + MsgBoxStyle.Question, "Confirmar Accion")
+        If EliminarProduccion <> MsgBoxResult.Yes Then Exit Sub
+
+        'Conexion a la Base de Datos
+        Try
+            AbrirConexion()
+
+            'Eliminar detalles de produccion
+            Using cmdDetalle As New OleDbCommand("DELETE FROM produccion_detalle WHERE id_produccion = ?", conexionDB)
+                cmdDetalle.Parameters.AddWithValue("?", idProduccionActual)
+                cmdDetalle.ExecuteNonQuery()
+            End Using
+
+            'Eliminar Produccion
+            Using cmdProduccion As New OleDbCommand("DELETE FROM produccion WHERE id_produccion = ?", conexionDB)
+                cmdProduccion.Parameters.AddWithValue("?", idProduccionActual)
+                cmdProduccion.ExecuteNonQuery()
+            End Using
+
+            MsgBox("Produccion Eliminada", MsgBoxStyle.Information)
+
+            'Buscar produccion Anterior
+            Dim IDAnterior As Object = Nothing
+            Using cmdAnterior As New OleDbCommand("SELECT MAX(id_produccion) FROM produccion WHERE id_produccion < ?", conexionDB)
+                cmdAnterior.Parameters.AddWithValue("?", idProduccionActual)
+                IDAnterior = cmdAnterior.ExecuteScalar()
+            End Using
+
+            'Cargar produccion anterior
+            If IDAnterior IsNot Nothing AndAlso IDAnterior IsNot DBNull.Value Then
+                CargarProduccionID(Convert.ToInt32(IDAnterior))
+            Else
+                dgvProduccion.Rows.Clear()
+                txtTotalProduccion.Text = "0 $"
+                cbIDEmpleado.SelectedIndex = -1
+                lblEmpleadoID.Text = "Seleccionar empleado para produccion."
+                rtxtComentario.Clear()
+                idProduccionActual = 0
+            End If
+
+            'Actualizar listado lateral
+            CargarListadoProduccion()
+
+        Catch ex As Exception
+            MsgBox("Error al eliminar la produccion: " & ex.Message, MsgBoxStyle.Critical)
+        Finally
+            CerrarConexion()
+        End Try
+
+    End Sub
+
+    '=== CARGAR LA ÚLTIMA PRODUCCIÓN AL ABRIR EL FORM ===
+    Private Sub CargarUltimaProduccion()
+        Try
+            AbrirConexion()
+            Using cmd As New OleDbCommand("SELECT TOP 1 id_produccion FROM produccion ORDER BY id_produccion DESC", conexionDB)
+                Dim result = cmd.ExecuteScalar()
+                If result IsNot Nothing AndAlso result IsNot DBNull.Value Then
+                    CargarProduccionID(Convert.ToInt32(result))
+                End If
+            End Using
+        Catch ex As Exception
+            MsgBox("Error al cargar la última producción: " & ex.Message, MsgBoxStyle.Critical)
+        Finally
+            CerrarConexion()
+        End Try
+    End Sub
+
+    '=== EVENTO DE CLICK EN LISTA PARA CARGAR PRODUCCIÓN ===
+    Private Sub dgvProduccionLista_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvProduccionHechas.CellClick
+        If e.RowIndex >= 0 AndAlso dgvProduccionHechas.Rows(e.RowIndex).Tag IsNot Nothing Then
+            Dim idSeleccionado As Integer = Convert.ToInt32(dgvProduccionHechas.Rows(e.RowIndex).Tag)
+            CargarProduccionID(idSeleccionado)
+        End If
+    End Sub
+
+    Public Sub GuardarProduccion()
+        ' Si no existe producción creada aún, no guardar
+        If idProduccionActual <= 0 Then Exit Sub
+
+        Dim transaccion As OleDbTransaction = Nothing
+        Try
+            AbrirConexion()
+
+            Dim fecha As Date = dtpFechaProduccion.Value
+
+            ' Empleado puede ser NULL
+            Dim idEmpleado As Object = DBNull.Value
+            If cbIDEmpleado.SelectedValue IsNot Nothing AndAlso IsNumeric(cbIDEmpleado.SelectedValue) Then
+                idEmpleado = Convert.ToInt32(cbIDEmpleado.SelectedValue)
+            End If
+
+            Dim comentario As String = rtxtComentario.Text
+            Dim total As Integer = ObtenerTotalProduccion()
+
+            ' A partir de aqui, todo se guarda junto o no se guarda nada
+            transaccion = conexionDB.BeginTransaction()
+
+            '=== SI YA EXISTE, ACTUALIZAR ===
+            If idProduccionActual > 0 Then
+                Using cmdActualizar As New OleDbCommand(
+                "UPDATE produccion SET fecha_produccion = ?, id_empleado = ?, comentario = ?, total = ? 
+                 WHERE id_produccion = ?", conexionDB, transaccion)
+
+                    cmdActualizar.Parameters.AddWithValue("?", fecha)
+                    cmdActualizar.Parameters.AddWithValue("?", idEmpleado)
+                    cmdActualizar.Parameters.AddWithValue("?", comentario)
+                    cmdActualizar.Parameters.AddWithValue("?", total)
+                    cmdActualizar.Parameters.AddWithValue("?", idProduccionActual)
+
+                    cmdActualizar.ExecuteNonQuery()
+                End Using
+
+                'Eliminar detalles anteriores
+                Using cmdBorrar As New OleDbCommand("DELETE FROM produccion_detalle WHERE id_produccion = ?", conexionDB, transaccion)
+                    cmdBorrar.Parameters.AddWithValue("?", idProduccionActual)
+                    cmdBorrar.ExecuteNonQuery()
+                End Using
+
+            End If
+
+            '=== INSERTAR DETALLES ===
+            For Each fila As DataGridViewRow In dgvProduccion.Rows
+                If fila.IsNewRow Then Continue For
+
+                If fila.Cells("codigo").Value Is Nothing OrElse
+               fila.Cells("nombre").Value Is Nothing OrElse
+               fila.Cells("cantidad").Value Is Nothing OrElse
+               fila.Cells("subtotal").Value Is Nothing Then Continue For
+
+                Dim codigo As String = fila.Cells("codigo").Value.ToString()
+                Dim nombre As String = fila.Cells("nombre").Value.ToString()
+                Dim cantidad As Integer = Convert.ToInt32(fila.Cells("cantidad").Value)
+                Dim subtotal As Integer = LimpiarMonto(fila.Cells("subtotal").Value)
+
+                ' Precio unitario fijo para que producciones antiguas no se alteren
+                Dim precioUnitario As Integer = 0
+                If cantidad > 0 Then precioUnitario = subtotal \ cantidad
+
+                Using cmdDetalle As New OleDbCommand(
+                "INSERT INTO produccion_detalle
+                (id_produccion, codigo_producto, nombre_producto, cantidad, precio_unitario, subtotal)
+                 VALUES (?,?,?,?,?,?)", conexionDB, transaccion)
+
+                    cmdDetalle.Parameters.AddWithValue("?", idProduccionActual)
+                    cmdDetalle.Parameters.AddWithValue("?", codigo)
+                    cmdDetalle.Parameters.AddWithValue("?", nombre)
+                    cmdDetalle.Parameters.AddWithValue("?", cantidad)
+                    cmdDetalle.Parameters.AddWithValue("?", precioUnitario)
+                    cmdDetalle.Parameters.AddWithValue("?", subtotal)
+
+                    cmdDetalle.ExecuteNonQuery()
+                End Using
+            Next
+
+            ' Todo salio bien: recien AHORA se confirman los cambios de forma definitiva
+            transaccion.Commit()
+
+            'Actualizar lista lateral
+            CargarListadoProduccion()
+
+        Catch ex As Exception
+            ' Algo fallo: se deshace TODO lo hecho desde BeginTransaction (deja la produccion como estaba antes del guardado)
+            Try
+                If transaccion IsNot Nothing Then transaccion.Rollback()
+            Catch
+                ' Si ni siquiera se pudo revertir (ej. se perdio la conexion en pleno intento), no hay mas accion posible aqui
+            End Try
+            MsgBox("Error al guardar la producción. No se guardó ningún cambio parcial: " & ex.Message, MsgBoxStyle.Critical)
+        Finally
+            CerrarConexion()
+        End Try
+    End Sub
+
+    'Calcular total general de la produccion
+    Private Function ObtenerTotalProduccion() As Integer
+        'El valor es 0 si no hay filas
+        Dim total As Integer = 0
+
+        For Each fila As DataGridViewRow In dgvProduccion.Rows
+            If Not fila.IsNewRow Then
+                Dim subtotalTexto = LimpiarMonto(fila.Cells("subtotal").Value)
+                total += Val(subtotalTexto)
+            End If
+        Next
+
+        Return total
+    End Function
+
+    'Actualizar total visual
+    Public Sub CalcularTotalProduccion()
+        Dim total = ObtenerTotalProduccion()
+        txtTotalProduccion.Text = String.Format("{0:N0}", total) & " $"
+    End Sub
+
+    'Limpia los montos de los totales
+    Private Function LimpiarMonto(monto As Object) As Integer
+        If monto Is Nothing Then Return 0
+
+        Dim txt As String = monto.ToString()
+
+        ' Eliminar cualquier formato conocido
+        txt = txt.Replace("$", "")
+        txt = txt.Replace(" ", "")
+        txt = txt.Replace(".", "")
+        txt = txt.Trim()
+
+        Dim val As Integer = 0
+        Integer.TryParse(txt, val)
+        Return val
+    End Function
+
+
+    Private Sub CargarProduccionID(idProduccion As Integer)
+        Debug.WriteLine(">> CargarProduccionID con ID = " & idProduccion)
+
+        cargarProduccion = True
+        dgvProduccion.Rows.Clear()
+
+        Try
+            AbrirConexion()
+
+            'Cargar datos de produccion a traves de una consulta SQL
+            Using cmdProduccion As New OleDbCommand("SELECT * FROM produccion WHERE id_produccion = ?", conexionDB)
+                cmdProduccion.Parameters.AddWithValue("?", idProduccion)
+
+                Using reader = cmdProduccion.ExecuteReader()
+                    If reader.Read() Then
+                        'Carga con el ID Produccion y Fecha de Produccion
+                        idProduccionActual = idProduccion
+                        dtpFechaProduccion.Value = Convert.ToDateTime(reader("fecha_produccion"))
+
+                        Dim idEmpleado As Integer? = Nothing
+                        If Not IsDBNull(reader("id_empleado")) Then idEmpleado = Convert.ToInt32(reader("id_empleado"))
+
+                        If idEmpleado.HasValue AndAlso idEmpleado.Value > 0 Then
+                            Dim empleadoDesignado As Boolean = False
+
+                            'Designar directamente si el combobox posee los datos cargados
+                            If cbIDEmpleado IsNot Nothing AndAlso cbIDEmpleado.DataSource IsNot Nothing Then
+                                Dim dataEmpleado As DataTable = TryCast(cbIDEmpleado.DataSource, DataTable)
+
+                                If dataEmpleado IsNot Nothing AndAlso dataEmpleado.Select("id_empleado = " & idEmpleado.Value).Length > 0 Then
+                                    cbIDEmpleado.SelectedValue = idEmpleado.Value
+                                    lblEmpleadoID.Text = cbIDEmpleado.Text
+                                    empleadoDesignado = True
+                                End If
+                            End If
+                            'Si no pudo ser designado, buscar en la base de datos
+                            If Not empleadoDesignado Then
+                                Using cmdEmpleado As New OleDbCommand("SELECT nombre_empleado FROM empleado WHERE id_empleado = ?", conexionDB)
+                                    cmdEmpleado.Parameters.AddWithValue("?", idEmpleado.Value)
+                                    Dim resultado = cmdEmpleado.ExecuteScalar()
+
+                                    If resultado IsNot Nothing AndAlso Not IsDBNull(resultado) Then
+                                        lblEmpleadoID.Text = resultado.ToString()
+                                    Else
+                                        lblEmpleadoID.Text = "Empleado no designado."
+                                    End If
+                                End Using
+                            End If
+                        Else
+                            'Si no posee un empleado designado 
+                            cbIDEmpleado.SelectedIndex = 0
+                            lblEmpleadoID.Text = "Seleccionar empleado para produccion."
+                        End If
+                        'Carga de los comentarios y total de produccion
+                        rtxtComentario.Text = reader("comentario").ToString()
+                        txtTotalProduccion.Text = String.Format("{0:N0}", reader("total")) & " $"
+                    End If
+                End Using
+            End Using
+
+            'Cargar detalles de produccion a traves de una consulta SQL
+            Using cmdDetalle As New OleDbCommand("SELECT codigo_producto, nombre_producto, cantidad, precio_unitario, subtotal FROM produccion_detalle WHERE id_produccion = ?", conexionDB)
+                cmdDetalle.Parameters.AddWithValue("?", idProduccion)
+
+                'Toma de datos para su posterior carga en el grid
+                Using reader = cmdDetalle.ExecuteReader()
+                    While reader.Read()
+                        Dim codigo As Object = If(IsDBNull(reader("codigo_producto")), "", reader("codigo_producto"))
+                        Dim nombre As Object = If(IsDBNull(reader("nombre_producto")), "", reader("nombre_producto"))
+                        Dim cantidad As Integer = If(IsDBNull(reader("cantidad")), 0, Convert.ToInt32(reader("cantidad")))
+                        Dim subtotal As Integer = If(IsDBNull(reader("subtotal")), 0, Convert.ToInt32(reader("subtotal")))
+
+                        'Agregado de la fila en el grid
+                        dgvProduccion.Rows.Add(codigo, nombre, cantidad, "$ " & String.Format("{0:N0}", subtotal))
+                    End While
+                End Using
+            End Using
+
+            'Captura de Errores y cierre de conexion
+        Catch ex As Exception
+            MsgBox("Error al cargar la producción: " & ex.Message, MsgBoxStyle.Critical)
+        Finally
+            CerrarConexion()
+            cargarProduccion = False
+        End Try
+    End Sub
+
+    Private Sub btnNuevaProduccion_Click(sender As Object, e As EventArgs) Handles btnNuevaProduccion.Click
+        Try
+            AbrirConexion()
+
+            ' Insertar nueva producción solo con fecha, total 0 y sin empleado
+            Using cmdInsertar As New OleDbCommand("INSERT INTO produccion (fecha_produccion, total) VALUES (?, ?)", conexionDB)
+                cmdInsertar.Parameters.AddWithValue("?", Date.Today)
+                cmdInsertar.Parameters.AddWithValue("?", 0)
+                cmdInsertar.ExecuteNonQuery()
+            End Using
+
+            ' Obtener el ID recién creado
+            Using cmdID As New OleDbCommand("SELECT @@IDENTITY", conexionDB)
+                idProduccionActual = Convert.ToInt32(cmdID.ExecuteScalar())
+            End Using
+
+            ' Resetear interfaz
+            dgvProduccion.Rows.Clear()
+            rtxtComentario.Clear()
+            txtTotalProduccion.Text = "$ 0"
+            cbIDEmpleado.SelectedIndex = -1
+            lblEmpleadoID.Text = "Sin empleado"
+            dtpFechaProduccion.Value = Date.Today
+
+            ' Permitir edición en el grid
+            dgvProduccion.ReadOnly = False
+
+            ' Actualizar lista lateral
+            CargarListadoProduccion()
+
+        Catch ex As Exception
+            MsgBox("Error al crear nueva producción: " & ex.Message, MsgBoxStyle.Critical)
+        Finally
+            CerrarConexion()
+        End Try
+    End Sub
+
+    Private Sub btnSiguienteProduccion_Click(sender As Object, e As EventArgs) Handles btnSiguienteProduccion.Click
+        Try
+            AbrirConexion()
+
+            Using cmd As New OleDbCommand("SELECT MIN(id_produccion) FROM produccion WHERE id_produccion > ?", conexionDB)
+                cmd.Parameters.AddWithValue("?", idProduccionActual)
+                Dim siguienteID = cmd.ExecuteScalar()
+
+                If siguienteID IsNot DBNull.Value AndAlso siguienteID IsNot Nothing Then
+                    CargarProduccionID(Convert.ToInt32(siguienteID))
+                Else
+                    MsgBox("No hay más producciones siguientes.", MsgBoxStyle.Information)
+                End If
+            End Using
+
+        Catch ex As Exception
+            MsgBox("Error al buscar producciones siguientes: " & ex.Message, MsgBoxStyle.Critical)
+        Finally
+            CerrarConexion()
+        End Try
+    End Sub
+
+    Private Sub btnAnteriorProduccion_Click(sender As Object, e As EventArgs) Handles btnAnteriorProduccion.Click
+        Try
+            AbrirConexion()
+
+            Using cmd As New OleDbCommand("SELECT MAX(id_produccion) FROM produccion WHERE id_produccion < ?", conexionDB)
+                cmd.Parameters.AddWithValue("?", idProduccionActual)
+                Dim anteriorID = cmd.ExecuteScalar()
+
+                If anteriorID IsNot DBNull.Value AndAlso anteriorID IsNot Nothing Then
+                    CargarProduccionID(Convert.ToInt32(anteriorID))
+                Else
+                    MsgBox("No hay más producciones anteriores.", MsgBoxStyle.Information)
+                End If
+            End Using
+
+        Catch ex As Exception
+            MsgBox("Error al buscar producciones anteriores: " & ex.Message, MsgBoxStyle.Critical)
+        Finally
+            CerrarConexion()
+        End Try
+    End Sub
+    Private Sub dgvProduccion_CellEndEdit(sender As Object, e As DataGridViewCellEventArgs) Handles dgvProduccion.CellEndEdit
+        ' Si editamos la columna de código
+        If e.ColumnIndex = 0 Then
+            Dim codigo As String = dgvProduccion.Rows(e.RowIndex).Cells(0).Value?.ToString()
+
+            If Not String.IsNullOrEmpty(codigo) Then
+
+                Try
+                    'Usar una conexión local y cerrarla manualmente (para evitar RCW)
+                    Using conexionLocal As New OleDbConnection(conexionDB.ConnectionString)
+                        conexionLocal.Open()
+
+                        Using cmd As New OleDbCommand("SELECT nombre, precio_venta_boleta FROM producto WHERE codigo = ?", conexionLocal)
+                            cmd.Parameters.AddWithValue("?", codigo)
+
+                            Using reader As OleDbDataReader = cmd.ExecuteReader()
+                                If reader.Read() Then
+                                    Dim nombre As String = reader("nombre").ToString()
+                                    Dim precioBoleta As Integer = Convert.ToInt32(reader("precio_venta_boleta"))
+                                    Dim precioFormato As String = "$ " & String.Format("{0:N0}", precioBoleta)
+
+                                    With dgvProduccion.Rows(e.RowIndex)
+                                        .Cells(1).Value = nombre
+                                        ' Solo se pone cantidad = 1 por defecto si la fila esta vacia/nueva,
+                                        ' para no perder una cantidad real ya cargada.
+                                        If IsDBNull(.Cells(2).Value) OrElse String.IsNullOrWhiteSpace(.Cells(2).Value?.ToString()) Then
+                                            .Cells(2).Value = 1
+                                        End If
+                                        .Cells(3).Value = precioFormato
+                                    End With
+
+                                    CalcularTotalProduccion()
+                                    GuardarProduccion()
+
+                                    'Tras ingresar el codigo producto, se seleccione cantidad automaticamente
+                                    Me.BeginInvoke(Sub()
+                                                       Try
+                                                           Dim columCantidad As Integer = dgvProduccion.Columns("cantidad").Index
+                                                           dgvProduccion.CurrentCell = dgvProduccion.Rows(e.RowIndex).Cells(columCantidad)
+                                                           dgvProduccion.BeginEdit(True)
+                                                       Catch ex As Exception
+                                                           Debug.WriteLine("Error al seleccionar Cantidad", ex.Message)
+                                                       End Try
+                                                   End Sub)
+                                Else
+                                    MsgBox("Código de producto no válido.", MsgBoxStyle.Exclamation)
+                                    dgvProduccion.Rows.RemoveAt(e.RowIndex)
+                                End If
+                            End Using
+                        End Using
+                    End Using
+
+                Catch ex As Exception
+                    MsgBox("Error al consultar producto: " & ex.Message)
+                End Try
+            End If
+
+            'Si editamos la columna de cantidad
+        ElseIf e.ColumnIndex = 2 Then
+            Try
+                Dim fila = dgvProduccion.Rows(e.RowIndex)
+
+                Dim cantidad As Integer = 1
+                Integer.TryParse(fila.Cells(2).Value?.ToString(), cantidad)
+                If cantidad <= 0 Then cantidad = 1
+
+                Dim subtotalAnterior As Integer = LimpiarMonto(fila.Cells(3).Value)
+
+                ' El precio unitario es el subtotal anterior por 1 unidad
+                Dim precioUnitario As Integer = subtotalAnterior
+
+                Dim nuevoSubtotal As Integer = cantidad * precioUnitario
+                fila.Cells(3).Value = "$ " & String.Format("{0:N0}", nuevoSubtotal)
+
+                CalcularTotalProduccion()
+                GuardarProduccion()
+
+                'Mover foco
+                Me.BeginInvoke(Sub()
+                                   Dim siguienteFila As Integer = e.RowIndex + 1
+                                   If siguienteFila >= dgvProduccion.Rows.Count Then
+                                       dgvProduccion.Rows.Add()
+                                   End If
+                                   dgvProduccion.CurrentCell =
+                               dgvProduccion.Rows(siguienteFila).Cells("codigo")
+                                   dgvProduccion.BeginEdit(True)
+                               End Sub)
+
+            Catch ex As Exception
+                MsgBox("Error al recalcular el subototal de los productos: " & ex.Message)
+            End Try
+        End If
+    End Sub
+
+    Private Sub dgvProduccion_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvProduccion.CellClick
+        If e.ColumnIndex = dgvProduccion.Columns("Eliminar").Index AndAlso e.RowIndex >= 0 Then
+            If Not dgvProduccion.Rows(e.RowIndex).IsNewRow Then
+                dgvProduccion.Rows.RemoveAt(e.RowIndex)
+                CalcularTotalProduccion()
+                GuardarProduccion()
+            End If
+        End If
+    End Sub
+
+    Private Sub ValidarEntradaNumerica(sender As Object, e As KeyPressEventArgs)
+        Dim txt As TextBox = CType(sender, TextBox)
+
+        If Char.IsControl(e.KeyChar) Then Return
+        If Not Char.IsDigit(e.KeyChar) Then
+            e.Handled = True
+            Return
+        End If
+        If txt.TextLength >= 5 Then
+            e.Handled = True
+        End If
+    End Sub
+
+    Private Sub dgvProduccion_EditingControlShowing(sender As Object, e As DataGridViewEditingControlShowingEventArgs) Handles dgvProduccion.EditingControlShowing
+        If dgvProduccion.CurrentCell.ColumnIndex = 0 Or dgvProduccion.CurrentCell.ColumnIndex = 2 Then
+            Dim txtEdit As TextBox = TryCast(e.Control, TextBox)
+            If txtEdit IsNot Nothing Then
+                RemoveHandler txtEdit.KeyPress, AddressOf ValidarEntradaNumerica
+                AddHandler txtEdit.KeyPress, AddressOf ValidarEntradaNumerica
+            End If
+        End If
+    End Sub
+
+    Private Sub btnAgregarProduccion_Click(sender As Object, e As EventArgs) Handles btnAgregarProduccion.Click
+        Dim formProductosProduccion As New FormProducc_Productos()
+        FormProducc_Productos.Owner = Me
+        FormProducc_Productos.ShowDialog()
+    End Sub
+
+    'Fuente, Cuerpo y posicion para impresion
+    Dim fuenteTitulo As New Font("Consolas", 8, FontStyle.Bold)
+    Dim fuenteCuerpo As New Font("Consolas", 7)
+    Dim yPos As Integer = 0
+
+    '==SECCION DE IMPRESION DE PRODUCCION==
+    Private Sub btnImprimirProduccion_Click(sender As Object, e As EventArgs) Handles btnImprimirProduccion.Click
+        Try
+            ' Configurar tamaño de papel (ancho 80mm ≈ 283, largo 297mm ≈ 1169)
+            Dim tamañoPapel As New PaperSize("Ticket80mm", 283, 1169)
+            impresionProduccion.DefaultPageSettings.PaperSize = tamañoPapel
+
+            ' Margen mínimo para aprovechar mejor el espacio
+            impresionProduccion.DefaultPageSettings.Margins = New Margins(5, 5, 5, 5)
+
+            ' Fuente estándar para tickets
+            fuenteCuerpo = New Font("Consolas", 7)
+
+            ' Inicia la impresión (DESCOMENTAR DESPUES DE PROBAR TICKETS!)
+            impresionProduccion.Print()
+
+            Using vistaPrevia As New PrintPreviewDialog()
+                vistaPrevia.Document = impresionProduccion
+                vistaPrevia.WindowState = FormWindowState.Maximized
+                vistaPrevia.PrintPreviewControl.Zoom = 2.0 'Escala de ventana del 200% CUIDADO!
+                vistaPrevia.Text = "Vista Previa de Guia"
+                vistaPrevia.ShowDialog()
+            End Using
+
+        Catch ex As Exception
+            MsgBox("Error al mostrar la vista previa de la guia!" & ex.Message, MsgBoxStyle.Critical)
+        End Try
+    End Sub
+
+    Private Sub ImpresionProduccion_PrintPage(sender As Object, e As PrintPageEventArgs) Handles impresionProduccion.PrintPage
+        'Elementos de la impresion, y margenes de impresion
+        Dim g As Graphics = e.Graphics
+        Dim margenIzq As Integer = e.MarginBounds.Left
+        yPos = e.MarginBounds.Top
+        Dim fuenteTitulo As New Font("Consolas", 8, FontStyle.Bold)
+        Dim fuenteCuerpo As New Font("Consolas", 7)
+        Dim salto As Integer = fuenteCuerpo.GetHeight(g) + 2
+
+        'Obtener el nombre del empleado
+        Dim nombreEmpleado As String = ""
+
+        'Conexion a la base de datos para obtener el nombre del empleado
+        Try
+            AbrirConexion()
+            Using cmd As New OleDbCommand("SELECT nombre_empleado FROM empleado WHERE id_empleado = ?", conexionDB)
+                cmd.Parameters.AddWithValue("?", cbIDEmpleado.SelectedValue)
+                Dim resultado = cmd.ExecuteScalar()
+                If resultado IsNot Nothing AndAlso Not IsDBNull(resultado) Then
+                    nombreEmpleado = resultado.ToString()
+                Else
+                    nombreEmpleado = "Empleado no encontrado."
+                End If
+            End Using
+        Catch ex As Exception
+            nombreEmpleado = "Empleado no Encontrado."
+        Finally
+            CerrarConexion()
+        End Try
+
+        '=== Encabezado de la guia ===
+        g.DrawString("Produccion Interna", fuenteTitulo, Brushes.Black, margenIzq, yPos)
+        yPos += salto
+
+        g.DrawString("Empleado: " & lblEmpleadoID.Text, fuenteCuerpo, Brushes.Black, margenIzq, yPos)
+        yPos += salto
+        g.DrawString("Fecha: " & dtpFechaProduccion.Value.ToString("dd/MM/yyyy"), fuenteCuerpo, Brushes.Black, margenIzq, yPos)
+        yPos += salto * 2
+
+        '== Cabecera de Tabla ==
+        g.DrawString("Código  Nombre Producto           Cant   Subtotal", fuenteCuerpo, Brushes.Black, margenIzq, yPos)
+        yPos += salto
+        g.DrawString("--------------------------------------------------", fuenteCuerpo, Brushes.Black, margenIzq, yPos)
+        yPos += salto
+
+        '== Cuerpo de la tabla ==
+
+        For Each fila As DataGridViewRow In dgvProduccion.Rows
+            If fila.IsNewRow Then Continue For
+
+            Dim codigo As String = If(fila.Cells("codigo").Value, "").ToString().PadRight(6)
+            Dim nombre As String = If(fila.Cells("nombre").Value, "").ToString().PadRight(25)
+            Dim cantidad As String = If(fila.Cells("cantidad").Value, "0").ToString().PadLeft(4)
+            Dim subtotalTexto As String = If(fila.Cells("subtotal").Value, "0").ToString().Replace(" $", "").Replace(".", "")
+            Dim subtotal As Integer = Val(subtotalTexto)
+
+            Dim linea As String = $"{codigo}{nombre}{cantidad.PadLeft(6)}{subtotal.ToString("N0").PadLeft(8)}"
+            g.DrawString(linea, fuenteCuerpo, Brushes.Black, margenIzq, yPos)
+            yPos += salto
+        Next
+
+        '== Total de Produccion ==
+        yPos += salto
+        g.DrawString("--------------------------------------------------", fuenteCuerpo, Brushes.Black, margenIzq, yPos)
+        yPos += salto
+        g.DrawString("TOTAL:".PadLeft(33) & txtTotalProduccion.Text.Replace(" ", ""), fuenteTitulo, Brushes.Black, margenIzq, yPos)
+        yPos += salto * 2
+
+        '== Comentario de Produccion ==
+        g.DrawString("COMENTARIO:", fuenteTitulo, Brushes.Black, margenIzq, yPos)
+        yPos += salto
+
+        Dim comentarioTexto As String = rtxtComentario.Text.Trim()
+        If comentarioTexto <> "" Then
+            ' Definir área de texto con márgenes
+            Dim anchoTexto As Single = 280 ' ancho útil del ticket (ajústalo a tu impresora)
+            Dim rectComentario As New RectangleF(margenIzq, yPos, anchoTexto, 9999)
+
+            ' Configurar formato de texto
+            Dim formato As New StringFormat()
+            formato.Alignment = StringAlignment.Near
+            formato.LineAlignment = StringAlignment.Near
+
+            ' Dibujar comentario con ajuste automático de líneas
+            g.DrawString(comentarioTexto, fuenteCuerpo, Brushes.Black, rectComentario, formato)
+
+            ' Mover yPos hacia abajo según el texto
+            Dim tamañoTexto As SizeF = g.MeasureString(comentarioTexto, fuenteCuerpo, anchoTexto)
+            yPos += tamañoTexto.Height
+        Else
+            g.DrawString("(Sin comentario)", fuenteCuerpo, Brushes.Black, margenIzq, yPos)
+            yPos += salto
+        End If
+
+    End Sub
+
+End Class

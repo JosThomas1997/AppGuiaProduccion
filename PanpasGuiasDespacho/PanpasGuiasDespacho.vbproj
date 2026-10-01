@@ -154,6 +154,12 @@
     <Compile Include="FormProductos.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="FormReactivarProductos.Designer.vb">
+      <DependentUpon>FormReactivarProductos.vb</DependentUpon>
+    </Compile>
+    <Compile Include="FormReactivarProductos.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="FormResumenProduccion.Designer.vb">
       <DependentUpon>FormResumenProduccion.vb</DependentUpon>
     </Compile>
@@ -182,8 +188,10 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="PrinterHelper.vb" />
     <Compile Include="Program.vb" />
     <Compile Include="Seguridad.vb" />
+    <Compile Include="UtilReactivarProductos.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Form1.resx">
@@ -191,6 +199,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Form2.resx">
       <DependentUpon>Form2.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormEditarPrecios.resx">
+      <DependentUpon>FormEditarPrecios.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormInformeProducto.resx">
       <DependentUpon>FormInformeProducto.vb</DependentUpon>
@@ -209,6 +220,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormProductos.resx">
       <DependentUpon>FormProductos.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormReactivarProductos.resx">
+      <DependentUpon>FormReactivarProductos.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormResumenProduccion.resx">
       <DependentUpon>FormResumenProduccion.vb</DependentUpon>
