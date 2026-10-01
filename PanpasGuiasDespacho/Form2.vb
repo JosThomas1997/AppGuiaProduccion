@@ -8,6 +8,9 @@ Public Class Form2
     Private autoGuardadoHabilitado As Boolean = True
     Private idProduccionActual As Integer = -1
     Private cargarProduccion As Boolean = False
+
+    ' Controla si dgvProduccionHechas muestra todo el historial o solo lo reciente.
+    Private mostrarHistorialCompletoProduccion As Boolean = False
     Public dgvProductos As New DataGridView()
 
     'Variable para Impresion
@@ -19,8 +22,18 @@ Public Class Form2
         Debug.WriteLine(">> Form2_Load")
         cargarProduccion = True
 
+        ' Doble buffer: evita el parpadeo al limpiar/repoblar la lista lateral de producciones.
+        ' DoubleBuffered es una propiedad protegida, por eso se activa via reflexion.
+        GetType(DataGridView).GetProperty("DoubleBuffered", Reflection.BindingFlags.Instance Or Reflection.BindingFlags.NonPublic).
+            SetValue(dgvProduccionHechas, True, Nothing)
+
         'Iniciar Tabla de Produccion
         IniciarTablaProduccion()
+
+        ' Se desactiva la seleccion multiple por el mismo motivo que en Form1:
+        ' esta grilla es de carga secuencial, y una seleccion multiple accidental
+        ' puede disparar CellEndEdit en filas no deseadas, pisando su cantidad real.
+        dgvProduccion.MultiSelect = False
 
         'Cargar Columnas
         ConfigurarColumnas()
@@ -232,16 +245,29 @@ Public Class Form2
 
     '=== CARGAR LISTADO DE PRODUCCIONES ===
     Private Sub CargarListadoProduccion()
+        dgvProduccionHechas.SuspendLayout()
         Try
             AbrirConexion()
 
             Dim sql As String =
             "SELECT p.id_produccion, p.fecha_produccion, e.nombre_empleado, p.total " &
             "FROM produccion AS p " &
-            "INNER JOIN empleado AS e ON p.id_empleado = e.id_empleado " &
-            "ORDER BY p.fecha_produccion DESC, p.id_produccion DESC"
+            "INNER JOIN empleado AS e ON p.id_empleado = e.id_empleado "
+
+            ' Por defecto solo se traen los ultimos 60 dias (mas rapido en PC modestas).
+            ' El boton "Ver historial completo" permite alternar a traer todo cuando haga falta.
+            If Not mostrarHistorialCompletoProduccion Then
+                sql &= "WHERE p.fecha_produccion BETWEEN ? AND ? "
+            End If
+
+            sql &= "ORDER BY p.fecha_produccion DESC, p.id_produccion DESC"
 
             Using cmd As New OleDbCommand(sql, conexionDB)
+                If Not mostrarHistorialCompletoProduccion Then
+                    cmd.Parameters.AddWithValue("?", Date.Today.AddDays(-60))
+                    cmd.Parameters.AddWithValue("?", Date.Today)
+                End If
+
                 Using reader = cmd.ExecuteReader()
                     dgvProduccionHechas.Rows.Clear()
 
@@ -260,11 +286,20 @@ Public Class Form2
             MsgBox("Error al cargar la lista de producciones: " & ex.Message, MsgBoxStyle.Critical)
         Finally
             CerrarConexion()
+            dgvProduccionHechas.ResumeLayout()
         End Try
     End Sub
 
     '=== BOTÓN ACTUALIZAR ===
     Private Sub btnActualizarProduccion_Click(sender As Object, e As EventArgs) Handles btnActualizarProduccion.Click
+        mostrarHistorialCompletoProduccion = Not mostrarHistorialCompletoProduccion
+
+        If mostrarHistorialCompletoProduccion Then
+            btnActualizarProduccion.Text = "Ver solo recientes"
+        Else
+            btnActualizarProduccion.Text = "Ver historial completo"
+        End If
+
         ConfigurarColumnas()
         CargarListadoProduccion()
     End Sub
@@ -358,6 +393,7 @@ Public Class Form2
         ' Si no existe producción creada aún, no guardar
         If idProduccionActual <= 0 Then Exit Sub
 
+        Dim transaccion As OleDbTransaction = Nothing
         Try
             AbrirConexion()
 
@@ -372,11 +408,14 @@ Public Class Form2
             Dim comentario As String = rtxtComentario.Text
             Dim total As Integer = ObtenerTotalProduccion()
 
+            ' A partir de aqui, todo se guarda junto o no se guarda nada
+            transaccion = conexionDB.BeginTransaction()
+
             '=== SI YA EXISTE, ACTUALIZAR ===
             If idProduccionActual > 0 Then
                 Using cmdActualizar As New OleDbCommand(
                 "UPDATE produccion SET fecha_produccion = ?, id_empleado = ?, comentario = ?, total = ? 
-                 WHERE id_produccion = ?", conexionDB)
+                 WHERE id_produccion = ?", conexionDB, transaccion)
 
                     cmdActualizar.Parameters.AddWithValue("?", fecha)
                     cmdActualizar.Parameters.AddWithValue("?", idEmpleado)
@@ -388,7 +427,7 @@ Public Class Form2
                 End Using
 
                 'Eliminar detalles anteriores
-                Using cmdBorrar As New OleDbCommand("DELETE FROM produccion_detalle WHERE id_produccion = ?", conexionDB)
+                Using cmdBorrar As New OleDbCommand("DELETE FROM produccion_detalle WHERE id_produccion = ?", conexionDB, transaccion)
                     cmdBorrar.Parameters.AddWithValue("?", idProduccionActual)
                     cmdBorrar.ExecuteNonQuery()
                 End Using
@@ -416,7 +455,7 @@ Public Class Form2
                 Using cmdDetalle As New OleDbCommand(
                 "INSERT INTO produccion_detalle
                 (id_produccion, codigo_producto, nombre_producto, cantidad, precio_unitario, subtotal)
-                 VALUES (?,?,?,?,?,?)", conexionDB)
+                 VALUES (?,?,?,?,?,?)", conexionDB, transaccion)
 
                     cmdDetalle.Parameters.AddWithValue("?", idProduccionActual)
                     cmdDetalle.Parameters.AddWithValue("?", codigo)
@@ -429,11 +468,20 @@ Public Class Form2
                 End Using
             Next
 
+            ' Todo salio bien: recien AHORA se confirman los cambios de forma definitiva
+            transaccion.Commit()
+
             'Actualizar lista lateral
             CargarListadoProduccion()
 
         Catch ex As Exception
-            MsgBox("Error al guardar la producción: " & ex.Message, MsgBoxStyle.Critical)
+            ' Algo fallo: se deshace TODO lo hecho desde BeginTransaction (deja la produccion como estaba antes del guardado)
+            Try
+                If transaccion IsNot Nothing Then transaccion.Rollback()
+            Catch
+                ' Si ni siquiera se pudo revertir (ej. se perdio la conexion en pleno intento), no hay mas accion posible aqui
+            End Try
+            MsgBox("Error al guardar la producción. No se guardó ningún cambio parcial: " & ex.Message, MsgBoxStyle.Critical)
         Finally
             CerrarConexion()
         End Try
@@ -668,7 +716,11 @@ Public Class Form2
 
                                     With dgvProduccion.Rows(e.RowIndex)
                                         .Cells(1).Value = nombre
-                                        .Cells(2).Value = 1
+                                        ' Solo se pone cantidad = 1 por defecto si la fila esta vacia/nueva,
+                                        ' para no perder una cantidad real ya cargada.
+                                        If IsDBNull(.Cells(2).Value) OrElse String.IsNullOrWhiteSpace(.Cells(2).Value?.ToString()) Then
+                                            .Cells(2).Value = 1
+                                        End If
                                         .Cells(3).Value = precioFormato
                                     End With
 

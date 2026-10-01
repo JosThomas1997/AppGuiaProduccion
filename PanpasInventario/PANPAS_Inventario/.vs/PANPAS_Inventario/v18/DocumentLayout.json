@@ -1,0 +1,55 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasInventario\\PANPAS_Inventario\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{11D03DAD-8A07-4997-A02E-FF58ADEEE9E6}|Sistema_Inventario_PANPAS\\SistemaInventarioPANPAS.vbproj|D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasInventario\\PANPAS_Inventario\\sistema_inventario_panpas\\forminventario.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
+      "RelativeMoniker": "D:0:0:{11D03DAD-8A07-4997-A02E-FF58ADEEE9E6}|Sistema_Inventario_PANPAS\\SistemaInventarioPANPAS.vbproj|solutionrelative:sistema_inventario_panpas\\forminventario.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{11D03DAD-8A07-4997-A02E-FF58ADEEE9E6}|Sistema_Inventario_PANPAS\\SistemaInventarioPANPAS.vbproj|d:\\anaisprograma\\appguiaproduccion\\panpasinventario\\panpas_inventario\\sistema_inventario_panpas\\forminventario.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}|Form",
+      "RelativeMoniker": "D:0:0:{11D03DAD-8A07-4997-A02E-FF58ADEEE9E6}|Sistema_Inventario_PANPAS\\SistemaInventarioPANPAS.vbproj|solutionrelative:sistema_inventario_panpas\\forminventario.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}|Form"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "FormInventario.vb [Dise\u00F1o]",
+              "DocumentMoniker": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasInventario\\PANPAS_Inventario\\Sistema_Inventario_PANPAS\\FormInventario.vb",
+              "RelativeDocumentMoniker": "Sistema_Inventario_PANPAS\\FormInventario.vb",
+              "ToolTip": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasInventario\\PANPAS_Inventario\\Sistema_Inventario_PANPAS\\FormInventario.vb [Dise\u00F1o]",
+              "RelativeToolTip": "Sistema_Inventario_PANPAS\\FormInventario.vb [Dise\u00F1o]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
+              "WhenOpened": "2026-05-23T08:12:22.167Z",
+              "IsPinned": true,
+              "EditorCaption": " [Dise\u00F1o]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "FormInventario.vb",
+              "DocumentMoniker": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasInventario\\PANPAS_Inventario\\Sistema_Inventario_PANPAS\\FormInventario.vb",
+              "RelativeDocumentMoniker": "Sistema_Inventario_PANPAS\\FormInventario.vb",
+              "ToolTip": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasInventario\\PANPAS_Inventario\\Sistema_Inventario_PANPAS\\FormInventario.vb",
+              "RelativeToolTip": "Sistema_Inventario_PANPAS\\FormInventario.vb",
+              "ViewState": "AgIAAOsBAAAAAAAAAAApwAUCAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
+              "WhenOpened": "2026-05-23T08:12:49.045Z",
+              "IsPinned": true,
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -91,6 +91,7 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CatalogoProductos.vb" />
     <Compile Include="Conexion.vb" />
     <Compile Include="Form1.vb">
       <SubType>Form</SubType>
@@ -103,6 +104,12 @@
       <DependentUpon>Form2.vb</DependentUpon>
     </Compile>
     <Compile Include="Form2.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormEditarPrecios.Designer.vb">
+      <DependentUpon>FormEditarPrecios.vb</DependentUpon>
+    </Compile>
+    <Compile Include="FormEditarPrecios.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="FormInformeProducto.Designer.vb">
@@ -127,6 +134,12 @@
       <DependentUpon>FormLocal.vb</DependentUpon>
     </Compile>
     <Compile Include="FormLocal.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormLoginAdmin.Designer.vb">
+      <DependentUpon>FormLoginAdmin.vb</DependentUpon>
+    </Compile>
+    <Compile Include="FormLoginAdmin.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="FormProducc_Productos.Designer.vb">
@@ -170,6 +183,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="Program.vb" />
+    <Compile Include="Seguridad.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Form1.resx">

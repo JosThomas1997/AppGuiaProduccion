@@ -19,7 +19,6 @@ D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\bin\Debug\PanpasGuiasDesp
 D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\bin\Debug\PanpasGuiasDespacho.pdb
 D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\bin\Debug\PanpasGuiasDespacho.xml
 D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDespacho.vbproj.AssemblyReference.cache
-D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDespacho.exe.config
 D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDespacho.Form1.resources
 D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDespacho.Form2.resources
 D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDespacho.FormProducc_Productos.resources

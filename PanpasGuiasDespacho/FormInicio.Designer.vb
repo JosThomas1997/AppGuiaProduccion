@@ -30,9 +30,13 @@ Partial Class FormInicio
         Me.Panel2 = New System.Windows.Forms.Panel()
         Me.btnInformes = New System.Windows.Forms.Button()
         Me.Label2 = New System.Windows.Forms.Label()
+        Me.Panel3 = New System.Windows.Forms.Panel()
+        Me.btnPrecios = New System.Windows.Forms.Button()
+        Me.Label3 = New System.Windows.Forms.Label()
         Me.Panel1.SuspendLayout()
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.Panel2.SuspendLayout()
+        Me.Panel3.SuspendLayout()
         Me.SuspendLayout()
         '
         'Panel1
@@ -68,15 +72,16 @@ Partial Class FormInicio
         'PictureBox1
         '
         Me.PictureBox1.Image = CType(resources.GetObject("PictureBox1.Image"), System.Drawing.Image)
-        Me.PictureBox1.Location = New System.Drawing.Point(208, 15)
+        Me.PictureBox1.Location = New System.Drawing.Point(-17, 0)
         Me.PictureBox1.Name = "PictureBox1"
-        Me.PictureBox1.Size = New System.Drawing.Size(366, 189)
+        Me.PictureBox1.Size = New System.Drawing.Size(400, 192)
         Me.PictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage
         Me.PictureBox1.TabIndex = 0
         Me.PictureBox1.TabStop = False
         '
         'Panel2
         '
+        Me.Panel2.Controls.Add(Me.PictureBox1)
         Me.Panel2.Controls.Add(Me.btnInformes)
         Me.Panel2.Controls.Add(Me.Label2)
         Me.Panel2.Location = New System.Drawing.Point(412, 12)
@@ -105,12 +110,42 @@ Partial Class FormInicio
         Me.Label2.Text = "Informes" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "de " & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "Panaderia"
         Me.Label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
         '
+        'Panel3
+        '
+        Me.Panel3.Controls.Add(Me.btnPrecios)
+        Me.Panel3.Controls.Add(Me.Label3)
+        Me.Panel3.Location = New System.Drawing.Point(812, 12)
+        Me.Panel3.Name = "Panel3"
+        Me.Panel3.Size = New System.Drawing.Size(360, 537)
+        Me.Panel3.TabIndex = 2
+        '
+        'btnPrecios
+        '
+        Me.btnPrecios.Font = New System.Drawing.Font("Microsoft Sans Serif", 24.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.btnPrecios.Location = New System.Drawing.Point(60, 410)
+        Me.btnPrecios.Name = "btnPrecios"
+        Me.btnPrecios.Size = New System.Drawing.Size(223, 107)
+        Me.btnPrecios.TabIndex = 3
+        Me.btnPrecios.Text = "Editar Precios"
+        Me.btnPrecios.UseVisualStyleBackColor = True
+        '
+        'Label3
+        '
+        Me.Label3.AutoSize = True
+        Me.Label3.Font = New System.Drawing.Font("Arial Rounded MT Bold", 26.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.Label3.Location = New System.Drawing.Point(53, 267)
+        Me.Label3.Name = "Label3"
+        Me.Label3.Size = New System.Drawing.Size(232, 40)
+        Me.Label3.TabIndex = 2
+        Me.Label3.Text = "Modo CRUD "
+        Me.Label3.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
+        '
         'FormInicio
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(784, 561)
-        Me.Controls.Add(Me.PictureBox1)
+        Me.ClientSize = New System.Drawing.Size(1184, 561)
+        Me.Controls.Add(Me.Panel3)
         Me.Controls.Add(Me.Panel2)
         Me.Controls.Add(Me.Panel1)
         Me.Name = "FormInicio"
@@ -120,6 +155,8 @@ Partial Class FormInicio
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.Panel2.ResumeLayout(False)
         Me.Panel2.PerformLayout()
+        Me.Panel3.ResumeLayout(False)
+        Me.Panel3.PerformLayout()
         Me.ResumeLayout(False)
 
     End Sub
@@ -131,4 +168,7 @@ Partial Class FormInicio
     Friend WithEvents btnGuiaProduccion As Button
     Friend WithEvents btnInformes As Button
     Friend WithEvents Label2 As Label
+    Friend WithEvents Panel3 As Panel
+    Friend WithEvents btnPrecios As Button
+    Friend WithEvents Label3 As Label
 End Class

@@ -181,11 +181,11 @@ Partial Class Form1
         '
         'btnActualizarGuias
         '
-        Me.btnActualizarGuias.Location = New System.Drawing.Point(1003, 472)
+        Me.btnActualizarGuias.Location = New System.Drawing.Point(985, 472)
         Me.btnActualizarGuias.Name = "btnActualizarGuias"
-        Me.btnActualizarGuias.Size = New System.Drawing.Size(115, 23)
+        Me.btnActualizarGuias.Size = New System.Drawing.Size(140, 23)
         Me.btnActualizarGuias.TabIndex = 27
-        Me.btnActualizarGuias.Text = "Actualizar"
+        Me.btnActualizarGuias.Text = "Ver historial completo"
         Me.btnActualizarGuias.UseVisualStyleBackColor = True
         '
         'btnImprimir

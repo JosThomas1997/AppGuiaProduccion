@@ -32,8 +32,12 @@ Partial Class FormInventario
         Me.btnSiguienteInventario = New System.Windows.Forms.Button()
         Me.btnAnteriorInventario = New System.Windows.Forms.Button()
         Me.gbInventariosExistentes = New System.Windows.Forms.GroupBox()
-        Me.DataGridView1 = New System.Windows.Forms.DataGridView()
+        Me.dgvListaInventarios = New System.Windows.Forms.DataGridView()
         Me.gbSaquitosBerlines = New System.Windows.Forms.GroupBox()
+        Me.txtPanDulce = New System.Windows.Forms.TextBox()
+        Me.Label20 = New System.Windows.Forms.Label()
+        Me.txtEmpanadas = New System.Windows.Forms.TextBox()
+        Me.Label19 = New System.Windows.Forms.Label()
         Me.lblSaquitos = New System.Windows.Forms.Label()
         Me.Label17 = New System.Windows.Forms.Label()
         Me.Label8 = New System.Windows.Forms.Label()
@@ -51,6 +55,8 @@ Partial Class FormInventario
         Me.txtProdBerlines = New System.Windows.Forms.TextBox()
         Me.Label2 = New System.Windows.Forms.Label()
         Me.gbVentaPan = New System.Windows.Forms.GroupBox()
+        Me.TextBox1 = New System.Windows.Forms.TextBox()
+        Me.Label21 = New System.Windows.Forms.Label()
         Me.Label14 = New System.Windows.Forms.Label()
         Me.txtTotalPan = New System.Windows.Forms.TextBox()
         Me.Label13 = New System.Windows.Forms.Label()
@@ -71,9 +77,23 @@ Partial Class FormInventario
         Me.txtRendimiento = New System.Windows.Forms.TextBox()
         Me.Label15 = New System.Windows.Forms.Label()
         Me.tmrGuardar = New System.Windows.Forms.Timer(Me.components)
+        Me.txtPanaderos = New System.Windows.Forms.TextBox()
+        Me.txtPersonal = New System.Windows.Forms.TextBox()
+        Me.lblPanaderos = New System.Windows.Forms.Label()
+        Me.Label22 = New System.Windows.Forms.Label()
+        Me.txtPanDulcePan = New System.Windows.Forms.TextBox()
+        Me.lblPanDulcePan = New System.Windows.Forms.Label()
+        Me.txtLocal27 = New System.Windows.Forms.TextBox()
+        Me.lblLocal27 = New System.Windows.Forms.Label()
+        Me.lblOtros = New System.Windows.Forms.Label()
+        Me.txtOtros = New System.Windows.Forms.TextBox()
+        Me.txtMasaUtilizada = New System.Windows.Forms.TextBox()
+        Me.txtMasaReutilizada = New System.Windows.Forms.TextBox()
+        Me.lblMasaUtil = New System.Windows.Forms.Label()
+        Me.lblMasaReutilizada = New System.Windows.Forms.Label()
         CType(Me.dgvInventario, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.gbInventariosExistentes.SuspendLayout()
-        CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.dgvListaInventarios, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.gbSaquitosBerlines.SuspendLayout()
         Me.gbVentaPan.SuspendLayout()
         Me.gbRendimiento.SuspendLayout()
@@ -155,24 +175,28 @@ Partial Class FormInventario
         '
         'gbInventariosExistentes
         '
-        Me.gbInventariosExistentes.Controls.Add(Me.DataGridView1)
+        Me.gbInventariosExistentes.Controls.Add(Me.dgvListaInventarios)
         Me.gbInventariosExistentes.Location = New System.Drawing.Point(15, 444)
         Me.gbInventariosExistentes.Name = "gbInventariosExistentes"
-        Me.gbInventariosExistentes.Size = New System.Drawing.Size(357, 225)
+        Me.gbInventariosExistentes.Size = New System.Drawing.Size(212, 225)
         Me.gbInventariosExistentes.TabIndex = 8
         Me.gbInventariosExistentes.TabStop = False
         Me.gbInventariosExistentes.Text = "Inventarios Existentes"
         '
-        'DataGridView1
+        'dgvListaInventarios
         '
-        Me.DataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.DataGridView1.Location = New System.Drawing.Point(6, 19)
-        Me.DataGridView1.Name = "DataGridView1"
-        Me.DataGridView1.Size = New System.Drawing.Size(345, 200)
-        Me.DataGridView1.TabIndex = 0
+        Me.dgvListaInventarios.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        Me.dgvListaInventarios.Location = New System.Drawing.Point(6, 19)
+        Me.dgvListaInventarios.Name = "dgvListaInventarios"
+        Me.dgvListaInventarios.Size = New System.Drawing.Size(200, 200)
+        Me.dgvListaInventarios.TabIndex = 0
         '
         'gbSaquitosBerlines
         '
+        Me.gbSaquitosBerlines.Controls.Add(Me.txtPanDulce)
+        Me.gbSaquitosBerlines.Controls.Add(Me.Label20)
+        Me.gbSaquitosBerlines.Controls.Add(Me.txtEmpanadas)
+        Me.gbSaquitosBerlines.Controls.Add(Me.Label19)
         Me.gbSaquitosBerlines.Controls.Add(Me.lblSaquitos)
         Me.gbSaquitosBerlines.Controls.Add(Me.Label17)
         Me.gbSaquitosBerlines.Controls.Add(Me.Label8)
@@ -189,17 +213,49 @@ Partial Class FormInventario
         Me.gbSaquitosBerlines.Controls.Add(Me.txtInventarioInicialSaquitos)
         Me.gbSaquitosBerlines.Controls.Add(Me.txtProdBerlines)
         Me.gbSaquitosBerlines.Controls.Add(Me.Label2)
-        Me.gbSaquitosBerlines.Location = New System.Drawing.Point(378, 444)
+        Me.gbSaquitosBerlines.Location = New System.Drawing.Point(233, 444)
         Me.gbSaquitosBerlines.Name = "gbSaquitosBerlines"
-        Me.gbSaquitosBerlines.Size = New System.Drawing.Size(370, 225)
+        Me.gbSaquitosBerlines.Size = New System.Drawing.Size(304, 225)
         Me.gbSaquitosBerlines.TabIndex = 9
         Me.gbSaquitosBerlines.TabStop = False
         Me.gbSaquitosBerlines.Text = "Saquitos / Berlines"
         '
+        'txtPanDulce
+        '
+        Me.txtPanDulce.Location = New System.Drawing.Point(152, 128)
+        Me.txtPanDulce.Name = "txtPanDulce"
+        Me.txtPanDulce.Size = New System.Drawing.Size(100, 20)
+        Me.txtPanDulce.TabIndex = 19
+        '
+        'Label20
+        '
+        Me.Label20.AutoSize = True
+        Me.Label20.Location = New System.Drawing.Point(149, 112)
+        Me.Label20.Name = "Label20"
+        Me.Label20.Size = New System.Drawing.Size(60, 13)
+        Me.Label20.TabIndex = 18
+        Me.Label20.Text = "Pan Dulce:"
+        '
+        'txtEmpanadas
+        '
+        Me.txtEmpanadas.Location = New System.Drawing.Point(152, 84)
+        Me.txtEmpanadas.Name = "txtEmpanadas"
+        Me.txtEmpanadas.Size = New System.Drawing.Size(100, 20)
+        Me.txtEmpanadas.TabIndex = 17
+        '
+        'Label19
+        '
+        Me.Label19.AutoSize = True
+        Me.Label19.Location = New System.Drawing.Point(149, 70)
+        Me.Label19.Name = "Label19"
+        Me.Label19.Size = New System.Drawing.Size(66, 13)
+        Me.Label19.TabIndex = 16
+        Me.Label19.Text = "Empanadas:"
+        '
         'lblSaquitos
         '
         Me.lblSaquitos.AutoSize = True
-        Me.lblSaquitos.Location = New System.Drawing.Point(308, 183)
+        Me.lblSaquitos.Location = New System.Drawing.Point(277, 198)
         Me.lblSaquitos.Name = "lblSaquitos"
         Me.lblSaquitos.Size = New System.Drawing.Size(10, 13)
         Me.lblSaquitos.TabIndex = 15
@@ -209,7 +265,7 @@ Partial Class FormInventario
         '
         Me.Label17.AutoSize = True
         Me.Label17.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label17.Location = New System.Drawing.Point(273, 183)
+        Me.Label17.Location = New System.Drawing.Point(242, 198)
         Me.Label17.Name = "Label17"
         Me.Label17.Size = New System.Drawing.Size(29, 13)
         Me.Label17.TabIndex = 14
@@ -218,7 +274,7 @@ Partial Class FormInventario
         'Label8
         '
         Me.Label8.AutoSize = True
-        Me.Label8.Location = New System.Drawing.Point(167, 202)
+        Me.Label8.Location = New System.Drawing.Point(133, 179)
         Me.Label8.Name = "Label8"
         Me.Label8.Size = New System.Drawing.Size(91, 13)
         Me.Label8.TabIndex = 13
@@ -226,7 +282,7 @@ Partial Class FormInventario
         '
         'txtProduccionTotal
         '
-        Me.txtProduccionTotal.Location = New System.Drawing.Point(264, 199)
+        Me.txtProduccionTotal.Location = New System.Drawing.Point(136, 195)
         Me.txtProduccionTotal.Name = "txtProduccionTotal"
         Me.txtProduccionTotal.ReadOnly = True
         Me.txtProduccionTotal.Size = New System.Drawing.Size(100, 20)
@@ -235,16 +291,16 @@ Partial Class FormInventario
         'Label7
         '
         Me.Label7.AutoSize = True
-        Me.Label7.Location = New System.Drawing.Point(45, 162)
+        Me.Label7.Location = New System.Drawing.Point(6, 178)
         Me.Label7.Name = "Label7"
-        Me.Label7.Size = New System.Drawing.Size(50, 13)
+        Me.Label7.Size = New System.Drawing.Size(53, 13)
         Me.Label7.TabIndex = 11
-        Me.Label7.Text = "Inv. Final"
+        Me.Label7.Text = "Inv. Final:"
         '
         'Label6
         '
         Me.Label6.AutoSize = True
-        Me.Label6.Location = New System.Drawing.Point(51, 136)
+        Me.Label6.Location = New System.Drawing.Point(6, 141)
         Me.Label6.Name = "Label6"
         Me.Label6.Size = New System.Drawing.Size(47, 13)
         Me.Label6.TabIndex = 10
@@ -253,40 +309,40 @@ Partial Class FormInventario
         'Label5
         '
         Me.Label5.AutoSize = True
-        Me.Label5.Location = New System.Drawing.Point(15, 110)
+        Me.Label5.Location = New System.Drawing.Point(6, 104)
         Me.Label5.Name = "Label5"
-        Me.Label5.Size = New System.Drawing.Size(83, 13)
+        Me.Label5.Size = New System.Drawing.Size(39, 13)
         Me.Label5.TabIndex = 9
-        Me.Label5.Text = "Salida Saquitos:"
+        Me.Label5.Text = "Salida:"
         '
         'Label4
         '
         Me.Label4.AutoSize = True
-        Me.Label4.Location = New System.Drawing.Point(9, 84)
+        Me.Label4.Location = New System.Drawing.Point(6, 65)
         Me.Label4.Name = "Label4"
-        Me.Label4.Size = New System.Drawing.Size(89, 13)
+        Me.Label4.Size = New System.Drawing.Size(48, 13)
         Me.Label4.TabIndex = 8
-        Me.Label4.Text = "Ingreso Saquitos:"
+        Me.Label4.Text = "Llegada:"
         '
         'Label3
         '
         Me.Label3.AutoSize = True
-        Me.Label3.Location = New System.Drawing.Point(40, 58)
+        Me.Label3.Location = New System.Drawing.Point(7, 26)
         Me.Label3.Name = "Label3"
-        Me.Label3.Size = New System.Drawing.Size(58, 13)
+        Me.Label3.Size = New System.Drawing.Size(86, 13)
         Me.Label3.TabIndex = 7
-        Me.Label3.Text = "Inv. Inicial:"
+        Me.Label3.Text = "QQ Inv. Anterior:"
         '
         'txtInventarioFinalSaquitos
         '
-        Me.txtInventarioFinalSaquitos.Location = New System.Drawing.Point(101, 159)
+        Me.txtInventarioFinalSaquitos.Location = New System.Drawing.Point(9, 194)
         Me.txtInventarioFinalSaquitos.Name = "txtInventarioFinalSaquitos"
         Me.txtInventarioFinalSaquitos.Size = New System.Drawing.Size(100, 20)
         Me.txtInventarioFinalSaquitos.TabIndex = 6
         '
         'txtBerlinesSaquitos
         '
-        Me.txtBerlinesSaquitos.Location = New System.Drawing.Point(101, 133)
+        Me.txtBerlinesSaquitos.Location = New System.Drawing.Point(9, 155)
         Me.txtBerlinesSaquitos.Name = "txtBerlinesSaquitos"
         Me.txtBerlinesSaquitos.ReadOnly = True
         Me.txtBerlinesSaquitos.Size = New System.Drawing.Size(100, 20)
@@ -294,28 +350,28 @@ Partial Class FormInventario
         '
         'txtSalidaSaquitos
         '
-        Me.txtSalidaSaquitos.Location = New System.Drawing.Point(101, 107)
+        Me.txtSalidaSaquitos.Location = New System.Drawing.Point(9, 118)
         Me.txtSalidaSaquitos.Name = "txtSalidaSaquitos"
         Me.txtSalidaSaquitos.Size = New System.Drawing.Size(100, 20)
         Me.txtSalidaSaquitos.TabIndex = 4
         '
         'txtIngresoSaquitos
         '
-        Me.txtIngresoSaquitos.Location = New System.Drawing.Point(101, 81)
+        Me.txtIngresoSaquitos.Location = New System.Drawing.Point(9, 81)
         Me.txtIngresoSaquitos.Name = "txtIngresoSaquitos"
         Me.txtIngresoSaquitos.Size = New System.Drawing.Size(100, 20)
         Me.txtIngresoSaquitos.TabIndex = 3
         '
         'txtInventarioInicialSaquitos
         '
-        Me.txtInventarioInicialSaquitos.Location = New System.Drawing.Point(101, 55)
+        Me.txtInventarioInicialSaquitos.Location = New System.Drawing.Point(9, 42)
         Me.txtInventarioInicialSaquitos.Name = "txtInventarioInicialSaquitos"
         Me.txtInventarioInicialSaquitos.Size = New System.Drawing.Size(100, 20)
         Me.txtInventarioInicialSaquitos.TabIndex = 2
         '
         'txtProdBerlines
         '
-        Me.txtProdBerlines.Location = New System.Drawing.Point(264, 19)
+        Me.txtProdBerlines.Location = New System.Drawing.Point(152, 42)
         Me.txtProdBerlines.Name = "txtProdBerlines"
         Me.txtProdBerlines.Size = New System.Drawing.Size(100, 20)
         Me.txtProdBerlines.TabIndex = 1
@@ -323,7 +379,7 @@ Partial Class FormInventario
         'Label2
         '
         Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(183, 22)
+        Me.Label2.Location = New System.Drawing.Point(149, 26)
         Me.Label2.Name = "Label2"
         Me.Label2.Size = New System.Drawing.Size(75, 13)
         Me.Label2.TabIndex = 0
@@ -331,6 +387,22 @@ Partial Class FormInventario
         '
         'gbVentaPan
         '
+        Me.gbVentaPan.Controls.Add(Me.lblMasaReutilizada)
+        Me.gbVentaPan.Controls.Add(Me.lblMasaUtil)
+        Me.gbVentaPan.Controls.Add(Me.txtMasaReutilizada)
+        Me.gbVentaPan.Controls.Add(Me.txtMasaUtilizada)
+        Me.gbVentaPan.Controls.Add(Me.txtOtros)
+        Me.gbVentaPan.Controls.Add(Me.lblOtros)
+        Me.gbVentaPan.Controls.Add(Me.lblLocal27)
+        Me.gbVentaPan.Controls.Add(Me.txtLocal27)
+        Me.gbVentaPan.Controls.Add(Me.lblPanDulcePan)
+        Me.gbVentaPan.Controls.Add(Me.txtPanDulcePan)
+        Me.gbVentaPan.Controls.Add(Me.Label22)
+        Me.gbVentaPan.Controls.Add(Me.lblPanaderos)
+        Me.gbVentaPan.Controls.Add(Me.txtPersonal)
+        Me.gbVentaPan.Controls.Add(Me.txtPanaderos)
+        Me.gbVentaPan.Controls.Add(Me.TextBox1)
+        Me.gbVentaPan.Controls.Add(Me.Label21)
         Me.gbVentaPan.Controls.Add(Me.Label14)
         Me.gbVentaPan.Controls.Add(Me.txtTotalPan)
         Me.gbVentaPan.Controls.Add(Me.Label13)
@@ -343,17 +415,33 @@ Partial Class FormInventario
         Me.gbVentaPan.Controls.Add(Me.Label9)
         Me.gbVentaPan.Controls.Add(Me.txtPrecioPan)
         Me.gbVentaPan.Controls.Add(Me.txtVentaPesos)
-        Me.gbVentaPan.Location = New System.Drawing.Point(754, 444)
+        Me.gbVentaPan.Location = New System.Drawing.Point(546, 444)
         Me.gbVentaPan.Name = "gbVentaPan"
-        Me.gbVentaPan.Size = New System.Drawing.Size(272, 225)
+        Me.gbVentaPan.Size = New System.Drawing.Size(480, 225)
         Me.gbVentaPan.TabIndex = 10
         Me.gbVentaPan.TabStop = False
         Me.gbVentaPan.Text = "Venta Pan"
         '
+        'TextBox1
+        '
+        Me.TextBox1.Location = New System.Drawing.Point(89, 156)
+        Me.TextBox1.Name = "TextBox1"
+        Me.TextBox1.Size = New System.Drawing.Size(100, 20)
+        Me.TextBox1.TabIndex = 13
+        '
+        'Label21
+        '
+        Me.Label21.AutoSize = True
+        Me.Label21.Location = New System.Drawing.Point(30, 159)
+        Me.Label21.Name = "Label21"
+        Me.Label21.Size = New System.Drawing.Size(53, 13)
+        Me.Label21.TabIndex = 12
+        Me.Label21.Text = "Sobrante:"
+        '
         'Label14
         '
         Me.Label14.AutoSize = True
-        Me.Label14.Location = New System.Drawing.Point(104, 198)
+        Me.Label14.Location = New System.Drawing.Point(27, 202)
         Me.Label14.Name = "Label14"
         Me.Label14.Size = New System.Drawing.Size(56, 13)
         Me.Label14.TabIndex = 11
@@ -361,7 +449,7 @@ Partial Class FormInventario
         '
         'txtTotalPan
         '
-        Me.txtTotalPan.Location = New System.Drawing.Point(166, 195)
+        Me.txtTotalPan.Location = New System.Drawing.Point(89, 199)
         Me.txtTotalPan.Name = "txtTotalPan"
         Me.txtTotalPan.ReadOnly = True
         Me.txtTotalPan.Size = New System.Drawing.Size(100, 20)
@@ -370,7 +458,7 @@ Partial Class FormInventario
         'Label13
         '
         Me.Label13.AutoSize = True
-        Me.Label13.Location = New System.Drawing.Point(49, 148)
+        Me.Label13.Location = New System.Drawing.Point(22, 133)
         Me.Label13.Name = "Label13"
         Me.Label13.Size = New System.Drawing.Size(61, 13)
         Me.Label13.TabIndex = 9
@@ -378,7 +466,7 @@ Partial Class FormInventario
         '
         'txtSalidaPan
         '
-        Me.txtSalidaPan.Location = New System.Drawing.Point(116, 145)
+        Me.txtSalidaPan.Location = New System.Drawing.Point(89, 130)
         Me.txtSalidaPan.Name = "txtSalidaPan"
         Me.txtSalidaPan.Size = New System.Drawing.Size(100, 20)
         Me.txtSalidaPan.TabIndex = 8
@@ -386,15 +474,15 @@ Partial Class FormInventario
         'Label12
         '
         Me.Label12.AutoSize = True
-        Me.Label12.Location = New System.Drawing.Point(52, 122)
+        Me.Label12.Location = New System.Drawing.Point(13, 107)
         Me.Label12.Name = "Label12"
-        Me.Label12.Size = New System.Drawing.Size(58, 13)
+        Me.Label12.Size = New System.Drawing.Size(70, 13)
         Me.Label12.TabIndex = 7
-        Me.Label12.Text = "Llego Pan:"
+        Me.Label12.Text = "Llegada Pan:"
         '
         'txtLlegoPan
         '
-        Me.txtLlegoPan.Location = New System.Drawing.Point(116, 119)
+        Me.txtLlegoPan.Location = New System.Drawing.Point(89, 104)
         Me.txtLlegoPan.Name = "txtLlegoPan"
         Me.txtLlegoPan.Size = New System.Drawing.Size(100, 20)
         Me.txtLlegoPan.TabIndex = 6
@@ -402,7 +490,7 @@ Partial Class FormInventario
         'Label11
         '
         Me.Label11.AutoSize = True
-        Me.Label11.Location = New System.Drawing.Point(50, 96)
+        Me.Label11.Location = New System.Drawing.Point(23, 81)
         Me.Label11.Name = "Label11"
         Me.Label11.Size = New System.Drawing.Size(60, 13)
         Me.Label11.TabIndex = 5
@@ -410,7 +498,7 @@ Partial Class FormInventario
         '
         'txtVentaPanKg
         '
-        Me.txtVentaPanKg.Location = New System.Drawing.Point(116, 93)
+        Me.txtVentaPanKg.Location = New System.Drawing.Point(89, 78)
         Me.txtVentaPanKg.Name = "txtVentaPanKg"
         Me.txtVentaPanKg.ReadOnly = True
         Me.txtVentaPanKg.Size = New System.Drawing.Size(100, 20)
@@ -419,7 +507,7 @@ Partial Class FormInventario
         'Label10
         '
         Me.Label10.AutoSize = True
-        Me.Label10.Location = New System.Drawing.Point(188, 26)
+        Me.Label10.Location = New System.Drawing.Point(139, 26)
         Me.Label10.Name = "Label10"
         Me.Label10.Size = New System.Drawing.Size(62, 13)
         Me.Label10.TabIndex = 3
@@ -436,7 +524,7 @@ Partial Class FormInventario
         '
         'txtPrecioPan
         '
-        Me.txtPrecioPan.Location = New System.Drawing.Point(167, 42)
+        Me.txtPrecioPan.Location = New System.Drawing.Point(118, 42)
         Me.txtPrecioPan.Name = "txtPrecioPan"
         Me.txtPrecioPan.Size = New System.Drawing.Size(100, 20)
         Me.txtPrecioPan.TabIndex = 1
@@ -522,6 +610,118 @@ Partial Class FormInventario
         Me.tmrGuardar.Enabled = True
         Me.tmrGuardar.Interval = 1000
         '
+        'txtPanaderos
+        '
+        Me.txtPanaderos.Location = New System.Drawing.Point(251, 42)
+        Me.txtPanaderos.Name = "txtPanaderos"
+        Me.txtPanaderos.Size = New System.Drawing.Size(100, 20)
+        Me.txtPanaderos.TabIndex = 14
+        '
+        'txtPersonal
+        '
+        Me.txtPersonal.Location = New System.Drawing.Point(357, 42)
+        Me.txtPersonal.Name = "txtPersonal"
+        Me.txtPersonal.Size = New System.Drawing.Size(100, 20)
+        Me.txtPersonal.TabIndex = 15
+        '
+        'lblPanaderos
+        '
+        Me.lblPanaderos.AutoSize = True
+        Me.lblPanaderos.Location = New System.Drawing.Point(271, 26)
+        Me.lblPanaderos.Name = "lblPanaderos"
+        Me.lblPanaderos.Size = New System.Drawing.Size(61, 13)
+        Me.lblPanaderos.TabIndex = 16
+        Me.lblPanaderos.Text = "Panaderos:"
+        '
+        'Label22
+        '
+        Me.Label22.AutoSize = True
+        Me.Label22.Location = New System.Drawing.Point(384, 26)
+        Me.Label22.Name = "Label22"
+        Me.Label22.Size = New System.Drawing.Size(51, 13)
+        Me.Label22.TabIndex = 17
+        Me.Label22.Text = "Personal:"
+        '
+        'txtPanDulcePan
+        '
+        Me.txtPanDulcePan.Location = New System.Drawing.Point(251, 86)
+        Me.txtPanDulcePan.Name = "txtPanDulcePan"
+        Me.txtPanDulcePan.Size = New System.Drawing.Size(100, 20)
+        Me.txtPanDulcePan.TabIndex = 18
+        '
+        'lblPanDulcePan
+        '
+        Me.lblPanDulcePan.AutoSize = True
+        Me.lblPanDulcePan.Location = New System.Drawing.Point(271, 70)
+        Me.lblPanDulcePan.Name = "lblPanDulcePan"
+        Me.lblPanDulcePan.Size = New System.Drawing.Size(60, 13)
+        Me.lblPanDulcePan.TabIndex = 19
+        Me.lblPanDulcePan.Text = "Pan Dulce:"
+        '
+        'txtLocal27
+        '
+        Me.txtLocal27.Location = New System.Drawing.Point(357, 86)
+        Me.txtLocal27.Name = "txtLocal27"
+        Me.txtLocal27.Size = New System.Drawing.Size(100, 20)
+        Me.txtLocal27.TabIndex = 20
+        '
+        'lblLocal27
+        '
+        Me.lblLocal27.AutoSize = True
+        Me.lblLocal27.Location = New System.Drawing.Point(384, 70)
+        Me.lblLocal27.Name = "lblLocal27"
+        Me.lblLocal27.Size = New System.Drawing.Size(51, 13)
+        Me.lblLocal27.TabIndex = 21
+        Me.lblLocal27.Text = "Local 27:"
+        '
+        'lblOtros
+        '
+        Me.lblOtros.AutoSize = True
+        Me.lblOtros.Location = New System.Drawing.Point(336, 118)
+        Me.lblOtros.Name = "lblOtros"
+        Me.lblOtros.Size = New System.Drawing.Size(35, 13)
+        Me.lblOtros.TabIndex = 22
+        Me.lblOtros.Text = "Otros:"
+        '
+        'txtOtros
+        '
+        Me.txtOtros.Location = New System.Drawing.Point(300, 134)
+        Me.txtOtros.Name = "txtOtros"
+        Me.txtOtros.Size = New System.Drawing.Size(100, 20)
+        Me.txtOtros.TabIndex = 23
+        '
+        'txtMasaUtilizada
+        '
+        Me.txtMasaUtilizada.Location = New System.Drawing.Point(251, 195)
+        Me.txtMasaUtilizada.Name = "txtMasaUtilizada"
+        Me.txtMasaUtilizada.Size = New System.Drawing.Size(100, 20)
+        Me.txtMasaUtilizada.TabIndex = 24
+        '
+        'txtMasaReutilizada
+        '
+        Me.txtMasaReutilizada.Location = New System.Drawing.Point(357, 195)
+        Me.txtMasaReutilizada.Name = "txtMasaReutilizada"
+        Me.txtMasaReutilizada.Size = New System.Drawing.Size(100, 20)
+        Me.txtMasaReutilizada.TabIndex = 25
+        '
+        'lblMasaUtil
+        '
+        Me.lblMasaUtil.AutoSize = True
+        Me.lblMasaUtil.Location = New System.Drawing.Point(248, 178)
+        Me.lblMasaUtil.Name = "lblMasaUtil"
+        Me.lblMasaUtil.Size = New System.Drawing.Size(79, 13)
+        Me.lblMasaUtil.TabIndex = 26
+        Me.lblMasaUtil.Text = "Masa Utilizada:"
+        '
+        'lblMasaReutilizada
+        '
+        Me.lblMasaReutilizada.AutoSize = True
+        Me.lblMasaReutilizada.Location = New System.Drawing.Point(355, 178)
+        Me.lblMasaReutilizada.Name = "lblMasaReutilizada"
+        Me.lblMasaReutilizada.Size = New System.Drawing.Size(91, 13)
+        Me.lblMasaReutilizada.TabIndex = 27
+        Me.lblMasaReutilizada.Text = "Masa Reutilizada:"
+        '
         'FormInventario
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -543,7 +743,7 @@ Partial Class FormInventario
         Me.Text = "Inventario PANPAS"
         CType(Me.dgvInventario, System.ComponentModel.ISupportInitialize).EndInit()
         Me.gbInventariosExistentes.ResumeLayout(False)
-        CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.dgvListaInventarios, System.ComponentModel.ISupportInitialize).EndInit()
         Me.gbSaquitosBerlines.ResumeLayout(False)
         Me.gbSaquitosBerlines.PerformLayout()
         Me.gbVentaPan.ResumeLayout(False)
@@ -564,7 +764,7 @@ Partial Class FormInventario
     Friend WithEvents btnSiguienteInventario As Button
     Friend WithEvents btnAnteriorInventario As Button
     Friend WithEvents gbInventariosExistentes As GroupBox
-    Friend WithEvents DataGridView1 As DataGridView
+    Friend WithEvents dgvListaInventarios As DataGridView
     Friend WithEvents gbSaquitosBerlines As GroupBox
     Friend WithEvents txtProdBerlines As TextBox
     Friend WithEvents Label2 As Label
@@ -603,4 +803,24 @@ Partial Class FormInventario
     Friend WithEvents txtKilosVenta As TextBox
     Friend WithEvents Label18 As Label
     Friend WithEvents tmrGuardar As Timer
+    Friend WithEvents txtPanDulce As TextBox
+    Friend WithEvents Label20 As Label
+    Friend WithEvents txtEmpanadas As TextBox
+    Friend WithEvents Label19 As Label
+    Friend WithEvents Label21 As Label
+    Friend WithEvents TextBox1 As TextBox
+    Friend WithEvents lblPanaderos As Label
+    Friend WithEvents txtPersonal As TextBox
+    Friend WithEvents txtPanaderos As TextBox
+    Friend WithEvents Label22 As Label
+    Friend WithEvents txtOtros As TextBox
+    Friend WithEvents lblOtros As Label
+    Friend WithEvents lblLocal27 As Label
+    Friend WithEvents txtLocal27 As TextBox
+    Friend WithEvents lblPanDulcePan As Label
+    Friend WithEvents txtPanDulcePan As TextBox
+    Friend WithEvents lblMasaReutilizada As Label
+    Friend WithEvents lblMasaUtil As Label
+    Friend WithEvents txtMasaReutilizada As TextBox
+    Friend WithEvents txtMasaUtilizada As TextBox
 End Class

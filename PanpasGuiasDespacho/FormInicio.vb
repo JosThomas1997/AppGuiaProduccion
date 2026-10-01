@@ -44,4 +44,23 @@ Public Class FormInicio
         End If
     End Sub
 
+    Private Sub btnPrecios_Click(sender As Object, e As EventArgs) Handles btnPrecios.Click
+        Dim formAbierto As Boolean = False
+
+        For Each form As Form In Application.OpenForms
+            If TypeOf form Is FormEditarPrecios Then
+                formAbierto = True
+                form.BringToFront()
+                Exit For
+            End If
+        Next
+
+        If formAbierto Then
+            MessageBox.Show("Editar Precios se encuentra en ejecución.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+        ElseIf Seguridad.ValidarAccesoAdmin() Then
+            Dim form As New FormEditarPrecios()
+            form.Show()
+        End If
+    End Sub
+
 End Class

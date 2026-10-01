@@ -7,6 +7,10 @@ Imports System.Drawing.Printing
 Public Class Form1
     Private autoGuardadoHabilitado As Boolean = True
     Private idGuiaActual As Integer = -1
+
+    ' Controla si dgvGuias muestra todo el historial o solo lo reciente (ver GuiasListado).
+    ' Empieza en False: por defecto se ve solo lo reciente, mas rapido en PC modestas.
+    Private mostrarHistorialCompleto As Boolean = False
     Dim numeroGuia As Integer = 1
     Private cargarGuia As Boolean = False
 
@@ -20,8 +24,20 @@ Public Class Form1
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         cargarGuia = True
 
+        ' Doble buffer: dibuja los cambios en memoria antes de mostrarlos de una vez,
+        ' evitando el parpadeo al limpiar/repoblar la lista lateral de guias.
+        ' DoubleBuffered es una propiedad protegida, por eso se activa via reflexion.
+        GetType(DataGridView).GetProperty("DoubleBuffered", Reflection.BindingFlags.Instance Or Reflection.BindingFlags.NonPublic).
+            SetValue(dgvGuias, True, Nothing)
+
         'Preparar tabla de guia
         IniciarTabla()
+
+        ' Se desactiva la seleccion multiple: esta grilla es de carga secuencial
+        ' (codigo -> cantidad -> siguiente fila), seleccionar varias celdas a la vez
+        ' no tiene un uso legitimo aqui y puede disparar CellEndEdit en filas que
+        ' el usuario no queria tocar, pisando su cantidad real con el valor por defecto.
+        dgvGuiaProductos.MultiSelect = False
 
         ConfigurarColumnasDgvGuias()
 
@@ -55,8 +71,7 @@ Public Class Form1
     'Carga de Cliente para el ComboBox de Id Clientes
     Private Sub CargarClientes()
         Try
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
-            conexionDB.Open()
+            AbrirConexion() ' antes: cerraba y reabria; ahora reutiliza la conexion si ya esta abierta
 
             Dim cmd As New OleDbCommand("SELECT id_cliente, nombre_fantasia FROM cliente ORDER BY nombre_fantasia", conexionDB)
             Dim reader As OleDbDataReader = cmd.ExecuteReader()
@@ -74,7 +89,6 @@ Public Class Form1
         Catch ex As Exception
             MsgBox("Error al cargar los clientes: " & ex.Message, MsgBoxStyle.Critical)
         Finally
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
         End Try
     End Sub
 
@@ -92,18 +106,15 @@ Public Class Form1
     'Actualizar guia al cambiar la fecha
     Private Sub dtpFecha_ValueChanged(sender As Object, e As EventArgs) Handles dtpFecha.ValueChanged
         If Not cargarGuia Then
-            guardarGuia() 'Guardar cambio en la guia
-            AutoActualizarGuias() 'Refrescar la lista
+            guardarGuia() 'Guardar cambio en la guia (ya refresca la lista lateral internamente)
         End If
     End Sub
 
-    'Actualizar guia a cambiar numero de guia
-    Private Sub txtNumeroGuia_TextChanged(sender As Object, e As EventArgs) Handles txtNumeroGuia.TextChanged
-        If Not cargarGuia Then
-            guardarGuia() 'Guardar cambio en la guia
-            AutoActualizarGuias() 'Refrescar la lista
-        End If
-    End Sub
+    ' Nota: antes existia un manejador de txtNumeroGuia.TextChanged que llamaba a guardarGuia()
+    ' en cada tecleo, sin validar. Esto causaba errores si el campo quedaba vacio a mitad de
+    ' edicion, y ademas duplicaba el guardado en btnNuevaGuia_Click (se disparaba al escribir
+    ' el numero Y de nuevo al llamar guardarGuia() explicitamente). Se quito: txtNumeroGuia_Leave
+    ' (mas abajo) ya guarda de forma validada cuando el usuario termina de editar el campo.
 
     'DETECCION DE CAMBIOS EN EL GRID
     Private Sub dgvProductos_CellValueChanged(sender As Object, e As DataGridViewCellEventArgs) Handles dgvGuiaProductos.CellValueChanged
@@ -130,16 +141,30 @@ Public Class Form1
 
     'Cargar Grid de Guias (derecha)
     Private Sub GuiasListado(Optional fechaInicio As Date = Nothing, Optional fechaFin As Date = Nothing)
+        dgvGuias.SuspendLayout()
         dgvGuias.Rows.Clear()
 
+        ' Si no se especifico un rango de fechas y no se pidio ver el historial completo,
+        ' se aplica un rango por defecto (ultimos 60 dias) para no cargar toda la tabla
+        ' en cada refresco. Esto es clave en PC modestas, ya que la lista se recarga
+        ' en cada autoguardado.
+        Dim usarRango As Boolean = True
+        If fechaInicio = Nothing OrElse fechaFin = Nothing Then
+            If mostrarHistorialCompleto Then
+                usarRango = False
+            Else
+                fechaInicio = Date.Today.AddDays(-60)
+                fechaFin = Date.Today
+            End If
+        End If
+
         Try
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
-            conexionDB.Open()
+            AbrirConexion() ' antes: cerraba y reabria; ahora reutiliza la conexion si ya esta abierta
 
             Dim sql As String = "SELECT g.id_guia, g.numero_guia, g.fecha, c.nombre_fantasia " &
                                 "FROM guia g LEFT JOIN cliente c ON g.id_cliente = c.id_cliente "
 
-            If fechaInicio <> Nothing AndAlso fechaFin <> Nothing Then
+            If usarRango Then
                 sql &= "WHERE g.fecha BETWEEN ? AND ? "
             End If
 
@@ -147,7 +172,7 @@ Public Class Form1
             sql &= "ORDER BY g.fecha DESC, g.numero_guia DESC, g.id_guia DESC"
 
             Using cmd As New OleDbCommand(sql, conexionDB)
-                If fechaInicio <> Nothing AndAlso fechaFin <> Nothing Then
+                If usarRango Then
                     cmd.Parameters.AddWithValue("?", fechaInicio)
                     cmd.Parameters.AddWithValue("?", fechaFin)
                 End If
@@ -167,13 +192,12 @@ Public Class Form1
         Catch ex As Exception
             MsgBox("Error al cargar la lista de guias:" & ex.Message, MsgBoxStyle.Critical)
         Finally
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
+            dgvGuias.ResumeLayout()
         End Try
 
     End Sub
 
     Private Sub AutoActualizarGuias()
-        ConfigurarColumnasDgvGuias()
         GuiasListado()
         dgvGuias.Refresh()
 
@@ -199,6 +223,16 @@ Public Class Form1
     End Sub
 
     Private Sub btnActualizarGuias_Click(sender As Object, e As EventArgs) Handles btnActualizarGuias.Click
+        ' Este boton ahora hace doble funcion: refresca la lista, y alterna entre
+        ' ver solo lo reciente (rapido) o el historial completo (mas lento, uso ocasional).
+        mostrarHistorialCompleto = Not mostrarHistorialCompleto
+
+        If mostrarHistorialCompleto Then
+            btnActualizarGuias.Text = "Ver solo recientes"
+        Else
+            btnActualizarGuias.Text = "Ver historial completo"
+        End If
+
         ConfigurarColumnasDgvGuias()
         GuiasListado()
     End Sub
@@ -217,8 +251,7 @@ Public Class Form1
 
         listaGuias.Clear()
         Try
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
-            conexionDB.Open()
+            AbrirConexion() ' antes: cerraba y reabria; ahora reutiliza la conexion si ya esta abierta
 
             Using cmd As New OleDbCommand("SELECT id_guia FROM guia ORDER BY numero_guia", conexionDB)
                 Using reader = cmd.ExecuteReader()
@@ -230,7 +263,6 @@ Public Class Form1
         Catch ex As Exception
             MsgBox("Error al cargar la lista de guias: " & ex.Message)
         Finally
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
         End Try
     End Sub
 
@@ -238,8 +270,7 @@ Public Class Form1
     Private Sub CargarUltimaGuia()
         Debug.WriteLine(">> CargarUltimaGuia")
         Try
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
-            conexionDB.Open()
+            AbrirConexion() ' antes: cerraba y reabria; ahora reutiliza la conexion si ya esta abierta
 
             Using cmd As New OleDbCommand("SELECT TOP 1 id_guia FROM guia ORDER BY id_guia DESC", conexionDB)
                 Dim result = cmd.ExecuteScalar()
@@ -251,7 +282,6 @@ Public Class Form1
         Catch ex As Exception
             MsgBox("Error al cargar la ultima pagina: " & ex.Message, MsgBoxStyle.Critical)
         Finally
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
         End Try
     End Sub
 
@@ -265,8 +295,7 @@ Public Class Form1
         Dim datosGuia As New List(Of Object())
 
         Try
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
-            conexionDB.Open()
+            AbrirConexion() ' antes: cerraba y reabria; ahora reutiliza la conexion si ya esta abierta
 
             Using cmd As New OleDbCommand("SELECT * FROM guia_detalle WHERE id_guia = ?", conexionDB)
                 cmd.Parameters.AddWithValue("?", idGuia)
@@ -292,7 +321,6 @@ Public Class Form1
         Catch ex As Exception
             MsgBox("Error al cargar la guia: " & ex.Message)
         Finally
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
         End Try
 
         For Each fila As Object() In datosGuia
@@ -326,8 +354,7 @@ Public Class Form1
 
     Private Sub btnSiguiente_Click(sender As Object, e As EventArgs) Handles btnSiguiente.Click
         Try
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
-            conexionDB.Open()
+            AbrirConexion() ' antes: cerraba y reabria; ahora reutiliza la conexion si ya esta abierta
 
             Using cmd As New OleDbCommand("SELECT MIN(id_guia) FROM guia WHERE id_guia > ?", conexionDB)
                 cmd.Parameters.AddWithValue("?", idGuiaActual)
@@ -348,14 +375,12 @@ Public Class Form1
         Catch ex As Exception
             MsgBox("Error al buscar guias siguientes: " & ex.Message)
         Finally
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
         End Try
     End Sub
 
     Private Sub btnAnterior_Click(sender As Object, e As EventArgs) Handles btnAnterior.Click
         Try
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
-            conexionDB.Open()
+            AbrirConexion() ' antes: cerraba y reabria; ahora reutiliza la conexion si ya esta abierta
 
             Using cmd As New OleDbCommand("SELECT MAX(id_guia) FROM guia WHERE id_guia < ?", conexionDB)
                 cmd.Parameters.AddWithValue("?", idGuiaActual)
@@ -374,7 +399,6 @@ Public Class Form1
         Catch ex As Exception
             MsgBox("Error al buscar guias anteriores: " & ex.Message)
         Finally
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
         End Try
     End Sub
 
@@ -384,8 +408,7 @@ Public Class Form1
         cargarGuia = True
 
         Try
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
-            conexionDB.Open()
+            AbrirConexion() ' antes: cerraba y reabria; ahora reutiliza la conexion si ya esta abierta
 
             Using cmdGuia As New OleDbCommand("SELECT * FROM guia WHERE id_guia = ?", conexionDB)
                 cmdGuia.Parameters.AddWithValue("?", idGuia)
@@ -410,7 +433,6 @@ Public Class Form1
             MsgBox("Error al cargar la guia: " & ex.Message)
             Return
         Finally
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
         End Try
     End Sub
 
@@ -423,7 +445,7 @@ Public Class Form1
                 Try
                     Using cmd As New OleDbCommand("SELECT nombre, precio_venta_boleta FROM producto WHERE codigo = ?", conexionDB)
                         cmd.Parameters.AddWithValue("?", codigo)
-                        conexionDB.Open()
+                        AbrirConexion()
 
                         Using reader As OleDbDataReader = cmd.ExecuteReader()
                             If reader.Read() Then
@@ -434,7 +456,13 @@ Public Class Form1
                                 With dgvGuiaProductos.Rows(e.RowIndex)
                                     .Cells(1).Value = nombre
                                     .Cells(2).Value = precioFormato
-                                    .Cells(3).Value = 1
+                                    ' Solo se pone cantidad = 1 por defecto si la fila esta vacia/nueva.
+                                    ' Si ya tenia una cantidad real cargada, no se pisa (evita perder
+                                    ' datos si CellEndEdit se dispara de nuevo sobre una fila ya cargada,
+                                    ' por ejemplo al confirmar una edicion con varias celdas seleccionadas).
+                                    If IsDBNull(.Cells(3).Value) OrElse String.IsNullOrWhiteSpace(.Cells(3).Value?.ToString()) Then
+                                        .Cells(3).Value = 1
+                                    End If
                                     .Cells(4).Value = String.Format("$ {0:N0}", precioBoleta)
                                 End With
 
@@ -459,7 +487,6 @@ Public Class Form1
                 Catch ex As Exception
                     MsgBox("Error al consultar producto: " & ex.Message)
                 Finally
-                    If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
                 End Try
             End If
 
@@ -509,11 +536,8 @@ Public Class Form1
         'Esto permitira que la guia sea creada con la fecha actual de la PC
         dtpFecha.Value = Date.Today
 
-        'Guardar la guia 
+        'Guardar la guia (ya refresca la lista lateral internamente)
         guardarGuia()
-
-        'Actualizar lista lateral
-        AutoActualizarGuias()
 
     End Sub
 
@@ -580,8 +604,7 @@ Public Class Form1
     Private Function ObtenerSiguienteNumeroGuia() As Integer
         Try
 
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
-            conexionDB.Open()
+            AbrirConexion() ' antes: cerraba y reabria; ahora reutiliza la conexion si ya esta abierta
 
             Dim sql As String = "SELECT TOP 1 numero_guia FROM guia ORDER BY id_guia DESC"
             Using cmd As New OleDbCommand(sql, conexionDB)
@@ -597,7 +620,6 @@ Public Class Form1
             MsgBox("Error al obtener la siguiente guia: " & ex.Message, MsgBoxStyle.Critical)
             Return 1
         Finally
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
         End Try
     End Function
 
@@ -623,26 +645,34 @@ Public Class Form1
 
     'GUARDADO DE GUIAS NUEVO
     Public Sub guardarGuia()
+        Dim transaccion As OleDbTransaction = Nothing
         Try
             'Conexion a la DB
-            If conexionDB.State <> ConnectionState.Closed Then conexionDB.Close()
-            conexionDB.Open()
+            AbrirConexion()
 
             'Se calcula el total
             CalcularTotal()
             Dim total As Integer = ObtenerTotalGuia()
             Dim fecha As Date = dtpFecha.Value
-            Dim numeroGuia As Integer = Convert.ToInt32(txtNumeroGuia.Text)
+
+            Dim numeroGuia As Integer
+            If Not Integer.TryParse(txtNumeroGuia.Text, numeroGuia) Then
+                MsgBox("El número de guía no es válido. No se guardaron los cambios.", MsgBoxStyle.Exclamation)
+                Exit Sub
+            End If
 
             ' Dejar codigo cliente nulo
             Dim idCliente As Object = If(cbCodCliente.SelectedValue Is Nothing OrElse cbCodCliente.SelectedValue.ToString() = "",
                                      DBNull.Value,
                                      cbCodCliente.SelectedValue)
 
+            ' A partir de aqui, todo se guarda junto o no se guarda nada
+            transaccion = conexionDB.BeginTransaction()
+
             ' verificar si la guia existe
             If idGuiaActual > 0 Then
                 'Actualizar la guia ya registrada
-                Using cmdUpdate As New OleDbCommand("UPDATE guia SET fecha = ?, total = ?, id_cliente = ?, numero_guia = ? WHERE id_guia = ?", conexionDB)
+                Using cmdUpdate As New OleDbCommand("UPDATE guia SET fecha = ?, total = ?, id_cliente = ?, numero_guia = ? WHERE id_guia = ?", conexionDB, transaccion)
                     cmdUpdate.Parameters.AddWithValue("?", fecha)
                     cmdUpdate.Parameters.AddWithValue("?", total)
                     cmdUpdate.Parameters.AddWithValue("?", idCliente)
@@ -652,14 +682,14 @@ Public Class Form1
                 End Using
 
                 ' eliminar detalles
-                Using cmdDelete As New OleDbCommand("DELETE FROM guia_detalle WHERE id_guia = ?", conexionDB)
+                Using cmdDelete As New OleDbCommand("DELETE FROM guia_detalle WHERE id_guia = ?", conexionDB, transaccion)
                     cmdDelete.Parameters.AddWithValue("?", idGuiaActual)
                     cmdDelete.ExecuteNonQuery()
                 End Using
 
             Else
                 'crear la nueva guia
-                Using cmdInsert As New OleDbCommand("INSERT INTO guia (fecha, total, id_cliente, numero_guia) VALUES (?,?,?,?)", conexionDB)
+                Using cmdInsert As New OleDbCommand("INSERT INTO guia (fecha, total, id_cliente, numero_guia) VALUES (?,?,?,?)", conexionDB, transaccion)
                     cmdInsert.Parameters.AddWithValue("?", fecha)
                     cmdInsert.Parameters.AddWithValue("?", total)
                     cmdInsert.Parameters.AddWithValue("?", idCliente)
@@ -667,7 +697,7 @@ Public Class Form1
                     cmdInsert.ExecuteNonQuery()
 
                     ' conseguir la ID de la nueva guia
-                    Using cmdID As New OleDbCommand("SELECT @@IDENTITY", conexionDB)
+                    Using cmdID As New OleDbCommand("SELECT @@IDENTITY", conexionDB, transaccion)
                         idGuiaActual = Convert.ToInt32(cmdID.ExecuteScalar())
                     End Using
                 End Using
@@ -685,7 +715,7 @@ Public Class Form1
 
                 If String.IsNullOrEmpty(codigo) OrElse String.IsNullOrEmpty(nombre) Then Continue For
 
-                Using cmdDetalle As New OleDbCommand("INSERT INTO guia_detalle (id_guia, codigo_producto, nombre_producto, cantidad, precio_venta_boleta, subtotal) VALUES (?,?,?,?,?,?)", conexionDB)
+                Using cmdDetalle As New OleDbCommand("INSERT INTO guia_detalle (id_guia, codigo_producto, nombre_producto, cantidad, precio_venta_boleta, subtotal) VALUES (?,?,?,?,?,?)", conexionDB, transaccion)
                     cmdDetalle.Parameters.AddWithValue("?", idGuiaActual)
                     cmdDetalle.Parameters.AddWithValue("?", codigo)
                     cmdDetalle.Parameters.AddWithValue("?", nombre)
@@ -696,13 +726,21 @@ Public Class Form1
                 End Using
             Next
 
+            ' Todo salio bien: recien AHORA se confirman los cambios de forma definitiva
+            transaccion.Commit()
+
             'actualizar lista lateral de las guias
             AutoActualizarGuias()
 
         Catch ex As Exception
-            MsgBox("Error al guardar o actualizar la guía: " & ex.Message, MsgBoxStyle.Critical)
+            ' Algo fallo: se deshace TODO lo hecho desde BeginTransaction (deja la guia como estaba antes del guardado)
+            Try
+                If transaccion IsNot Nothing Then transaccion.Rollback()
+            Catch
+                ' Si ni siquiera se pudo revertir (ej. se perdio la conexion en pleno intento), no hay mas accion posible aqui
+            End Try
+            MsgBox("Error al guardar o actualizar la guía. No se guardó ningún cambio parcial: " & ex.Message, MsgBoxStyle.Critical)
         Finally
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
         End Try
     End Sub
 
@@ -852,8 +890,7 @@ Public Class Form1
     'FUNCION EN CASO DE EXISTIR UN NUMERO DE GUIA IGUAL
     Private Function GuiaNumeroIgual(numeroGuia As Integer, Optional idExcluido As Integer = -1) As Boolean
         Try
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
-            conexionDB.Open()
+            AbrirConexion() ' antes: cerraba y reabria; ahora reutiliza la conexion si ya esta abierta
 
             Dim sql As String = "SELECT COUNT(*) FROM guia WHERE numero_guia = ?"
             If idExcluido > 0 Then
@@ -874,7 +911,6 @@ Public Class Form1
             Debug.WriteLine("Error verificando numero de guia duplicada: " & ex.Message)
             Return False
         Finally
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
         End Try
     End Function
 
@@ -939,8 +975,7 @@ Public Class Form1
 
         'CONEXION A LA BASE DE DATOS
         Try
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
-            conexionDB.Open()
+            AbrirConexion() ' antes: cerraba y reabria; ahora reutiliza la conexion si ya esta abierta
 
             Dim sqlCliente As String = "SELECT razon_social, rut, dvr, direccion, comuna FROM cliente WHERE id_cliente = ?"
 
@@ -964,7 +999,6 @@ Public Class Form1
             rutFormato = "-"
             direccionLocal = "-"
         Finally
-            If conexionDB.State = ConnectionState.Open Then conexionDB.Close()
         End Try
 
         ' ENCABEZADO FIJO
@@ -972,7 +1006,7 @@ Public Class Form1
         g.DrawString(razonSocial, fuenteCuerpo, Brushes.Black, margenIzq, yPos) : yPos += salto
         g.DrawString(rutFormato, fuenteCuerpo, Brushes.Black, margenIzq, yPos) : yPos += salto
         g.DrawString(direccionLocal, fuenteCuerpo, Brushes.Black, margenIzq, yPos) : yPos += salto
-        g.DrawString(dtpFecha.Value.ToString("dd/mm/yyyy"), fuenteCuerpo, Brushes.Black, margenIzq, yPos) : yPos += salto
+        g.DrawString(dtpFecha.Value.ToString("dd/MM/yyyy"), fuenteCuerpo, Brushes.Black, margenIzq, yPos) : yPos += salto
         yPos += salto
 
         ' N° Guía

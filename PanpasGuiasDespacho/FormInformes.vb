@@ -112,15 +112,14 @@ Public Class FormInformes
                 g.total AS Total
             FROM guia AS g
             LEFT JOIN cliente AS c ON g.id_cliente = c.id_cliente
-            WHERE g.fecha BETWEEN #" & desde.ToString("MM/dd/yyyy") & "# 
-            AND #" & hasta.ToString("MM/dd/yyyy") & "#
+            WHERE g.fecha BETWEEN ? AND ?
             ORDER BY g.numero_guia;"
 
             AbrirConexion()
 
             Using cmd As New OleDb.OleDbCommand(consultaSQL, conexionDB)
-                cmd.Parameters.AddWithValue("@Desde", desde)
-                cmd.Parameters.AddWithValue("@Hasta", hasta)
+                cmd.Parameters.AddWithValue("?", desde)
+                cmd.Parameters.AddWithValue("?", hasta)
 
                 Dim adaptar As New OleDb.OleDbDataAdapter(cmd)
                 Dim tabla As New DataTable()

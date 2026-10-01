@@ -45,11 +45,11 @@ Partial Class Form2
         '
         'btnActualizarProduccion
         '
-        Me.btnActualizarProduccion.Location = New System.Drawing.Point(927, 472)
+        Me.btnActualizarProduccion.Location = New System.Drawing.Point(985, 472)
         Me.btnActualizarProduccion.Name = "btnActualizarProduccion"
-        Me.btnActualizarProduccion.Size = New System.Drawing.Size(113, 23)
+        Me.btnActualizarProduccion.Size = New System.Drawing.Size(140, 23)
         Me.btnActualizarProduccion.TabIndex = 33
-        Me.btnActualizarProduccion.Text = "Actualizar"
+        Me.btnActualizarProduccion.Text = "Ver historial completo"
         Me.btnActualizarProduccion.UseVisualStyleBackColor = True
         '
         'lblEmpleadoID

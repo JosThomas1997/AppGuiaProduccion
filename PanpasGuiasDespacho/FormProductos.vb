@@ -130,22 +130,8 @@ Public Class FormProductos
         dgvProductos.Columns.Clear()
 
         'Creacion de los botones por tipo de torta
-        Dim tipoTortas As (Texto As String, Codigo As String())() = {
-        ("Holandesas", {"1010", "1011", "1012", "1013"}),
-        ("Yoghurt", {"1009"}),
-        ("Dulce de Leche", {"1028", "1038", "1048", "1058", "1068", "1078", "1088"}),
-        ("Chocolate", {"1027", "1037", "1047", "1057", "1067", "1077", "1087"}),
-        ("Piña", {"1021", "1031", "1041", "1051", "1061", "1071", "1081"}),
-        ("Selva Negra", {"1022", "1032", "1042", "1052", "1062", "1072", "1082"}),
-        ("Hoja Manjar", {"1100", "1101", "1102", "1103"}),
-        ("Lucuma", {"1023", "1033", "1043", "1053", "1063", "1073", "1083"}),
-        ("Tres Leches", {"1110", "1111", "1112"}),
-        ("Mocka", {"1024", "1034", "1044", "1054", "1064", "1074", "1084"}),
-        ("Panqueque", {"1114", "1116"}),
-        ("Durazno", {"1026", "1036", "1046", "1056", "1066", "1076", "1086"}),
-        ("Bizcocho Manjar", {"1025", "1035", "1045", "1055", "1065", "1075", "1085"}),
-        ("Panpas", {"1096"})
-    }
+        ' El catalogo de tipos de torta ahora vive centralizado en CatalogoProductos.vb
+        Dim tipoTortas = CatalogoProductos.tipoTortas
 
         'Creacion de los botones de tipoTorta
         Dim posY As Integer = 10
@@ -188,19 +174,32 @@ Public Class FormProductos
         'Conexion con Consulta SQL para la obtencion de las tortas
         Try
             AbrirConexion()
-            For Each codigo As String In tortaCodigo
-                Using cmd As New OleDbCommand("SELECT nombre, precio_venta_boleta FROM producto WHERE codigo = ?", conexionDB)
-                    cmd.Parameters.AddWithValue("?", codigo)
+
+            If tortaCodigo.Length > 0 Then
+                ' Una sola consulta con IN (...) en vez de una consulta por cada codigo
+                Dim placeholders As New System.Text.StringBuilder()
+                For i As Integer = 0 To tortaCodigo.Length - 1
+                    If i > 0 Then placeholders.Append(",")
+                    placeholders.Append("?")
+                Next
+
+                Dim sql As String = "SELECT codigo, nombre, precio_venta_boleta FROM producto WHERE codigo IN (" & placeholders.ToString() & ") ORDER BY codigo"
+
+                Using cmd As New OleDbCommand(sql, conexionDB)
+                    For Each codigo As String In tortaCodigo
+                        cmd.Parameters.AddWithValue("?", codigo)
+                    Next
 
                     Using reader As OleDbDataReader = cmd.ExecuteReader()
-                        If reader.Read() Then
+                        While reader.Read()
+                            Dim codigoLeido As String = reader("codigo").ToString()
                             Dim nombre As String = reader("nombre").ToString()
                             Dim precio As Integer = Convert.ToInt32(reader("precio_venta_boleta"))
-                            dgvProductos.Rows.Add(codigo, nombre, String.Format("$ {0:N0}", precio))
-                        End If
+                            dgvProductos.Rows.Add(codigoLeido, nombre, String.Format("$ {0:N0}", precio))
+                        End While
                     End Using
                 End Using
-            Next
+            End If
         Catch ex As Exception
             MsgBox("Error al cargar la torta: " & ex.Message, MsgBoxStyle.Critical)
         Finally
@@ -241,18 +240,31 @@ Public Class FormProductos
         Try
             AbrirConexion()
 
-            For Each codigo As String In codigos
-                Using cmd As New OleDbCommand("SELECT nombre, precio_venta_boleta FROM producto WHERE codigo = ?", conexionDB)
-                    cmd.Parameters.AddWithValue("?", codigo)
+            If codigos.Length > 0 Then
+                ' Una sola consulta con IN (...) en vez de una consulta por cada codigo
+                Dim placeholders As New System.Text.StringBuilder()
+                For i As Integer = 0 To codigos.Length - 1
+                    If i > 0 Then placeholders.Append(",")
+                    placeholders.Append("?")
+                Next
+
+                Dim sql As String = "SELECT codigo, nombre, precio_venta_boleta FROM producto WHERE codigo IN (" & placeholders.ToString() & ") ORDER BY codigo"
+
+                Using cmd As New OleDbCommand(sql, conexionDB)
+                    For Each codigo As String In codigos
+                        cmd.Parameters.AddWithValue("?", codigo)
+                    Next
+
                     Using reader As OleDbDataReader = cmd.ExecuteReader()
-                        If reader.Read() Then
+                        While reader.Read()
+                            Dim codigoLeido As String = reader("codigo").ToString()
                             Dim nombre As String = reader("nombre").ToString()
                             Dim precio As Integer = Convert.ToInt32(reader("precio_venta_boleta"))
-                            dgvProductos.Rows.Add(codigo, nombre, String.Format("$ {0:N0}", precio))
-                        End If
+                            dgvProductos.Rows.Add(codigoLeido, nombre, String.Format("$ {0:N0}", precio))
+                        End While
                     End Using
                 End Using
-            Next
+            End If
 
         Catch ex As Exception
             MsgBox("Error al cargar productos: " & ex.Message, MsgBoxStyle.Critical)
