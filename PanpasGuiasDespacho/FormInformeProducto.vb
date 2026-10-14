@@ -30,7 +30,8 @@ Public Class FormInformeProducto
             ("Materia Prima", "placeholder.png"),
             ("Pan de Completo", "pancompleto.png"),
             ("Mote con Huesillo", "motehuesillo.png"),
-            ("Pan de Pascua", "panpascua.png")
+            ("Pan de Pascua", "panpascua.png"),
+            ("Otros", "placeholder.png")
         }
 
         Dim btnAncho As Integer = 120
@@ -87,35 +88,11 @@ Public Class FormInformeProducto
         Select Case nombreProducto
             Case "Tortas"
                 btnTortas_Click(sender, e)
-            Case "Galletas"
-                MostrarCodigoProducto({"1304", "1305", "1310", "1311", "1313"})
-            Case "Empanadas"
-                MostrarCodigoProducto({"1410", "1411", "1414", "9012"})
-            Case "Masas Dulces"
-                MostrarCodigoProducto({"1502", "1503", "1504", "1505"})
-            Case "Kuchen"
-                MostrarCodigoProducto({"1200", "1201", "1202", "1203", "1206", "1207", "8014", "8015"})
-            Case "Cocadas"
-                MostrarCodigoProducto({"1309"})
-            Case "Alfajores"
-                MostrarCodigoProducto({"1300", "1302", "1303", "1319"})
-            Case "Brazos de Reina"
-                MostrarCodigoProducto({"1211"})
-            Case "Queques y Muffins"
-                MostrarCodigoProducto({"1307", "1316", "9013"})
-            Case "Pasteles"
-                MostrarCodigoProducto({"8000", "8006", "8001", "8007", "8017", "8009", "8003", "8010", "8004", "8011", "8005", "8013"})
-            Case "Pan de Completo"
-                MostrarCodigoProducto({"1402"})
-            Case "Materia Prima"
-                MostrarCodigoProducto({"9000", "10007"})
-            Case "Mote con Huesillo"
-                MostrarCodigoProducto({"1514"})
-            Case "Pan de Pascua"
-                MostrarCodigoProducto({"1513", "1509"})
+            Case "Otros"
+                MostrarProductosOtros()
             Case Else
-                MessageBox.Show("Aun no ha sido definido productos para:  " & nombreProducto,
-                                "!", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                'Cualquier otra categoria se consulta directamente en la base
+                MostrarProductosPorCategoria(nombreProducto)
         End Select
 
         'Traer panel al frente y hacerlo visible
@@ -123,79 +100,66 @@ Public Class FormInformeProducto
         dgvInformeProductos.BringToFront()
     End Sub
 
-    Private Sub MostrarCodigoProducto(codigos() As String)
-        'Para el caso de tortas, se limpia el panel central de los botones
-        LimpiarPanelCentro()
-        'Limpieza de las columnas y filas del datagrid
-        dgvInformeProductos.Columns.Clear()
-        dgvInformeProductos.Rows.Clear()
+    'Productos de la categoria "Otros" y los que aun no tienen categoria (incluye inactivos)
+    Private Sub MostrarProductosOtros()
+        Try
+            MostrarEnGrid(CatalogoProductos.ObtenerProductosOtros(False), "Otros")
+        Catch ex As Exception
+            LimpiarPanelCentro()
+            MsgBox("Error al cargar productos: " & ex.Message, MsgBoxStyle.Critical)
+        End Try
+    End Sub
 
-        'Creacion de las columnas del grid
-        If dgvInformeProductos.Columns.Count = 0 Then
-            dgvInformeProductos.Columns.Add("codigo", "Codigo")
-            dgvInformeProductos.Columns.Add("nombre", "Nombre")
-            dgvInformeProductos.Columns.Add("precio", "Precio")
+    'Todos los productos de una categoria (incluye inactivos: un informe debe ver el historial)
+    Private Sub MostrarProductosPorCategoria(categoria As String)
+        Try
+            MostrarEnGrid(CatalogoProductos.ObtenerProductosPorCategoria(categoria, False), categoria)
+        Catch ex As Exception
+            LimpiarPanelCentro()
+            MsgBox("Error al cargar productos: " & ex.Message, MsgBoxStyle.Critical)
+        End Try
+    End Sub
 
-            For Each col As DataGridViewColumn In dgvInformeProductos.Columns
-                col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
-            Next
+    'Dibuja los productos en la grilla y avisa si la categoria esta vacia
+    Private Sub MostrarEnGrid(tabla As DataTable, nombreCategoria As String, Optional conservarPanelCentral As Boolean = False)
+        If conservarPanelCentral Then
+            dgvInformeProductos.Columns.Clear()
+            dgvInformeProductos.Rows.Clear()
+        Else
+            LimpiarPanelCentro()
         End If
 
-        Try
-            AbrirConexion()
+        dgvInformeProductos.Columns.Add("codigo", "Codigo")
+        dgvInformeProductos.Columns.Add("nombre", "Nombre")
+        dgvInformeProductos.Columns.Add("precio", "Precio")
 
-            If codigos.Length > 0 Then
-                ' Una sola consulta con IN (...) en vez de una consulta por cada codigo
-                Dim placeholders As New System.Text.StringBuilder()
-                For i As Integer = 0 To codigos.Length - 1
-                    If i > 0 Then placeholders.Append(",")
-                    placeholders.Append("?")
-                Next
+        For Each col As DataGridViewColumn In dgvInformeProductos.Columns
+            col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+        Next
 
-                Dim sql As String = "SELECT codigo, nombre, precio_venta_boleta FROM producto WHERE codigo IN (" & placeholders.ToString() & ") ORDER BY codigo"
+        For Each fila As DataRow In tabla.Rows
+            Dim precio As Integer = If(IsDBNull(fila("precio_venta_boleta")), 0, Convert.ToInt32(fila("precio_venta_boleta")))
+            dgvInformeProductos.Rows.Add(fila("codigo").ToString(), fila("nombre").ToString(), String.Format("$ {0:N0}", precio))
+        Next
 
-                Using cmd As New OleDbCommand(sql, conexionDB)
-                    For Each codigo As String In codigos
-                        cmd.Parameters.AddWithValue("?", codigo)
-                    Next
-
-                    Using reader As OleDbDataReader = cmd.ExecuteReader()
-                        While reader.Read()
-                            Dim codigoLeido As String = reader("codigo").ToString()
-                            Dim nombre As String = reader("nombre").ToString()
-                            Dim precio As Integer = Convert.ToInt32(reader("precio_venta_boleta"))
-                            dgvInformeProductos.Rows.Add(codigoLeido, nombre, String.Format("$ {0:N0}", precio))
-                        End While
-                    End Using
-                End Using
-            End If
-
-        Catch ex As Exception
-            MsgBox("Error al cargar productos: " & ex.Message, MsgBoxStyle.Critical)
-        Finally
-            CerrarConexion()
-        End Try
+        If dgvInformeProductos.Rows.Count = 0 Then
+            MessageBox.Show("No hay productos en la categoria: " & nombreCategoria,
+                            "!", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        End If
 
         dgvInformeProductos.Visible = True
         dgvInformeProductos.BringToFront()
     End Sub
 
     Private Sub btnTortas_Click(sender As Object, e As EventArgs)
-        'Limpieza de los paneles y datagrid para los datos de tortas
-        panelCentral.Controls.Clear()
-        dgvInformeProductos.Rows.Clear()
-        dgvInformeProductos.Columns.Clear()
+        LimpiarPanelCentro()
 
-        'Creacion de los botones por tipo de torta
-        ' El catalogo de tipos de torta ahora vive centralizado en CatalogoProductos.vb
-        Dim tipoTortas = CatalogoProductos.tipoTortas
-
-        'Creacion de los botones de tipoTorta
+        'Un boton por cada tipo de torta
         Dim posY As Integer = 10
-        For Each tipo In tipoTortas
+        For Each nombreTipo In CatalogoProductos.tiposTorta
             Dim botonTipo As New Button()
-            botonTipo.Text = tipo.Texto
-            botonTipo.Tag = tipo.Codigo
+            botonTipo.Text = nombreTipo
+            botonTipo.Tag = nombreTipo
             botonTipo.Font = New Font("Segoe UI", 9, FontStyle.Bold)
             botonTipo.Size = New Size(180, 40)
             botonTipo.Location = New Point(10, posY)
@@ -212,59 +176,12 @@ Public Class FormInformeProducto
     End Sub
 
     Private Sub MostrarTortasTipo(sender As Object, e As EventArgs)
-        Dim botonTipo As Button = CType(sender, Button)
-        Dim tortaCodigo As String() = CType(botonTipo.Tag, String())
-
-        dgvInformeProductos.Columns.Clear()
-        dgvInformeProductos.Rows.Clear()
-
-        'Vista del DataGridView
-        dgvInformeProductos.Columns.Add("codigo", "Codigo")
-        dgvInformeProductos.Columns.Add("nombre", "Nombre")
-        dgvInformeProductos.Columns.Add("precio", "Precio")
-
-        For Each col As DataGridViewColumn In dgvInformeProductos.Columns
-            col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
-        Next
-
-        'Conexion con Consulta SQL para la obtencion de las tortas
+        Dim tipo As String = CType(sender, Button).Tag.ToString()
         Try
-            AbrirConexion()
-
-            If tortaCodigo.Length > 0 Then
-                ' Una sola consulta con IN (...) en vez de una consulta por cada codigo
-                Dim placeholders As New System.Text.StringBuilder()
-                For i As Integer = 0 To tortaCodigo.Length - 1
-                    If i > 0 Then placeholders.Append(",")
-                    placeholders.Append("?")
-                Next
-
-                Dim sql As String = "SELECT codigo, nombre, precio_venta_boleta FROM producto WHERE codigo IN (" & placeholders.ToString() & ") ORDER BY codigo"
-
-                Using cmd As New OleDbCommand(sql, conexionDB)
-                    For Each codigo As String In tortaCodigo
-                        cmd.Parameters.AddWithValue("?", codigo)
-                    Next
-
-                    Using reader As OleDbDataReader = cmd.ExecuteReader()
-                        While reader.Read()
-                            Dim codigoLeido As String = reader("codigo").ToString()
-                            Dim nombre As String = reader("nombre").ToString()
-                            Dim precio As Integer = Convert.ToInt32(reader("precio_venta_boleta"))
-                            dgvInformeProductos.Rows.Add(codigoLeido, nombre, String.Format("$ {0:N0}", precio))
-                        End While
-                    End Using
-                End Using
-            End If
+            MostrarEnGrid(CatalogoProductos.ObtenerTortasPorSubcategoria(tipo, False), tipo, True)
         Catch ex As Exception
             MsgBox("Error al cargar la torta: " & ex.Message, MsgBoxStyle.Critical)
-        Finally
-            CerrarConexion()
         End Try
-
-        'Traer panel al frente  y hacerlo visible
-        dgvInformeProductos.Visible = True
-        dgvInformeProductos.BringToFront()
     End Sub
 
     Private Sub LimpiarPanelCentro()
@@ -312,7 +229,7 @@ Public Class FormInformeProducto
                         dgvInformeProductos.Rows.Add(
                             codigo,
                             reader("nombre").ToString(),
-                            String.Format("$ {0:N0}", Convert.ToInt32(reader("precio_venta_boleta")))
+                            String.Format("$ {0:N0}", CatalogoProductos.PrecioEntero(reader("precio_venta_boleta")))
                         )
 
                         dgvInformeProductos.Visible = True
@@ -324,7 +241,7 @@ Public Class FormInformeProducto
             End Using
 
         Catch ex As Exception
-            MsgBox("Error al buscar el producto:", ex.Message)
+            MsgBox("Error al buscar el producto: " & ex.Message, MsgBoxStyle.Critical)
         Finally
             CerrarConexion()
         End Try

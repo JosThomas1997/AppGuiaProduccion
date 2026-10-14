@@ -22,38 +22,6 @@ PanpasGuiasDespacho
   resource lookups using this strongly typed resource class.
 </summary>
 </member>
-<member name="M:PanpasGuiasDespacho.Conexion.CerrarConexionApp">
- <summary>
- Cierra la conexion de verdad. Llamar SOLO al salir de la aplicacion (Program.vb).
- </summary>
-</member>
-<member name="M:PanpasGuiasDespacho.FormEditarPrecios.CargarCategoriasDisponibles">
- <summary>
- Llena los desplegables de categoria y sub-categoria (sabor de torta) leyendo
- los valores que YA existen en la base de datos, en vez de tenerlos escritos
- en el codigo. Como los ComboBox quedan editables (DropDown, no DropDownList),
- tambien se puede escribir una categoria completamente nueva si hace falta.
- </summary>
-</member>
-<member name="M:PanpasGuiasDespacho.FormEditarPrecios.cbCategoriaNueva_TextChanged(System.Object,System.EventArgs)">
- <summary>
- El campo de sabor (subcategoria) solo tiene sentido cuando la categoria es "Tortas".
- Se habilita/deshabilita segun lo que se escriba o elija en cbCategoriaNueva.
- </summary>
-</member>
-<member name="M:PanpasGuiasDespacho.FormEditarPrecios.CargarProductos(System.String)">
- <summary>
- Carga la lista de productos. Si "filtro" viene vacio, trae todos los productos que
- correspondan (activos, o tambien inactivos si el checkbox esta marcado); si no,
- ademas filtra por codigo o nombre que contengan el texto buscado.
- </summary>
-</member>
-<member name="M:PanpasGuiasDespacho.FormEditarPrecios.dgvResultados_CellClick(System.Object,System.Windows.Forms.DataGridViewCellEventArgs)">
- <summary>
- Al hacer clic en una fila de resultados, se muestra el producto elegido
- y se dejan su nombre y precio actuales listos para editar.
- </summary>
-</member>
 <member name="M:PanpasGuiasDespacho.FormEditarPrecios.btnEliminarReactivar_Click(System.Object,System.EventArgs)">
  <summary>
  Elimina o reactiva el producto seleccionado, segun su estado actual.

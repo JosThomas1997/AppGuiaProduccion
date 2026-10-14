@@ -190,6 +190,7 @@
     </Compile>
     <Compile Include="PrinterHelper.vb" />
     <Compile Include="Program.vb" />
+    <Compile Include="Respaldos.vb" />
     <Compile Include="Seguridad.vb" />
     <Compile Include="UtilReactivarProductos.vb" />
   </ItemGroup>

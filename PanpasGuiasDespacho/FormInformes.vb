@@ -84,6 +84,10 @@ Public Class FormInformes
             desde = dtpDesde.Value.Date
             hasta = dtpHasta.Value.Date
         ElseIf rdbPorMes.Checked Then
+            If cmbMes.SelectedIndex < 0 OrElse cmbAnio.SelectedItem Is Nothing Then
+                Throw New InvalidOperationException("Selecciona el mes y el año del informe.")
+            End If
+
             Dim SeleccionMes As Integer = cmbMes.SelectedIndex + 1
             Dim SeleccionAnio As Integer = CInt(cmbAnio.SelectedItem)
             desde = New Date(SeleccionAnio, SeleccionMes, 1)
@@ -659,11 +663,15 @@ Public Class FormInformes
     Private Sub btnProduccionProductos_Click(sender As Object, e As EventArgs) Handles btnProduccionProductos.Click
         informeActual = TipoInforme.ProduccionProductos
 
-        Dim rango = ObtenerRangoFechas()
-        Dim desde As Date = rango.Item1
-        Dim hasta As Date = rango.Item2
+        Try
+            Dim rango = ObtenerRangoFechas()
+            Dim desde As Date = rango.Item1
+            Dim hasta As Date = rango.Item2
 
-        CargarProduccionProductos(desde, hasta)
+            CargarProduccionProductos(desde, hasta)
+        Catch ex As Exception
+            MessageBox.Show("Error al generar el informe: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
     Private Sub CargarProduccionProductos(desde As Date, hasta As Date)

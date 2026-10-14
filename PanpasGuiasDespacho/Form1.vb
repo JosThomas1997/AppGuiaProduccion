@@ -1,11 +1,10 @@
 ﻿Imports System.Data.OleDb
-Imports System.Globalization
-Imports System.Linq.Expressions
-Imports System.Text.RegularExpressions
 Imports System.Drawing.Printing
 
+
+
 Public Class Form1
-    Private autoGuardadoHabilitado As Boolean = True
+
     Private idGuiaActual As Integer = -1
     Private numeroGuiaAnterior As String = ""
     Private impresora_Seleccionada As String = ""
@@ -16,6 +15,13 @@ Public Class Form1
     Dim numeroGuia As Integer = 1
     Private cargarGuia As Boolean = False
 
+    'Guardado diferido: se agrupan los cambios y se guarda una sola vez tras una pausa
+    Private guardadoPendiente As Boolean = False
+    Private WithEvents timerGuardado As New System.Windows.Forms.Timer() With {.Interval = 700}
+
+    'Codigo que tenia la celda antes de editarla (para saber si realmente cambio)
+    Private codigoAntesDeEditar As String = ""
+
     Private WithEvents documentoImpresion As New PrintDocument()
 
     'Creacion de lista de guias para los botones
@@ -24,6 +30,7 @@ Public Class Form1
 
     'Carga del formulario para dar formato a la guia
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
         cargarGuia = True
 
         ' Doble buffer: dibuja los cambios en memoria antes de mostrarlos de una vez,
@@ -108,6 +115,35 @@ Public Class Form1
         End If
     End Sub
 
+    'Marca que hay cambios y reinicia la cuenta regresiva del guardado
+    Private Sub SolicitarGuardado()
+        If cargarGuia Then Exit Sub
+        guardadoPendiente = True
+        timerGuardado.Stop()
+        timerGuardado.Start()
+    End Sub
+
+    Private Sub timerGuardado_Tick(sender As Object, e As EventArgs) Handles timerGuardado.Tick
+        GuardarPendiente()
+    End Sub
+
+    'Guarda ahora lo que este pendiente (si no hay nada pendiente, no hace nada)
+    Private Sub GuardarPendiente()
+        timerGuardado.Stop()
+        If Not guardadoPendiente Then Exit Sub
+        guardadoPendiente = False
+        Try
+            guardarGuia()
+        Catch ex As Exception
+            MsgBox("Error durante el autoguardado o actualizacion: " & ex.Message, MsgBoxStyle.Critical)
+        End Try
+    End Sub
+
+    'Antes de cerrar la ventana, no se pierde ningun cambio pendiente
+    Private Sub Form1_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
+        GuardarPendiente()
+    End Sub
+
     'Actualizar guia al cambiar la fecha
     Private Sub dtpFecha_ValueChanged(sender As Object, e As EventArgs) Handles dtpFecha.ValueChanged
         If Not cargarGuia Then
@@ -115,33 +151,13 @@ Public Class Form1
         End If
     End Sub
 
-    ' Nota: antes existia un manejador de txtNumeroGuia.TextChanged que llamaba a guardarGuia()
-    ' en cada tecleo, sin validar. Esto causaba errores si el campo quedaba vacio a mitad de
-    ' edicion, y ademas duplicaba el guardado en btnNuevaGuia_Click (se disparaba al escribir
-    ' el numero Y de nuevo al llamar guardarGuia() explicitamente). Se quito: txtNumeroGuia_Leave
-    ' (mas abajo) ya guarda de forma validada cuando el usuario termina de editar el campo.
-
     'DETECCION DE CAMBIOS EN EL GRID
     Private Sub dgvProductos_CellValueChanged(sender As Object, e As DataGridViewCellEventArgs) Handles dgvGuiaProductos.CellValueChanged
-        If cargarGuia Then Exit Sub
-        BeginInvoke(Sub()
-                        Try
-                            guardarGuia()
-                        Catch ex As Exception
-                            MsgBox("Error durante el autoguardado o actualizacion: " & ex.Message, MsgBoxStyle.Critical)
-                        End Try
-                    End Sub)
+        SolicitarGuardado()
     End Sub
 
     Private Sub dgvProductos_RowsRemoved(sender As Object, e As DataGridViewRowsRemovedEventArgs) Handles dgvGuiaProductos.RowsRemoved
-        If cargarGuia Then Exit Sub
-        BeginInvoke(Sub()
-                        Try
-                            guardarGuia()
-                        Catch ex As Exception
-                            MsgBox("Error durante el autoguardado o actualizacion:" & ex.Message, MsgBoxStyle.Critical)
-                        End Try
-                    End Sub)
+        SolicitarGuardado()
     End Sub
 
     'Cargar Grid de Guias (derecha)
@@ -335,28 +351,6 @@ Public Class Form1
         cargarGuia = False
     End Sub
 
-    'Buscar nombre de cliente ID
-    Private Sub BuscarNombreClienteID(idCliente As Integer)
-        Debug.WriteLine(">> BuscarNombreClienteID con ID = " & idCliente)
-        Try
-            Dim ruta As String = Application.StartupPath & "\DBApp\rjc_prod_f753.mdb"
-            Dim conexionDatos As New OleDbConnection("Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" & ruta)
-
-            conexionDatos.Open()
-
-            Using cmd As New OleDbCommand("SELECT nombre_fantasia FROM cliente WHERE id_cliente = ?", conexionDatos)
-                cmd.Parameters.AddWithValue("?", idCliente)
-                Dim nombre = cmd.ExecuteScalar()
-                lblNombreCliente.Text = If(nombre IsNot Nothing, nombre.ToString(), "Cliente no encontrado")
-            End Using
-
-            conexionDatos.Close()
-        Catch ex As Exception
-            lblNombreCliente.Text = "Error al buscar el cliente"
-            Debug.WriteLine("Error en Busqueda del nombre con ID: " & ex.Message)
-        End Try
-    End Sub
-
     Private Sub btnSiguiente_Click(sender As Object, e As EventArgs) Handles btnSiguiente.Click
         Try
             AbrirConexion() ' antes: cerraba y reabria; ahora reutiliza la conexion si ya esta abierta
@@ -408,6 +402,7 @@ Public Class Form1
     End Sub
 
     Public Sub CargarGuiaID(idGuia As Integer)
+        GuardarPendiente()
         Debug.WriteLine(">> CargarGuiaID con ID = " & idGuia)
 
         cargarGuia = True
@@ -423,7 +418,11 @@ Public Class Form1
                         idGuiaActual = idGuia
                         txtNumeroGuia.Text = reader("numero_guia").ToString()
                         dtpFecha.Value = Convert.ToDateTime(reader("fecha"))
-                        cbCodCliente.SelectedValue = Convert.ToInt32(reader("id_cliente"))
+                        If IsDBNull(reader("id_cliente")) OrElse Convert.ToInt32(reader("id_cliente")) <= 0 Then
+                            cbCodCliente.SelectedIndex = -1
+                        Else
+                            cbCodCliente.SelectedValue = Convert.ToInt32(reader("id_cliente"))
+                        End If
 
                         lblNombreCliente.Text = cbCodCliente.Text
 
@@ -434,14 +433,44 @@ Public Class Form1
 
             CargarDetalleGuia(idGuia)
 
-            'Actualizar el número de guía anterior después de cargar la guía
             numeroGuiaAnterior = txtNumeroGuia.Text
-            cargarGuia = False
 
         Catch ex As Exception
             MsgBox("Error al cargar la guia: " & ex.Message)
             Return
         Finally
+            cargarGuia = False
+        End Try
+    End Sub
+
+    Private Sub dgvProductos_CellBeginEdit(sender As Object, e As DataGridViewCellCancelEventArgs) Handles dgvGuiaProductos.CellBeginEdit
+        If e.ColumnIndex = 0 Then
+            codigoAntesDeEditar = dgvGuiaProductos.Rows(e.RowIndex).Cells(0).Value?.ToString()
+        End If
+    End Sub
+
+    'Lleva el cursor a la cantidad de una fila
+    Private Sub IrACantidad(fila As Integer)
+        Try
+            dgvGuiaProductos.CurrentCell = dgvGuiaProductos.Rows(fila).Cells("cantidad")
+            dgvGuiaProductos.BeginEdit(True)
+        Catch ex As Exception
+            Debug.WriteLine("Error al seleccionar Cantidad: " & ex.Message)
+        End Try
+    End Sub
+
+    'Lleva el cursor al codigo de la ultima fila (si ya tiene un producto, crea una nueva)
+    Private Sub IrAlFinalDeLaLista()
+        Try
+            Dim ultima As Integer = dgvGuiaProductos.Rows.Count - 1
+            If ultima < 0 OrElse Not String.IsNullOrWhiteSpace(dgvGuiaProductos.Rows(ultima).Cells("codigo").Value?.ToString()) Then
+                dgvGuiaProductos.Rows.Add()
+                ultima = dgvGuiaProductos.Rows.Count - 1
+            End If
+            dgvGuiaProductos.CurrentCell = dgvGuiaProductos.Rows(ultima).Cells("codigo")
+            dgvGuiaProductos.BeginEdit(True)
+        Catch ex As Exception
+            Debug.WriteLine("Error al mover el foco al final de la lista: " & ex.Message)
         End Try
     End Sub
 
@@ -451,44 +480,45 @@ Public Class Form1
             Dim codigo As String = dgvGuiaProductos.Rows(e.RowIndex).Cells(0).Value?.ToString()
 
             If Not String.IsNullOrEmpty(codigo) Then
+
+                'Si el codigo no cambio y la fila ya esta cargada, no se consulta el catalogo ni se
+                'toca el precio de la guia: asi recorrer filas con Enter no altera nada.
+                Dim filaCargada As Boolean = Not String.IsNullOrWhiteSpace(dgvGuiaProductos.Rows(e.RowIndex).Cells(1).Value?.ToString())
+                If codigo = codigoAntesDeEditar AndAlso filaCargada Then
+                    Me.BeginInvoke(Sub() IrACantidad(e.RowIndex))
+                    Exit Sub
+                End If
+
                 Try
-                    Using cmd As New OleDbCommand("SELECT nombre, precio_venta_boleta FROM producto WHERE codigo = ?", conexionDB)
+                    Using cmd As New OleDbCommand("SELECT nombre, precio_venta_boleta FROM producto WHERE codigo = ? AND (productoActivo = True OR productoActivo IS NULL)", conexionDB)
                         cmd.Parameters.AddWithValue("?", codigo)
                         AbrirConexion()
 
                         Using reader As OleDbDataReader = cmd.ExecuteReader()
                             If reader.Read() Then
                                 Dim nombre As String = reader("nombre").ToString()
-                                Dim precioBoleta As Integer = Convert.ToInt32(reader("precio_venta_boleta"))
+                                Dim precioBoleta As Integer = CatalogoProductos.PrecioEntero(reader("precio_venta_boleta"))
                                 Dim precioFormato As String = String.Format("$ {0:N0}", precioBoleta)
 
                                 With dgvGuiaProductos.Rows(e.RowIndex)
                                     .Cells(1).Value = nombre
                                     .Cells(2).Value = precioFormato
                                     ' Solo se pone cantidad = 1 por defecto si la fila esta vacia/nueva.
-                                    ' Si ya tenia una cantidad real cargada, no se pisa (evita perder
-                                    ' datos si CellEndEdit se dispara de nuevo sobre una fila ya cargada,
-                                    ' por ejemplo al confirmar una edicion con varias celdas seleccionadas).
                                     If IsDBNull(.Cells(3).Value) OrElse String.IsNullOrWhiteSpace(.Cells(3).Value?.ToString()) Then
                                         .Cells(3).Value = 1
                                     End If
-                                    .Cells(4).Value = String.Format("$ {0:N0}", precioBoleta)
+                                    ' El subtotal siempre es cantidad x precio
+                                    Dim cantidadFila As Integer = 1
+                                    Integer.TryParse(.Cells(3).Value?.ToString(), cantidadFila)
+                                    .Cells(4).Value = String.Format("$ {0:N0}", cantidadFila * precioBoleta)
                                 End With
 
                                 CalcularTotal()
 
-                                'Tras ingresar el codigo de producto, se seleccionar cantidad automaticamente
-                                Me.BeginInvoke(Sub()
-                                                   Try
-                                                       Dim columCantidad As Integer = dgvGuiaProductos.Columns("cantidad").Index
-                                                       dgvGuiaProductos.CurrentCell = dgvGuiaProductos.Rows(e.RowIndex).Cells(columCantidad)
-                                                       dgvGuiaProductos.BeginEdit(True)
-                                                   Catch ex As Exception
-                                                       Debug.WriteLine("Error al seleccionar Cantidad", ex.Message)
-                                                   End Try
-                                               End Sub)
+                                'Tras ingresar el codigo de producto, se selecciona cantidad automaticamente
+                                Me.BeginInvoke(Sub() IrACantidad(e.RowIndex))
                             Else
-                                MsgBox("Codigo de producto no valido: " & MsgBoxStyle.Exclamation)
+                                MsgBox("Codigo de producto no valido o inactivo: " & codigo, MsgBoxStyle.Exclamation)
                                 dgvGuiaProductos.Rows.RemoveAt(e.RowIndex)
                             End If
                         End Using
@@ -501,37 +531,22 @@ Public Class Form1
 
         ElseIf e.ColumnIndex = 3 Then
             Dim cantidad = Val(dgvGuiaProductos.Rows(e.RowIndex).Cells(3).Value)
-
-            Dim precioTexto = dgvGuiaProductos.Rows(e.RowIndex).Cells(2).Value?.ToString().Replace("$ ", "").Replace(" ", "").Replace(".", "").Trim()
-            Dim precio = Val(precioTexto)
+            Dim precio = CatalogoProductos.MontoEntero(dgvGuiaProductos.Rows(e.RowIndex).Cells(2).Value)
 
             Dim subtotal = cantidad * precio
             dgvGuiaProductos.Rows(e.RowIndex).Cells(4).Value = String.Format("$ {0:N0}", subtotal)
 
             CalcularTotal()
 
-            'Mover automaticamente a la siguiente fila
-            Me.BeginInvoke(Sub()
-                               Try
-                                   Dim filaSiguiente As Integer = e.RowIndex + 1
-
-                                   'Agregar una fila en caso de no haber una en el grid
-                                   If filaSiguiente >= dgvGuiaProductos.Rows.Count Then
-                                       dgvGuiaProductos.Rows.Add()
-                                   End If
-
-                                   Dim colCodigo As Integer = dgvGuiaProductos.Columns("codigo").Index
-                                   dgvGuiaProductos.CurrentCell = dgvGuiaProductos.Rows(filaSiguiente).Cells(colCodigo)
-                                   dgvGuiaProductos.BeginEdit(True)
-                               Catch ex As Exception
-                                   Debug.WriteLine("Error al mover el foco a la siguiente fila: " & ex.Message)
-                               End Try
-                           End Sub)
+            'Mover foco al final de la lista, listo para el siguiente producto
+            Me.BeginInvoke(Sub() IrAlFinalDeLaLista())
         End If
     End Sub
 
     'BOTON PARA NUEVAS GUIAS
     Private Sub btnNuevaGuia_Click(sender As Object, e As EventArgs) Handles btnNuevaGuia.Click
+        GuardarPendiente()
+
         dgvGuiaProductos.Rows.Clear()
         lblNombreCliente.Text = ""
         idGuiaActual = 0
@@ -562,28 +577,43 @@ Public Class Form1
         Dim MensajeConfirmacion = MsgBox("Esta por eliminar la Guia Nº " & txtNumeroGuia.Text & "?", MsgBoxStyle.YesNo + MsgBoxStyle.Question, "Confirmar eliminación")
         If MensajeConfirmacion <> MsgBoxResult.Yes Then Exit Sub
 
-        'Conexion a base de datos para eliminar guia
+        Dim idAEliminar As Integer = idGuiaActual
+        Dim transaccion As OleDbTransaction = Nothing
+
+        timerGuardado.Stop()
+        guardadoPendiente = False
+
+        'Mientras se elimina, se bloquea el autoguardado para que nada la vuelva a escribir
+        cargarGuia = True
+
         Try
             AbrirConexion()
 
-            'Eliminar detalles de la guia
-            Using cmdDetalle As New OleDbCommand("DELETE FROM guia_detalle WHERE id_guia = ?", conexionDB)
-                cmdDetalle.Parameters.AddWithValue("?", idGuiaActual)
+            'Detalle y cabecera se eliminan juntos o no se elimina nada
+            transaccion = conexionDB.BeginTransaction()
+
+            Using cmdDetalle As New OleDbCommand("DELETE FROM guia_detalle WHERE id_guia = ?", conexionDB, transaccion)
+                cmdDetalle.Parameters.AddWithValue("?", idAEliminar)
                 cmdDetalle.ExecuteNonQuery()
             End Using
 
-            'Eliminar guia
-            Using cmdGuia As New OleDbCommand("DELETE FROM guia WHERE id_guia = ?", conexionDB)
-                cmdGuia.Parameters.AddWithValue("?", idGuiaActual)
+            Using cmdGuia As New OleDbCommand("DELETE FROM guia WHERE id_guia = ?", conexionDB, transaccion)
+                cmdGuia.Parameters.AddWithValue("?", idAEliminar)
                 cmdGuia.ExecuteNonQuery()
             End Using
+
+            transaccion.Commit()
+            transaccion = Nothing
+
+            'La guia ya no existe: ningun guardado posterior debe apuntar a ella
+            idGuiaActual = 0
 
             MsgBox("La guia ha sido eliminada.", MsgBoxStyle.Information)
 
             'Buscar guia anterior
             Dim IDAnterior As Object = Nothing
             Using cmdAnterior As New OleDbCommand("SELECT MAX(id_guia) FROM guia WHERE id_guia < ?", conexionDB)
-                cmdAnterior.Parameters.AddWithValue("?", idGuiaActual)
+                cmdAnterior.Parameters.AddWithValue("?", idAEliminar)
                 IDAnterior = cmdAnterior.ExecuteScalar()
             End Using
 
@@ -603,8 +633,15 @@ Public Class Form1
             AutoActualizarGuias()
 
         Catch ex As Exception
+            'Si falla antes del Commit, se deshace todo y la guia queda intacta
+            Try
+                If transaccion IsNot Nothing Then transaccion.Rollback()
+            Catch
+                'Si ni siquiera se pudo revertir, no hay mas accion posible aqui
+            End Try
             MsgBox("Error al eliminar guia: " & ex.Message, MsgBoxStyle.Critical)
         Finally
+            cargarGuia = False
             CerrarConexion()
         End Try
     End Sub
@@ -612,18 +649,24 @@ Public Class Form1
     'PARA EL SIGUIENTE NUMERO DE LA GUIA (AHORA EN BASE AL MAS RECIENTE)
     Private Function ObtenerSiguienteNumeroGuia() As Integer
         Try
-
             AbrirConexion() ' antes: cerraba y reabria; ahora reutiliza la conexion si ya esta abierta
+
+            Dim siguiente As Integer = 1
 
             Dim sql As String = "SELECT TOP 1 numero_guia FROM guia ORDER BY id_guia DESC"
             Using cmd As New OleDbCommand(sql, conexionDB)
                 Dim result = cmd.ExecuteScalar()
                 If result IsNot DBNull.Value AndAlso result IsNot Nothing Then
-                    Return Convert.ToInt32(result) + 1
-                Else
-                    Return 1
+                    siguiente = Convert.ToInt32(result) + 1
                 End If
             End Using
+
+            'Si otra guia ya usa ese numero, se avanza hasta encontrar uno libre
+            Do While GuiaNumeroIgual(siguiente)
+                siguiente += 1
+            Loop
+
+            Return siguiente
 
         Catch ex As Exception
             MsgBox("Error al obtener la siguiente guia: " & ex.Message, MsgBoxStyle.Critical)
@@ -654,6 +697,11 @@ Public Class Form1
 
     'GUARDADO DE GUIAS NUEVO
     Public Sub guardarGuia()
+        If cargarGuia Then Exit Sub
+
+        timerGuardado.Stop()
+        guardadoPendiente = False
+
         Dim transaccion As OleDbTransaction = Nothing
         Try
             'Conexion a la DB
@@ -662,11 +710,17 @@ Public Class Form1
             'Se calcula el total
             CalcularTotal()
             Dim total As Integer = ObtenerTotalGuia()
-            Dim fecha As Date = dtpFecha.Value
+            Dim fecha As Date = dtpFecha.Value.Date
 
             Dim numeroGuia As Integer
             If Not Integer.TryParse(txtNumeroGuia.Text, numeroGuia) Then
                 MsgBox("El número de guía no es válido. No se guardaron los cambios.", MsgBoxStyle.Exclamation)
+                Exit Sub
+            End If
+
+            'El numero de guia no puede repetirse en otra guia
+            If GuiaNumeroIgual(numeroGuia, idGuiaActual) Then
+                MsgBox("Ya existe otra guía con el número " & numeroGuia & ". No se guardaron los cambios.", MsgBoxStyle.Exclamation)
                 Exit Sub
             End If
 
@@ -687,7 +741,13 @@ Public Class Form1
                     cmdUpdate.Parameters.AddWithValue("?", idCliente)
                     cmdUpdate.Parameters.AddWithValue("?", numeroGuia)
                     cmdUpdate.Parameters.AddWithValue("?", idGuiaActual)
-                    cmdUpdate.ExecuteNonQuery()
+
+                    If cmdUpdate.ExecuteNonQuery() = 0 Then
+                        transaccion.Rollback()
+                        transaccion = Nothing
+                        Debug.WriteLine(">> guardarGuia: La guia " & idGuiaActual & " ya no existe, no se guardara.")
+                        Exit Sub
+                    End If
                 End Using
 
                 ' eliminar detalles
@@ -748,43 +808,25 @@ Public Class Form1
             Catch
                 ' Si ni siquiera se pudo revertir (ej. se perdio la conexion en pleno intento), no hay mas accion posible aqui
             End Try
+
+            'Si la base de datos rechazo un numero de guia repetido (indice unico), se avisa con claridad
+            If TypeOf ex Is OleDbException Then
+                For Each errorBd As OleDbError In DirectCast(ex, OleDbException).Errors
+                    If errorBd.SQLState = "3022" Then
+                        MsgBox("El número de guía ya está en uso por otra guía. No se guardó ningún cambio.", MsgBoxStyle.Exclamation)
+                        Exit Sub
+                    End If
+                Next
+            End If
+
             MsgBox("Error al guardar o actualizar la guía. No se guardó ningún cambio parcial: " & ex.Message, MsgBoxStyle.Critical)
         Finally
         End Try
     End Sub
 
-    'Carga de la guia por su numero
-    Private Sub CargarGuiaNumero(numGuia As Integer)
-        Try
-            AbrirConexion()
-            Using cmd As New OleDbCommand("SELECT id_guia FROM guia WHERE numero_guia = ?", conexionDB)
-                cmd.Parameters.AddWithValue("?", numGuia)
-                Dim id As Object = cmd.ExecuteScalar()
-                If id IsNot Nothing AndAlso id IsNot DBNull.Value Then
-                    CargarGuiaID(Convert.ToInt32(id))
-                End If
-            End Using
-        Catch ex As Exception
-            MsgBox("Error al cargar la guía existente: " & ex.Message)
-        Finally
-            CerrarConexion()
-        End Try
-    End Sub
-
     'LIMPIEZA DE LOS SIMBOLOS EN LOS INTEGER
     Private Function LimpiarMonto(monto As Object) As Integer
-        If monto Is Nothing OrElse String.IsNullOrWhiteSpace(monto.ToString()) Then Return 0
-
-        Dim TextoMonetario As String = monto.ToString()
-
-        'Ajuste de posicion del simbolo monetario
-        TextoMonetario = TextoMonetario.Replace("$", "").Replace(" ", "").Replace(".", "").Trim()
-
-        Dim valor As Integer = 0
-        Integer.TryParse(TextoMonetario, valor)
-
-        Return valor
-        'Return Convert.ToInt32(monto.ToString().Replace("$ ", "").Replace(" ", "").Replace(".", ""))
+        Return CatalogoProductos.MontoEntero(monto)
     End Function
 
     'inicializacion de la tabla guia
@@ -920,8 +962,9 @@ Public Class Form1
             End Using
 
         Catch ex As Exception
+            'Si no se puede verificar, no se asume "libre": el error sube al llamador
             Debug.WriteLine("Error verificando numero de guia duplicada: " & ex.Message)
-            Return False
+            Throw
         Finally
         End Try
     End Function
@@ -932,6 +975,12 @@ Public Class Form1
         formProductos.Owner = Me 'Establece al dueño de la apertura 
         formProductos.ShowDialog() 'Mostrar el Formulario
     End Sub
+
+    'Posicion y Fuente para la impresion
+    Dim fuenteTitulo As New Font("Consolas", 8, FontStyle.Bold)
+    Dim fuenteCuerpo As New Font("Consolas", 7)
+    Dim yPos As Integer = 0
+    Private seImprimioEnVistaPrevia As Boolean = False
 
     'SECCION PARA IMPRESION (Click para imprimir en papel!)
     Private Sub btnImprimir_Click(sender As Object, e As EventArgs) Handles btnImprimir.Click
@@ -949,21 +998,22 @@ Public Class Form1
                 documentoImpresion.PrinterSettings.PrinterName = impresora_Seleccionada
             End If
 
-            ' Fuente estandar para tickets
-            fuenteCuerpo = New Font("Consolas", 7)
-
-            ' Inicia la impresión
-            ' (Aviso, en caso de desear ver el formato sin imprimir para pruebas, comentar el codigo
-            ' de abajo!)
-            documentoImpresion.Print()
+            seImprimioEnVistaPrevia = False
 
             Using vistaPrevia As New PrintPreviewDialog()
                 vistaPrevia.Document = documentoImpresion
                 vistaPrevia.WindowState = FormWindowState.Maximized
                 vistaPrevia.PrintPreviewControl.Zoom = 2.0 'Escala de ventana del 200% CUIDADO!
-                vistaPrevia.Text = "Vista Previa de Guia" & txtNumeroGuia.Text
+                vistaPrevia.Text = "Vista Previa de Guia " & txtNumeroGuia.Text
                 vistaPrevia.ShowDialog()
             End Using
+
+            'Si no se imprimio desde la vista previa, se ofrece imprimir ahora
+            If Not seImprimioEnVistaPrevia Then
+                Dim respuesta = MsgBox("¿Imprimir la guía Nº " & txtNumeroGuia.Text & " ahora?",
+                                       MsgBoxStyle.YesNo Or MsgBoxStyle.Question, "Imprimir guía")
+                If respuesta = MsgBoxResult.Yes Then documentoImpresion.Print()
+            End If
 
             'Error en caso de no lograrse imprimir
         Catch ex As Exception
@@ -971,10 +1021,10 @@ Public Class Form1
         End Try
     End Sub
 
-    'Posicion y Fuente para la impresion
-    Dim fuenteTitulo As New Font("Consolas", 8, FontStyle.Bold)
-    Dim fuenteCuerpo As New Font("Consolas", 7)
-    Dim yPos As Integer = 0
+    'Detecta si el usuario imprimio desde el boton de la vista previa
+    Private Sub documentoImpresion_BeginPrint(sender As Object, e As PrintEventArgs) Handles documentoImpresion.BeginPrint
+        If e.PrintAction = PrintAction.PrintToPrinter Then seImprimioEnVistaPrevia = True
+    End Sub
 
     'Impresion del Ticket
     Private Sub documentoImpresion_PrintPage(sender As Object, e As PrintPageEventArgs) Handles documentoImpresion.PrintPage
@@ -982,8 +1032,6 @@ Public Class Form1
         Dim g As Graphics = e.Graphics
         Dim margenIzq As Integer = e.MarginBounds.Left
         yPos = e.MarginBounds.Top
-        Dim fuenteTitulo As New Font("Consolas", 8, FontStyle.Bold)
-        Dim fuenteCuerpo As New Font("Consolas", 7)
         Dim salto As Integer = fuenteCuerpo.GetHeight(g) + 2
 
         'OBTENER DATOS DEL CLIENTE 
@@ -1042,8 +1090,8 @@ Public Class Form1
             ' Alineación formateada tipo consola
             Dim nombre As String = If(fila.Cells("nombre").Value IsNot Nothing, fila.Cells("nombre").Value.ToString(), "")
             Dim cantidad As Integer = Val(fila.Cells("cantidad").Value?.ToString())
-            Dim precio As Integer = Val(fila.Cells("precio").Value?.ToString().Replace("$ ", "").Replace(" ", "").Replace(".", ""))
-            Dim subtotal As Integer = Val(fila.Cells("subtotal").Value?.ToString().Replace("$ ", "").Replace(" ", "").Replace(".", ""))
+            Dim precio As Integer = CatalogoProductos.MontoEntero(fila.Cells("precio").Value)
+            Dim subtotal As Integer = CatalogoProductos.MontoEntero(fila.Cells("subtotal").Value)
 
             Dim linea As String = nombre.PadRight(26)
             linea &= cantidad.ToString().PadLeft(4) & " "
@@ -1065,9 +1113,10 @@ Public Class Form1
         'En caso de existir una ventana abierta, no abrir otra
         For Each frm As Form In Application.OpenForms
             If TypeOf frm Is Form2 Then
-                frm.Focus() 'Mover hacia el frente de la pantalla si la ventana ya esta abierta
-                frm.WindowState = FormWindowState.Normal 'Mostrar la ventana de produccion con normalidad
-                frm.BringToFront() 'Traer al frente de la pantalla
+                frm.WindowState = FormWindowState.Normal
+                frm.BringToFront()
+                frm.Activate()
+                Return
             End If
         Next
 

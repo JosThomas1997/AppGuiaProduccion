@@ -232,9 +232,9 @@ Partial Class Form1
         'cbImpresora
         '
         Me.cbImpresora.FormattingEnabled = True
-        Me.cbImpresora.Location = New System.Drawing.Point(1003, 34)
+        Me.cbImpresora.Location = New System.Drawing.Point(966, 34)
         Me.cbImpresora.Name = "cbImpresora"
-        Me.cbImpresora.Size = New System.Drawing.Size(115, 21)
+        Me.cbImpresora.Size = New System.Drawing.Size(152, 21)
         Me.cbImpresora.TabIndex = 32
         '
         'Label2

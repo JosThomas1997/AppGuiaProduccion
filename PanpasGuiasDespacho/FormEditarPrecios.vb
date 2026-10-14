@@ -11,12 +11,6 @@ Public Class FormEditarPrecios
         CargarCategoriasDisponibles()
     End Sub
 
-    ''' <summary>
-    ''' Llena los desplegables de categoria y sub-categoria (sabor de torta) leyendo
-    ''' los valores que YA existen en la base de datos, en vez de tenerlos escritos
-    ''' en el codigo. Como los ComboBox quedan editables (DropDown, no DropDownList),
-    ''' tambien se puede escribir una categoria completamente nueva si hace falta.
-    ''' </summary>
     Private Sub CargarCategoriasDisponibles()
         Try
             AbrirConexion()
@@ -46,33 +40,24 @@ Public Class FormEditarPrecios
         End Try
     End Sub
 
-    ''' <summary>
-    ''' El campo de sabor (subcategoria) solo tiene sentido cuando la categoria es "Tortas".
-    ''' Se habilita/deshabilita segun lo que se escriba o elija en cbCategoriaNueva.
-    ''' </summary>
     Private Sub cbCategoriaNueva_TextChanged(sender As Object, e As EventArgs) Handles cbCategoriaNueva.TextChanged
         Dim esTorta As Boolean = cbCategoriaNueva.Text.Trim().Equals("Tortas", StringComparison.OrdinalIgnoreCase)
         cbSubcategoriaNueva.Enabled = esTorta
         If Not esTorta Then cbSubcategoriaNueva.Text = ""
     End Sub
 
-    ''' <summary>
-    ''' Carga la lista de productos. Si "filtro" viene vacio, trae todos los productos que
-    ''' correspondan (activos, o tambien inactivos si el checkbox esta marcado); si no,
-    ''' ademas filtra por codigo o nombre que contengan el texto buscado.
-    ''' </summary>
     Private Sub CargarProductos(Optional filtro As String = "")
         dgvResultados.SuspendLayout()
         Try
             AbrirConexion()
 
             Dim sql As String = "SELECT codigo, nombre, precio_venta_boleta, productoActivo FROM producto WHERE 1=1 "
-            If Not chkMostrarInactivos.Checked Then
-                ' OJO: se incluye "OR productoActivo IS NULL" a proposito. Productos creados
-                ' antes de que existiera esta columna quedaron con el valor en blanco (NULL),
-                ' y en SQL, NULL nunca es igual a True/False -- sin este OR, esos productos
-                ' antiguos nunca apareceerian en la vista de "solo activos", sin importar
-                ' que se compare contra -1 o contra un parametro Boolean.
+            If chkMostrarInactivos.Checked Then
+                'Marcado: solo los inactivos
+                sql &= "AND productoActivo = ? "
+            Else
+                'Desmarcado: solo los activos. Se incluye "OR IS NULL" para los productos antiguos
+                'con la columna en blanco, que se tratan como activos.
                 sql &= "AND (productoActivo = ? OR productoActivo IS NULL) "
             End If
             If Not String.IsNullOrWhiteSpace(filtro) Then
@@ -81,10 +66,8 @@ Public Class FormEditarPrecios
             sql &= "ORDER BY nombre"
 
             Using cmd As New OleDbCommand(sql, conexionDB)
-                ' El orden de los parametros debe calzar con el orden de los "?" en el SQL de arriba
-                If Not chkMostrarInactivos.Checked Then
-                    cmd.Parameters.AddWithValue("?", True)
-                End If
+                'El orden de los parametros debe calzar con el orden de los "?" en el SQL de arriba
+                cmd.Parameters.AddWithValue("?", Not chkMostrarInactivos.Checked)
                 If Not String.IsNullOrWhiteSpace(filtro) Then
                     cmd.Parameters.AddWithValue("?", "%" & filtro & "%")
                     cmd.Parameters.AddWithValue("?", "%" & filtro & "%")
@@ -95,7 +78,7 @@ Public Class FormEditarPrecios
                     While reader.Read()
                         Dim codigo As String = reader("codigo").ToString()
                         Dim nombre As String = reader("nombre").ToString()
-                        Dim precio As Integer = Convert.ToInt32(reader("precio_venta_boleta"))
+                        Dim precio As Integer = CatalogoProductos.PrecioEntero(reader("precio_venta_boleta"))
 
                         ' Si productoActivo viene en NULL (producto antiguo, de antes de que
                         ' existiera esta columna), se trata como activo por defecto en vez
@@ -121,6 +104,10 @@ Public Class FormEditarPrecios
         CargarProductos(txtBuscar.Text.Trim())
     End Sub
 
+    Private Sub txtBuscar_TextChanged(sender As Object, e As EventArgs) Handles txtBuscar.TextChanged
+        CargarProductos(txtBuscar.Text.Trim())
+    End Sub
+
     Private Sub txtBuscar_KeyDown(sender As Object, e As KeyEventArgs) Handles txtBuscar.KeyDown
         If e.KeyCode = Keys.Enter Then
             e.SuppressKeyPress = True
@@ -132,10 +119,6 @@ Public Class FormEditarPrecios
         CargarProductos(txtBuscar.Text.Trim())
     End Sub
 
-    ''' <summary>
-    ''' Al hacer clic en una fila de resultados, se muestra el producto elegido
-    ''' y se dejan su nombre y precio actuales listos para editar.
-    ''' </summary>
     Private Sub dgvResultados_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvResultados.CellClick
         If e.RowIndex < 0 Then Exit Sub
 
@@ -150,7 +133,7 @@ Public Class FormEditarPrecios
         ' Extraer precio de forma más robusta: remover símbolos de formato
         Dim precioFormato As String = fila.Cells("precio").Value.ToString()
         ' Remover $ y espacios, luego puntos de formato (1.234 -> 1234)
-        Dim precioLimpio As String = precioFormato.Replace("$", "").Replace(".", "").Trim()
+        Dim precioLimpio As String = CatalogoProductos.MontoEntero(precioFormato).ToString()
         txtNuevoPrecio.Text = precioLimpio
 
         btnGuardar.Enabled = True
@@ -333,7 +316,7 @@ Public Class FormEditarPrecios
         End If
 
         If String.IsNullOrEmpty(categoriaNueva) Then
-            MsgBox("Debes elegir (o escribir) una categoría. Así el producto va a aparecer solo en el panel correcto para los empleados.", MsgBoxStyle.Exclamation)
+            MsgBox("Debes elegir una categoría de la lista. El producto aparecerá en el panel de esa categoría.", MsgBoxStyle.Exclamation)
             Exit Sub
         End If
 
@@ -394,8 +377,19 @@ Public Class FormEditarPrecios
                 End Using
 
                 transaction.Commit()
-                MsgBox("Producto agregado correctamente. Ya debería aparecer en el panel de """ & categoriaNueva & """ para los empleados, sin necesidad de tocar nada más.",
-                       MsgBoxStyle.Information)
+                Dim aviso As String = "Producto agregado correctamente. Aparecerá en el panel """ & categoriaNueva & """ para los empleados."
+
+                If esTorta Then
+                    'Un sabor nuevo necesita estar en la lista de tipos de torta para tener su boton
+                    Dim saborConocido As Boolean = Array.Exists(CatalogoProductos.tiposTorta,
+                        Function(t) t.Equals(subcategoriaNueva, StringComparison.OrdinalIgnoreCase))
+                    If Not saborConocido Then
+                        aviso &= vbCrLf & vbCrLf & "Aviso: el sabor """ & subcategoriaNueva & """ no tiene boton todavia. " &
+                                 "Para que aparezca, agregalo a la lista tiposTorta en CatalogoProductos.vb."
+                    End If
+                End If
+
+                MsgBox(aviso, MsgBoxStyle.Information)
 
             Catch ex As Exception
                 If transaction IsNot Nothing Then
@@ -424,7 +418,7 @@ Public Class FormEditarPrecios
     ''' Abre el formulario para reactivar productos
     ''' Permite gestionar la activación/desactivación de productos en lote
     ''' </summary>
-    Private Sub btnReactivarProductos_Click(sender As Object, e As EventArgs) Handles btnReactivarProductos.Click
+    Private Sub btnReactivarProductos_Click(sender As Object, e As EventArgs)
         Dim formAbierto As Boolean = False
 
         ' Verifica si el formulario ya está abierto

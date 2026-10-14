@@ -8,6 +8,8 @@ Module Conexion
     'Abrir Conexion (no hace nada si ya esta abierta)
     Public Sub AbrirConexion()
         Try
+            'Una conexion rota se cierra primero para poder reabrirla
+            If conexionDB.State = ConnectionState.Broken Then conexionDB.Close()
             If conexionDB.State = ConnectionState.Closed Then
                 conexionDB.Open()
             End If
@@ -16,19 +18,10 @@ Module Conexion
         End Try
     End Sub
 
-    ' "Cerrar" Conexion: a proposito, ya NO cierra la conexion en cada llamado.
-    ' Antes, cada operacion abria y cerraba la conexion por su cuenta (decenas de veces
-    ' por sesion), lo cual tiene un costo real en PC modestas. Ahora la conexion se
-    ' mantiene abierta y se reutiliza durante toda la sesion del programa; recien se
-    ' cierra de verdad al salir de la aplicacion, con CerrarConexionApp() (ver Program.vb).
     Public Sub CerrarConexion()
-        ' Intencionalmente vacio. Se deja el metodo (en vez de borrarlo) para no tener
-        ' que tocar cada formulario que ya lo llama.
+
     End Sub
 
-    ''' <summary>
-    ''' Cierra la conexion de verdad. Llamar SOLO al salir de la aplicacion (Program.vb).
-    ''' </summary>
     Public Sub CerrarConexionApp()
         Try
             If conexionDB.State = ConnectionState.Open Then

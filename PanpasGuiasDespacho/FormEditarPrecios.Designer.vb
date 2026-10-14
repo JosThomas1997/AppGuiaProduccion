@@ -1,8 +1,8 @@
-﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
+﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class FormEditarPrecios
     Inherits System.Windows.Forms.Form
 
-    <System.Diagnostics.DebuggerNonUserCode()> _
+    <System.Diagnostics.DebuggerNonUserCode()>
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         Try
             If disposing AndAlso components IsNot Nothing Then
@@ -15,7 +15,7 @@ Partial Class FormEditarPrecios
 
     Private components As System.ComponentModel.IContainer
 
-    <System.Diagnostics.DebuggerStepThrough()> _
+    <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Me.lblBuscar = New System.Windows.Forms.Label()
         Me.txtBuscar = New System.Windows.Forms.TextBox()
@@ -33,7 +33,6 @@ Partial Class FormEditarPrecios
         Me.txtNuevoPrecio = New System.Windows.Forms.TextBox()
         Me.btnGuardar = New System.Windows.Forms.Button()
         Me.btnEliminarReactivar = New System.Windows.Forms.Button()
-        Me.btnReactivarProductos = New System.Windows.Forms.Button()
         Me.lblSeparadorNuevo = New System.Windows.Forms.Label()
         Me.lblCodigoNuevo = New System.Windows.Forms.Label()
         Me.txtCodigoNuevo = New System.Windows.Forms.TextBox()
@@ -188,18 +187,6 @@ Partial Class FormEditarPrecios
         Me.btnEliminarReactivar.Text = "Eliminar producto"
         Me.btnEliminarReactivar.UseVisualStyleBackColor = True
         '
-        'btnReactivarProductos
-        '
-        Me.btnReactivarProductos.BackColor = System.Drawing.Color.FromArgb(CType(CType(76, Byte), Integer), CType(CType(175, Byte), Integer), CType(CType(80, Byte), Integer))
-        Me.btnReactivarProductos.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Bold)
-        Me.btnReactivarProductos.ForeColor = System.Drawing.Color.White
-        Me.btnReactivarProductos.Location = New System.Drawing.Point(320, 487)
-        Me.btnReactivarProductos.Name = "btnReactivarProductos"
-        Me.btnReactivarProductos.Size = New System.Drawing.Size(170, 28)
-        Me.btnReactivarProductos.TabIndex = 24
-        Me.btnReactivarProductos.Text = "Reactivar Catálogo"
-        Me.btnReactivarProductos.UseVisualStyleBackColor = False
-        '
         'lblSeparadorNuevo
         '
         Me.lblSeparadorNuevo.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D
@@ -251,6 +238,7 @@ Partial Class FormEditarPrecios
         '
         'cbCategoriaNueva
         '
+        Me.cbCategoriaNueva.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cbCategoriaNueva.FormattingEnabled = True
         Me.cbCategoriaNueva.Location = New System.Drawing.Point(90, 573)
         Me.cbCategoriaNueva.Name = "cbCategoriaNueva"
@@ -306,7 +294,6 @@ Partial Class FormEditarPrecios
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(502, 677)
         Me.Controls.Add(Me.btnAgregarProducto)
-        Me.Controls.Add(Me.btnReactivarProductos)
         Me.Controls.Add(Me.txtPrecioNuevoProducto)
         Me.Controls.Add(Me.lblPrecioNuevoProducto)
         Me.Controls.Add(Me.cbSubcategoriaNueva)
@@ -356,7 +343,6 @@ Partial Class FormEditarPrecios
     Friend WithEvents txtNuevoPrecio As TextBox
     Friend WithEvents btnGuardar As Button
     Friend WithEvents btnEliminarReactivar As Button
-    Friend WithEvents btnReactivarProductos As Button
     Friend WithEvents lblSeparadorNuevo As Label
     Friend WithEvents lblCodigoNuevo As Label
     Friend WithEvents txtCodigoNuevo As TextBox

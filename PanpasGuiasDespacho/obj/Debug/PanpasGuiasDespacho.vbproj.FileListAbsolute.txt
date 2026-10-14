@@ -35,3 +35,4 @@ D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDesp
 D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDespacho.FormInformeProducto.resources
 D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDespacho.FormResumenProduccion.resources
 D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDespacho.FormReactivarProductos.resources
+D:\AnaisPrograma\AppGuiaProduccion\PanpasGuiasDespacho\obj\Debug\PanpasGuiasDespacho.FormEditarPrecios.resources

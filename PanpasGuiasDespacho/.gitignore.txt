@@ -9,6 +9,11 @@ obj/
 *.log
 *.tmp
 
+# Archivos de mdb.
+PanpasGuiasDespacho/bin/Debug/DBApp/*.mdb
+PanpasGuiasDespacho/bin/Debug/DBApp/*.ldb
+PanpasGuiasDespacho/bin/Debug/DBApp/Respaldos/
+
 # Documentos del Usuario
 *.user
 *.suo
