@@ -1,1 +1,4 @@
 PanpasGuiasDespacho/bin/Debug/DBApp/rjc_prod_f753.mdb
+PanpasGuiasDespacho/bin/Debug/DBApp/*.mdb
+PanpasGuiasDespacho/bin/Debug/DBApp/*.ldb
+PanpasGuiasDespacho/bin/Debug/DBApp/Respaldos/

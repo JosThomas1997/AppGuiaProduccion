@@ -1,4 +1,6 @@
-﻿Imports System.Data.OleDb
+﻿Option Strict On
+
+Imports System.Data.OleDb
 Imports System.Drawing.Printing
 
 Public Class Form2
@@ -324,7 +326,7 @@ Public Class Form2
         End If
 
         'Confirmacion de la eliminacion de la produccion
-        Dim EliminarProduccion = MsgBox("Estas seguro de Eliminar la Produccion Nº " & idProduccionActual & "?", MsgBoxStyle.YesNo + MsgBoxStyle.Question, "Confirmar Accion")
+        Dim EliminarProduccion = MsgBox("Estas seguro de Eliminar la Produccion Nº " & idProduccionActual & "?", MsgBoxStyle.YesNo Or MsgBoxStyle.Question, "Confirmar Accion")
         If EliminarProduccion <> MsgBoxResult.Yes Then Exit Sub
 
         Dim idAEliminar As Integer = idProduccionActual
@@ -894,6 +896,14 @@ Public Class Form2
         End Using
     End Sub
 
+    'Al cerrar la ventana se liberan los recursos de impresion
+    Private Sub Form2_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        fuenteTitulo.Dispose()
+        fuenteCuerpo.Dispose()
+        impresionProduccion.Dispose()
+        timerGuardado.Dispose()
+    End Sub
+
     'Fuente, Cuerpo y posicion para impresion
     Dim fuenteTitulo As New Font("Consolas", 8, FontStyle.Bold)
     Dim fuenteCuerpo As New Font("Consolas", 7)
@@ -947,7 +957,7 @@ Public Class Form2
         Dim g As Graphics = e.Graphics
         Dim margenIzq As Integer = e.MarginBounds.Left
         yPos = e.MarginBounds.Top
-        Dim salto As Integer = fuenteCuerpo.GetHeight(g) + 2
+        Dim salto As Integer = CInt(fuenteCuerpo.GetHeight(g)) + 2
 
         '=== Encabezado de la guia ===
         g.DrawString("Produccion Interna", fuenteTitulo, Brushes.Black, margenIzq, yPos)
@@ -1005,8 +1015,8 @@ Public Class Form2
             g.DrawString(comentarioTexto, fuenteCuerpo, Brushes.Black, rectComentario, formato)
 
             ' Mover yPos hacia abajo según el texto
-            Dim tamañoTexto As SizeF = g.MeasureString(comentarioTexto, fuenteCuerpo, anchoTexto)
-            yPos += tamañoTexto.Height
+            Dim tamañoTexto As SizeF = g.MeasureString(comentarioTexto, fuenteCuerpo, CInt(anchoTexto))
+            yPos += CInt(Math.Ceiling(tamañoTexto.Height))
         Else
             g.DrawString("(Sin comentario)", fuenteCuerpo, Brushes.Black, margenIzq, yPos)
             yPos += salto
@@ -1016,7 +1026,8 @@ Public Class Form2
 
     'Actualizar la impresora seleccionada
     Private Sub cbImpresora_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cbImpresora.SelectedIndexChanged
-        If cbImpresora.SelectedIndex >= 0 AndAlso cbImpresora.SelectedItem <> Nothing Then
+        'Si no hay impresoras el combo queda deshabilitado con un aviso: ese texto no es una impresora
+        If cbImpresora.Enabled AndAlso cbImpresora.SelectedIndex >= 0 Then
             impresora_Seleccionada = cbImpresora.SelectedItem.ToString()
         End If
     End Sub

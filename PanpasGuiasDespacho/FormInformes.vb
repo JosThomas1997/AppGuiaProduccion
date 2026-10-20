@@ -1,4 +1,6 @@
-﻿Imports System.Data.OleDb
+﻿Option Strict On
+
+Imports System.Data.OleDb
 Imports System.Drawing.Printing
 Imports System.Security.Cryptography
 Imports System.Security.Policy
@@ -813,7 +815,7 @@ Public Class FormInformes
         Dim g = e.Graphics
         Dim margen = e.MarginBounds.Left
         yPos = e.MarginBounds.Top
-        Dim salto = fuenteCuerpo.GetHeight(g) + 2
+        Dim salto As Integer = CInt(fuenteCuerpo.GetHeight(g)) + 2
 
         '=== ENCABEZADO DE PANPAS GENERICO ===
         g.DrawString("Panaderia y Pasteleria PANPAS", fuenteTitulo, Brushes.Black, margen, yPos)

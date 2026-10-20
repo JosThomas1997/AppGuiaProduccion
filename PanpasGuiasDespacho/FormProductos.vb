@@ -1,4 +1,6 @@
-﻿Imports System.IO
+﻿Option Strict On
+
+Imports System.IO
 Imports System.Data.OleDb
 
 Public Class FormProductos

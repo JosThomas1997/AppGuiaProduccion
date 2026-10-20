@@ -1,48 +1,7 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "D:\\AnaisPrograma\\AppGuiaProduccion\\",
-  "Documents": [
-    {
-      "AbsoluteMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|d:\\anaisprograma\\appguiaproduccion\\panpasguiasdespacho\\program.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
-      "RelativeMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|solutionrelative:panpasguiasdespacho\\program.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|d:\\anaisprograma\\appguiaproduccion\\panpasguiasdespacho\\respaldos.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
-      "RelativeMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|solutionrelative:panpasguiasdespacho\\respaldos.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|d:\\anaisprograma\\appguiaproduccion\\panpasguiasdespacho\\form1.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
-      "RelativeMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|solutionrelative:panpasguiasdespacho\\form1.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|D:\\AnaisPrograma\\AppGuiaProduccion\\panpasguiasdespacho\\form2.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
-      "RelativeMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|solutionrelative:panpasguiasdespacho\\form2.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|d:\\anaisprograma\\appguiaproduccion\\panpasguiasdespacho\\conexion.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
-      "RelativeMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|solutionrelative:panpasguiasdespacho\\conexion.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|D:\\AnaisPrograma\\AppGuiaProduccion\\panpasguiasdespacho\\formeditarprecios.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
-      "RelativeMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|solutionrelative:panpasguiasdespacho\\formeditarprecios.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|D:\\AnaisPrograma\\AppGuiaProduccion\\panpasguiasdespacho\\formproducc_productos.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
-      "RelativeMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|solutionrelative:panpasguiasdespacho\\formproducc_productos.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|D:\\AnaisPrograma\\AppGuiaProduccion\\panpasguiasdespacho\\formproductos.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
-      "RelativeMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|solutionrelative:panpasguiasdespacho\\formproductos.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|D:\\AnaisPrograma\\AppGuiaProduccion\\panpasguiasdespacho\\catalogoproductos.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
-      "RelativeMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|solutionrelative:panpasguiasdespacho\\catalogoproductos.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|d:\\anaisprograma\\appguiaproduccion\\panpasguiasdespacho\\forminformes.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
-      "RelativeMoniker": "D:0:0:{6A5803ED-4999-45AD-A763-3E26E2938AC3}|PanpasGuiasDespacho\\PanpasGuiasDespacho.vbproj|solutionrelative:panpasguiasdespacho\\forminformes.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
-    }
-  ],
+  "Documents": [],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
@@ -50,141 +9,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": -1,
           "Children": [
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Program.vb",
-              "DocumentMoniker": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\Program.vb",
-              "RelativeDocumentMoniker": "PanpasGuiasDespacho\\Program.vb",
-              "ToolTip": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\Program.vb",
-              "RelativeToolTip": "PanpasGuiasDespacho\\Program.vb",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAARAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
-              "WhenOpened": "2026-10-14T03:52:58.646Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Respaldos.vb",
-              "DocumentMoniker": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\Respaldos.vb",
-              "RelativeDocumentMoniker": "PanpasGuiasDespacho\\Respaldos.vb",
-              "ToolTip": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\Respaldos.vb",
-              "RelativeToolTip": "PanpasGuiasDespacho\\Respaldos.vb",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAACwAAAAKAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
-              "WhenOpened": "2026-10-14T03:51:52.412Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "Conexion.vb",
-              "DocumentMoniker": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\Conexion.vb",
-              "RelativeDocumentMoniker": "PanpasGuiasDespacho\\Conexion.vb",
-              "ToolTip": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\Conexion.vb",
-              "RelativeToolTip": "PanpasGuiasDespacho\\Conexion.vb",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAALAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
-              "WhenOpened": "2026-10-14T03:35:08.847Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "FormInformes.vb",
-              "DocumentMoniker": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormInformes.vb",
-              "RelativeDocumentMoniker": "PanpasGuiasDespacho\\FormInformes.vb",
-              "ToolTip": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormInformes.vb",
-              "RelativeToolTip": "PanpasGuiasDespacho\\FormInformes.vb",
-              "ViewState": "AgIAAH0CAAAAAAAAAAApwKICAAALAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
-              "WhenOpened": "2026-10-14T03:21:52.59Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "Form1.vb",
-              "DocumentMoniker": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\Form1.vb",
-              "RelativeDocumentMoniker": "PanpasGuiasDespacho\\Form1.vb",
-              "ToolTip": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\Form1.vb",
-              "RelativeToolTip": "PanpasGuiasDespacho\\Form1.vb",
-              "ViewState": "AgIAADQEAAAAAAAAAAAAAFIEAAB5AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
-              "WhenOpened": "2026-10-14T01:07:36.596Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "Form2.vb",
-              "DocumentMoniker": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\Form2.vb",
-              "RelativeDocumentMoniker": "PanpasGuiasDespacho\\Form2.vb",
-              "ToolTip": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\Form2.vb",
-              "RelativeToolTip": "PanpasGuiasDespacho\\Form2.vb",
-              "ViewState": "AgIAAAYAAAAAAAAAAAAAABkAAABQAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
-              "WhenOpened": "2026-10-13T05:54:54.874Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "FormEditarPrecios.vb",
-              "DocumentMoniker": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormEditarPrecios.vb",
-              "RelativeDocumentMoniker": "PanpasGuiasDespacho\\FormEditarPrecios.vb",
-              "ToolTip": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormEditarPrecios.vb",
-              "RelativeToolTip": "PanpasGuiasDespacho\\FormEditarPrecios.vb",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAIgAAAAqAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
-              "WhenOpened": "2026-10-13T04:51:10.207Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "CatalogoProductos.vb",
-              "DocumentMoniker": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\CatalogoProductos.vb",
-              "RelativeDocumentMoniker": "PanpasGuiasDespacho\\CatalogoProductos.vb",
-              "ToolTip": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\CatalogoProductos.vb",
-              "RelativeToolTip": "PanpasGuiasDespacho\\CatalogoProductos.vb",
-              "ViewState": "AgIAAAgAAAAAAAAAAAAQwC8AAAAQAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
-              "WhenOpened": "2026-10-13T03:55:01.401Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "FormProducc_Productos.vb",
-              "DocumentMoniker": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormProducc_Productos.vb",
-              "RelativeDocumentMoniker": "PanpasGuiasDespacho\\FormProducc_Productos.vb",
-              "ToolTip": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormProducc_Productos.vb",
-              "RelativeToolTip": "PanpasGuiasDespacho\\FormProducc_Productos.vb",
-              "ViewState": "AgIAAMUAAAAAAAAAAAAiwM0AAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
-              "WhenOpened": "2026-10-09T19:32:01.628Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "FormProductos.vb",
-              "DocumentMoniker": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormProductos.vb",
-              "RelativeDocumentMoniker": "PanpasGuiasDespacho\\FormProductos.vb",
-              "ToolTip": "D:\\AnaisPrograma\\AppGuiaProduccion\\PanpasGuiasDespacho\\FormProductos.vb",
-              "RelativeToolTip": "PanpasGuiasDespacho\\FormProductos.vb",
-              "ViewState": "AgIAAK8AAAAAAAAAAAAwwM8AAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
-              "WhenOpened": "2026-07-12T23:52:35.815Z",
-              "EditorCaption": ""
             }
           ]
         }

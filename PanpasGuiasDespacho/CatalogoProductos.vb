@@ -1,5 +1,6 @@
-Imports System.Data.OleDb
+Option Strict On
 
+Imports System.Data.OleDb
 Module CatalogoProductos
     ' Catalogo centralizado de tipos de torta y sus codigos de producto.
     ' Antes esta misma lista estaba duplicada en FormProductos.vb, FormProducc_Productos.vb

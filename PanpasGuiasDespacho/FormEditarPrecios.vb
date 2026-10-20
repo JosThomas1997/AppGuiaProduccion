@@ -1,3 +1,5 @@
+Option Strict On
+
 Imports System.Data.OleDb
 
 Public Class FormEditarPrecios
@@ -412,30 +414,6 @@ Public Class FormEditarPrecios
         cbSubcategoriaNueva.Text = ""
         CargarProductos(txtBuscar.Text.Trim())
         CargarCategoriasDisponibles()
-    End Sub
-
-    ''' <summary>
-    ''' Abre el formulario para reactivar productos
-    ''' Permite gestionar la activación/desactivación de productos en lote
-    ''' </summary>
-    Private Sub btnReactivarProductos_Click(sender As Object, e As EventArgs)
-        Dim formAbierto As Boolean = False
-
-        ' Verifica si el formulario ya está abierto
-        For Each form As Form In Application.OpenForms
-            If TypeOf form Is FormReactivarProductos Then
-                formAbierto = True
-                form.BringToFront()
-                Exit For
-            End If
-        Next
-
-        If formAbierto Then
-            MessageBox.Show("Reactivar Productos se encuentra en ejecución.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
-        Else
-            Dim form As New FormReactivarProductos()
-            form.Show()
-        End If
     End Sub
 
 End Class

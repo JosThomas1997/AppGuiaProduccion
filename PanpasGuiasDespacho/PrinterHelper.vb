@@ -1,3 +1,5 @@
+Option Strict On
+
 Imports System.Drawing.Printing
 
 Public Module PrinterHelper
@@ -34,8 +36,8 @@ Public Module PrinterHelper
 
             If impresoras.Length = 0 Then
                 comboBox.Items.Add("No hay impresoras disponibles")
-                comboBox.SelectedIndex = 0
                 comboBox.Enabled = False
+                comboBox.SelectedIndex = 0
                 Return
             End If
 
@@ -62,8 +64,8 @@ Public Module PrinterHelper
         Catch ex As Exception
             comboBox.Items.Clear()
             comboBox.Items.Add("Error al cargar impresoras")
-            comboBox.SelectedIndex = 0
             comboBox.Enabled = False
+            comboBox.SelectedIndex = 0
         End Try
     End Sub
 End Module

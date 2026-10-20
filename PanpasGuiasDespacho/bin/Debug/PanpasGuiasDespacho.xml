@@ -29,33 +29,6 @@ PanpasGuiasDespacho
  (para no romper el historial) -- en su lugar se marca como inactivo.
  </summary>
 </member>
-<member name="M:PanpasGuiasDespacho.FormEditarPrecios.btnReactivarProductos_Click(System.Object,System.EventArgs)">
- <summary>
- Abre el formulario para reactivar productos
- Permite gestionar la activación/desactivación de productos en lote
- </summary>
-</member>
-<member name="T:PanpasGuiasDespacho.FormReactivarProductos">
- <summary>
- Formulario para reactivar productos inactivos
- Se usa cuando se detecta que el catálogo no tiene productos activos
- </summary>
-</member>
-<member name="M:PanpasGuiasDespacho.FormReactivarProductos.ActualizarEstado">
- <summary>
- Verifica y actualiza el estado de productos
- </summary>
-</member>
-<member name="M:PanpasGuiasDespacho.FormReactivarProductos.btnReactivar_Click(System.Object,System.EventArgs)">
- <summary>
- Reactiva los productos esperados (hardcodeados en FormProductos)
- </summary>
-</member>
-<member name="M:PanpasGuiasDespacho.FormReactivarProductos.btnReactivarTodos_Click(System.Object,System.EventArgs)">
- <summary>
- Reactiva TODOS los productos (opción nuclear)
- </summary>
-</member>
 <member name="M:PanpasGuiasDespacho.PrinterHelper.ObtenerImpresorasDisponibles">
  <summary>
  Obtiene la lista de impresoras disponibles en la computadora
@@ -68,34 +41,6 @@ PanpasGuiasDespacho
  </summary>
  <param name="comboBox">El ComboBox a llenar</param>
  <param name="impresora_Predeterminada">Nombre de la impresora a seleccionar por defecto (opcional)</param>
-</member>
-<member name="T:PanpasGuiasDespacho.UtilReactivarProductos">
- <summary>
- Módulo para reactivar productos en lote que están marcados como inactivos
- Se usa cuando se detecta que catalogo de productos está desactivado
- </summary>
-</member>
-<member name="M:PanpasGuiasDespacho.UtilReactivarProductos.ReactivarProductosEsperados">
- <summary>
- Reactiva los productos hardcodeados en FormProductos.vb
- Estos son los productos que DEBERÍAN estar activos
- </summary>
-</member>
-<member name="M:PanpasGuiasDespacho.UtilReactivarProductos.ReactivarTodos">
- <summary>
- Reactiva TODOS los productos de la base de datos
- Usar solo si sabes que todos deberían estar activos
- </summary>
-</member>
-<member name="M:PanpasGuiasDespacho.UtilReactivarProductos.ReactivarProductosPorCodigo(System.Collections.Generic.List{System.String})">
- <summary>
- Reactiva productos específicos por lista de códigos
- </summary>
-</member>
-<member name="M:PanpasGuiasDespacho.UtilReactivarProductos.VerificarProductosInactivos">
- <summary>
- Verifica cuántos de los productos esperados están inactivos
- </summary>
 </member>
 </members>
 </doc>

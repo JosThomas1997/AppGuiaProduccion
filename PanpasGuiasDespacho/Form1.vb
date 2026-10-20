@@ -1,8 +1,6 @@
-﻿Imports System.Data.OleDb
+﻿Option Strict On
+Imports System.Data.OleDb
 Imports System.Drawing.Printing
-
-
-
 Public Class Form1
 
     Private idGuiaActual As Integer = -1
@@ -277,7 +275,7 @@ Public Class Form1
             Using cmd As New OleDbCommand("SELECT id_guia FROM guia ORDER BY numero_guia", conexionDB)
                 Using reader = cmd.ExecuteReader()
                     While reader.Read()
-                        listaGuias.Add(reader("id_guia"))
+                        listaGuias.Add(Convert.ToInt32(reader("id_guia")))
                     End While
                 End Using
             End Using
@@ -297,7 +295,7 @@ Public Class Form1
                 Dim result = cmd.ExecuteScalar()
                 If result IsNot DBNull.Value AndAlso result IsNot Nothing Then
                     Dim idUltimaGuia As Integer = Convert.ToInt32(result)
-                    CargarGuiaID(result)
+                    CargarGuiaID(idUltimaGuia)
                 End If
             End Using
         Catch ex As Exception
@@ -574,7 +572,7 @@ Public Class Form1
         End If
 
         'Mensaje de confirmacion antes de eliminar
-        Dim MensajeConfirmacion = MsgBox("Esta por eliminar la Guia Nº " & txtNumeroGuia.Text & "?", MsgBoxStyle.YesNo + MsgBoxStyle.Question, "Confirmar eliminación")
+        Dim MensajeConfirmacion = MsgBox("Esta por eliminar la Guia Nº " & txtNumeroGuia.Text & "?", MsgBoxStyle.YesNo Or MsgBoxStyle.Question, "Confirmar eliminación")
         If MensajeConfirmacion <> MsgBoxResult.Yes Then Exit Sub
 
         Dim idAEliminar As Integer = idGuiaActual
@@ -976,6 +974,14 @@ Public Class Form1
         formProductos.ShowDialog() 'Mostrar el Formulario
     End Sub
 
+    'Al cerrar la ventana se liberan los recursos de impresion
+    Private Sub Form1_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        fuenteTitulo.Dispose()
+        fuenteCuerpo.Dispose()
+        documentoImpresion.Dispose()
+        timerGuardado.Dispose()
+    End Sub
+
     'Posicion y Fuente para la impresion
     Dim fuenteTitulo As New Font("Consolas", 8, FontStyle.Bold)
     Dim fuenteCuerpo As New Font("Consolas", 7)
@@ -1032,7 +1038,7 @@ Public Class Form1
         Dim g As Graphics = e.Graphics
         Dim margenIzq As Integer = e.MarginBounds.Left
         yPos = e.MarginBounds.Top
-        Dim salto As Integer = fuenteCuerpo.GetHeight(g) + 2
+        Dim salto As Integer = CInt(fuenteCuerpo.GetHeight(g)) + 2
 
         'OBTENER DATOS DEL CLIENTE 
         Dim razonSocial As String = ""
@@ -1089,7 +1095,7 @@ Public Class Form1
             If fila.IsNewRow Then Continue For
             ' Alineación formateada tipo consola
             Dim nombre As String = If(fila.Cells("nombre").Value IsNot Nothing, fila.Cells("nombre").Value.ToString(), "")
-            Dim cantidad As Integer = Val(fila.Cells("cantidad").Value?.ToString())
+            Dim cantidad As Integer = CInt(Val(fila.Cells("cantidad").Value?.ToString()))
             Dim precio As Integer = CatalogoProductos.MontoEntero(fila.Cells("precio").Value)
             Dim subtotal As Integer = CatalogoProductos.MontoEntero(fila.Cells("subtotal").Value)
 
@@ -1125,9 +1131,10 @@ Public Class Form1
         ventanaProduccion.Show() 'Mostrar la ventana de produccion
     End Sub
 
-    'Actualizar la impresora seleccionada
+    'Actualizar la impresora seleccionada 
     Private Sub cbImpresora_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cbImpresora.SelectedIndexChanged
-        If cbImpresora.SelectedIndex >= 0 AndAlso cbImpresora.SelectedItem <> Nothing Then
+        'Si no hay impresoras el combo queda deshabilitado con un aviso: ese texto no es una impresora
+        If cbImpresora.Enabled AndAlso cbImpresora.SelectedIndex >= 0 Then
             impresora_Seleccionada = cbImpresora.SelectedItem.ToString()
         End If
     End Sub

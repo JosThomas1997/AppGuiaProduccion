@@ -1,4 +1,6 @@
-﻿Imports System.IO
+﻿Option Strict On
+
+Imports System.IO
 
 Module Respaldos
     ' Cuantos respaldos automaticos se conservan (los mas nuevos). Con 2 por dia, 20 = 10 dias.
@@ -21,6 +23,7 @@ Module Respaldos
             If File.Exists(destino) AndAlso Not pisarSiExiste Then Return
 
             File.Copy(rutaDB, destino, True)
+            File.SetLastWriteTime(destino, Date.Now)
             LimpiarRespaldosAntiguos(carpeta, nombreBase)
 
         Catch ex As Exception
@@ -32,7 +35,7 @@ Module Respaldos
     ' dentro de la carpeta Respaldos: jamas la base ni los respaldos manuales.
     Private Sub LimpiarRespaldosAntiguos(carpeta As String, nombreBase As String)
         Dim archivos As FileInfo() = New DirectoryInfo(carpeta).GetFiles(nombreBase & " - auto *.mdb")
-        Array.Sort(archivos, Function(a, b) b.LastWriteTime.CompareTo(a.LastWriteTime))
+        Array.Sort(archivos, Function(a, b) String.Compare(b.Name, a.Name, StringComparison.Ordinal))
 
         For i As Integer = MaximoRespaldosAutomaticos To archivos.Length - 1
             Try

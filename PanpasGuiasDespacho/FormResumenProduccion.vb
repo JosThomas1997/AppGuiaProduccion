@@ -1,4 +1,5 @@
-﻿Imports System.Data.OleDb
+﻿Option Strict On
+Imports System.Data.OleDb
 
 Public Class FormResumenProduccion
 

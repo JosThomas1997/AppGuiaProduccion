@@ -1,5 +1,5 @@
-﻿Imports System.Security.Cryptography
-
+﻿Option Strict On
+Imports System.Security.Cryptography
 Public Class FormInicio
 
     Private Sub FormInicio_Load(sender As Object, e As EventArgs) Handles MyBase.Load
