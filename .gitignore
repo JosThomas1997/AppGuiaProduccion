@@ -1,4 +1,18 @@
-PanpasGuiasDespacho/bin/Debug/DBApp/rjc_prod_f753.mdb
-PanpasGuiasDespacho/bin/Debug/DBApp/*.mdb
-PanpasGuiasDespacho/bin/Debug/DBApp/*.ldb
-PanpasGuiasDespacho/bin/Debug/DBApp/Respaldos/
+# Resultados de compilacion
+bin/
+obj/
+
+# Archivos de Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.vspscc
+
+# Bases de datos y respaldos (nunca al repositorio)
+*.mdb
+*.ldb
+Respaldos/
+
+# Varios
+Thumbs.db
